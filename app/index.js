@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, Pressable, FlatList } from 'react-native';
+import { View, Text, StyleSheet, Pressable, FlatList, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import { useState, useCallback } from 'react';
@@ -94,12 +94,21 @@ export default function Accueil() {
       <View style={styles.bas}>
         {session ? (
           <>
+            {profil?.photo_url && (
+              <Image source={{ uri: profil.photo_url }} style={styles.avatar} />
+            )}
             <Text style={styles.connecteComme}>
               Connecté en tant que {profil?.prenom || session.user.email}
             </Text>
-            <Pressable onPress={seDeconnecter}>
-              <Text style={styles.lienBas}>Se déconnecter</Text>
-            </Pressable>
+            <View style={styles.ligneLiensBas}>
+              <Pressable onPress={() => router.push('/profil')}>
+                <Text style={styles.lienBas}>Mon profil</Text>
+              </Pressable>
+              <Text style={styles.separateurLiens}>·</Text>
+              <Pressable onPress={seDeconnecter}>
+                <Text style={styles.lienBas}>Se déconnecter</Text>
+              </Pressable>
+            </View>
           </>
         ) : (
           <Pressable onPress={() => router.push('/connexion')}>
@@ -145,6 +154,9 @@ const styles = StyleSheet.create({
   dateTournoi: { fontSize: 12, color: '#888', marginTop: 2 },
   chevron: { fontSize: 20, color: '#bbb' },
   bas: { marginTop: 'auto', alignItems: 'center', paddingTop: 40 },
+  avatar: { width: 36, height: 36, borderRadius: 18, marginBottom: 8 },
   connecteComme: { fontSize: 12, color: '#999', marginBottom: 6 },
+  ligneLiensBas: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  separateurLiens: { fontSize: 13, color: '#ccc' },
   lienBas: { fontSize: 13, color: '#4338ca' },
 });

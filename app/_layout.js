@@ -26,6 +26,15 @@ export default function Layout() {
       <Stack.Screen name="tournoi/[id]/calendrier" options={{ headerTitle: 'OLYMPIAD' }} />
       <Stack.Screen name="tournoi/[id]/saisie" options={{ headerTitle: 'OLYMPIAD' }} />
       <Stack.Screen name="suivi/[code]" options={{ headerTitle: 'OLYMPIAD' }} />
+      <Stack.Screen
+        name="profil"
+        options={{
+          headerTitle: 'OLYMPIAD',
+          headerLeft: () => null,
+          headerBackVisible: false,
+          gestureEnabled: false,
+        }}
+      />
     </Stack>
   );
 }

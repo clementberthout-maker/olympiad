@@ -143,3 +143,41 @@ alter table matchs alter column equipe_b_id drop not null;
 -- élimination directe terminé sur un score de parité.
 alter table resultats add column if not exists score_tab_a int;
 alter table resultats add column if not exists score_tab_b int;
+
+-- ============================================================
+-- MIGRATION — Photo de profil
+-- ============================================================
+alter table profils add column if not exists photo_url text;
+
+-- Permet à un utilisateur connecté de modifier son propre profil
+-- (nom, prénom, club, photo) depuis l'écran "Mon profil".
+drop policy if exists "Utilisateur modifie son propre profil" on profils;
+create policy "Utilisateur modifie son propre profil"
+on profils for update
+using (auth.uid() = id);
+
+-- Bucket public pour les photos de profil : une image par utilisateur,
+-- nommée "<user_id>.<extension>" (voir lib/profil.js).
+insert into storage.buckets (id, name, public)
+values ('avatars', 'avatars', true)
+on conflict (id) do nothing;
+
+drop policy if exists "Lecture publique des photos de profil" on storage.objects;
+create policy "Lecture publique des photos de profil"
+on storage.objects for select
+using (bucket_id = 'avatars');
+
+drop policy if exists "Un utilisateur televerse sa propre photo" on storage.objects;
+create policy "Un utilisateur televerse sa propre photo"
+on storage.objects for insert
+with check (bucket_id = 'avatars' and auth.uid()::text = split_part(name, '.', 1));
+
+drop policy if exists "Un utilisateur remplace sa propre photo" on storage.objects;
+create policy "Un utilisateur remplace sa propre photo"
+on storage.objects for update
+using (bucket_id = 'avatars' and auth.uid()::text = split_part(name, '.', 1));
+
+drop policy if exists "Un utilisateur supprime sa propre photo" on storage.objects;
+create policy "Un utilisateur supprime sa propre photo"
+on storage.objects for delete
+using (bucket_id = 'avatars' and auth.uid()::text = split_part(name, '.', 1));

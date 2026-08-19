@@ -1,7 +1,11 @@
-import { View, Text, TextInput, StyleSheet, Pressable, ScrollView, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import {
+  View, Text, TextInput, StyleSheet, Pressable, ScrollView, Alert,
+  KeyboardAvoidingView, Platform, Image,
+} from 'react-native';
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { supabase } from '../lib/supabase';
+import { choisirPhoto, televerserPhoto } from '../lib/profil';
 
 export default function Inscription() {
   const router = useRouter();
@@ -10,7 +14,13 @@ export default function Inscription() {
   const [club, setClub] = useState('');
   const [email, setEmail] = useState('');
   const [motDePasse, setMotDePasse] = useState('');
+  const [photoUri, setPhotoUri] = useState(null);
   const [enCours, setEnCours] = useState(false);
+
+  async function selectionnerPhoto() {
+    const uri = await choisirPhoto();
+    if (uri) setPhotoUri(uri);
+  }
 
   async function creerCompte() {
     if (!nom || !prenom || !email || !motDePasse) {
@@ -30,6 +40,16 @@ export default function Inscription() {
       return;
     }
 
+    if (data.session && photoUri) {
+      try {
+        const url = await televerserPhoto(data.session.user.id, photoUri);
+        await supabase.from('profils').update({ photo_url: url }).eq('id', data.session.user.id);
+      } catch (e) {
+        // La photo n'est pas bloquante : le compte est créé, on pourra
+        // réessayer depuis l'écran de profil.
+      }
+    }
+
     setEnCours(false);
 
     if (data.session) {
@@ -37,7 +57,9 @@ export default function Inscription() {
     } else {
       Alert.alert(
         'Compte créé',
-        'Vérifie ta boîte mail pour confirmer ton adresse, puis connecte-toi.',
+        photoUri
+          ? "Vérifie ta boîte mail pour confirmer ton adresse, puis connecte-toi. Tu pourras ajouter ta photo depuis ton profil une fois connecté."
+          : 'Vérifie ta boîte mail pour confirmer ton adresse, puis connecte-toi.',
         [{ text: 'OK', onPress: () => router.replace('/connexion') }]
       );
     }
@@ -82,8 +104,12 @@ export default function Inscription() {
         onSubmitEditing={creerCompte}
       />
 
-      <Pressable style={styles.boutonPhoto} disabled>
-        <Text style={styles.textePhoto}>Ajouter une photo (bientôt disponible)</Text>
+      <Pressable style={styles.boutonPhoto} onPress={selectionnerPhoto}>
+        {photoUri ? (
+          <Image source={{ uri: photoUri }} style={styles.apercuPhoto} />
+        ) : (
+          <Text style={styles.textePhoto}>Ajouter une photo</Text>
+        )}
       </Pressable>
 
       <Pressable style={styles.bouton} onPress={creerCompte} disabled={enCours}>
@@ -119,7 +145,8 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     alignItems: 'center',
   },
-  textePhoto: { fontSize: 13, color: '#bbb' },
+  textePhoto: { fontSize: 13, color: '#999' },
+  apercuPhoto: { width: 64, height: 64, borderRadius: 32 },
   bouton: {
     backgroundColor: '#111',
     borderRadius: 10,

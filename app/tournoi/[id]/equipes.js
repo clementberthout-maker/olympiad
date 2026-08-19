@@ -164,14 +164,28 @@ export default function GestionEquipes() {
 
   async function sauvegarderReglages() {
     setEnCours(true);
-    const { error } = await supabase.from('tournois').update(reglagesActuels()).eq('id', id);
-    setEnCours(false);
+    try {
+      const { error } = await supabase.from('tournois').update(reglagesActuels()).eq('id', id);
+      if (error) throw error;
 
-    if (error) {
-      Alert.alert('Erreur', error.message);
-      return;
+      // Premier enregistrement (aucun match encore généré) : on génère le
+      // calendrier automatiquement dès que possible, pour ne pas obliger
+      // l'organisateur à repasser par "Régénérer" juste après la création.
+      const { count } = await supabase
+        .from('matchs')
+        .select('id', { count: 'exact', head: true })
+        .eq('tournoi_id', id);
+
+      if (!count && equipes.length >= 2) {
+        await genererLesMatchs();
+      }
+
+      allerAuCalendrier();
+    } catch (e) {
+      Alert.alert('Erreur', e.message);
+    } finally {
+      setEnCours(false);
     }
-    allerAuCalendrier();
   }
 
   function confirmerRegeneration() {
@@ -189,60 +203,64 @@ export default function GestionEquipes() {
     );
   }
 
+  // Génère les poules (le cas échéant) et le calendrier des matchs à partir
+  // des réglages et équipes actuels. Suppose qu'il n'y a rien à supprimer au
+  // préalable (voir sauvegarderReglages / regenererCalendrier).
+  async function genererLesMatchs() {
+    const reglagesTournoi = reglagesActuels();
+    const reglages = {
+      dateDebut: dateEdit,
+      heureDebut: reglagesTournoi.heure_premier_match,
+      dureeCreneauMinutes: dureeMatch + (miTemps ? dureeMiTemps : 0) + tempsPause,
+      dureeMatchMinutes: dureeMatch + (miTemps ? dureeMiTemps : 0),
+      nombreTerrains,
+      pauseDejeuner,
+      heureDebutPause: reglagesTournoi.heure_debut_pause,
+      heureFinPause: reglagesTournoi.heure_fin_pause,
+    };
+
+    if (tournoi.format === 'elimination_directe') {
+      const matchs = genererPremierTourEliminationDirecte(equipes, id, reglages);
+      const { data: matchsInseres, error } = await supabase.from('matchs').insert(matchs).select();
+      if (error) throw error;
+      const resultatsExempts = resultatsAutoPourExempts(matchsInseres);
+      if (resultatsExempts.length) {
+        const { error: erreurExempts } = await supabase.from('resultats').insert(resultatsExempts);
+        if (erreurExempts) throw erreurExempts;
+      }
+    } else {
+      const groupes = repartirEnPoules(equipes, nombrePoules);
+      const poulesAvecEquipes = [];
+      for (let i = 0; i < groupes.length; i++) {
+        const nomPoule = `Poule ${String.fromCharCode(65 + i)}`;
+        const { data: poule, error: erreurPoule } = await supabase
+          .from('poules')
+          .insert({ tournoi_id: id, nom: nomPoule })
+          .select()
+          .single();
+        if (erreurPoule) throw erreurPoule;
+
+        await supabase
+          .from('equipes')
+          .update({ poule_id: poule.id })
+          .in('id', groupes[i].map((e) => e.id));
+
+        poulesAvecEquipes.push({ id: poule.id, nom: nomPoule, equipes: groupes[i] });
+      }
+
+      const matchs = genererCalendrierPoules(poulesAvecEquipes, id, reglages);
+      const { error: erreurMatchs } = await supabase.from('matchs').insert(matchs);
+      if (erreurMatchs) throw erreurMatchs;
+    }
+  }
+
   async function regenererCalendrier() {
     setEnCours(true);
     try {
-      const reglagesTournoi = reglagesActuels();
-      await supabase.from('tournois').update(reglagesTournoi).eq('id', id);
-
+      await supabase.from('tournois').update(reglagesActuels()).eq('id', id);
       await supabase.from('matchs').delete().eq('tournoi_id', id);
       await supabase.from('poules').delete().eq('tournoi_id', id);
-
-      const reglages = {
-        dateDebut: dateEdit,
-        heureDebut: reglagesTournoi.heure_premier_match,
-        dureeCreneauMinutes: dureeMatch + (miTemps ? dureeMiTemps : 0) + tempsPause,
-        dureeMatchMinutes: dureeMatch + (miTemps ? dureeMiTemps : 0),
-        nombreTerrains,
-        pauseDejeuner,
-        heureDebutPause: reglagesTournoi.heure_debut_pause,
-        heureFinPause: reglagesTournoi.heure_fin_pause,
-      };
-
-      if (tournoi.format === 'elimination_directe') {
-        const matchs = genererPremierTourEliminationDirecte(equipes, id, reglages);
-        const { data: matchsInseres, error } = await supabase.from('matchs').insert(matchs).select();
-        if (error) throw error;
-        const resultatsExempts = resultatsAutoPourExempts(matchsInseres);
-        if (resultatsExempts.length) {
-          const { error: erreurExempts } = await supabase.from('resultats').insert(resultatsExempts);
-          if (erreurExempts) throw erreurExempts;
-        }
-      } else {
-        const groupes = repartirEnPoules(equipes, nombrePoules);
-        const poulesAvecEquipes = [];
-        for (let i = 0; i < groupes.length; i++) {
-          const nomPoule = `Poule ${String.fromCharCode(65 + i)}`;
-          const { data: poule, error: erreurPoule } = await supabase
-            .from('poules')
-            .insert({ tournoi_id: id, nom: nomPoule })
-            .select()
-            .single();
-          if (erreurPoule) throw erreurPoule;
-
-          await supabase
-            .from('equipes')
-            .update({ poule_id: poule.id })
-            .in('id', groupes[i].map((e) => e.id));
-
-          poulesAvecEquipes.push({ id: poule.id, nom: nomPoule, equipes: groupes[i] });
-        }
-
-        const matchs = genererCalendrierPoules(poulesAvecEquipes, id, reglages);
-        const { error: erreurMatchs } = await supabase.from('matchs').insert(matchs);
-        if (erreurMatchs) throw erreurMatchs;
-      }
-
+      await genererLesMatchs();
       allerAuCalendrier();
     } catch (e) {
       Alert.alert('Erreur', e.message);
