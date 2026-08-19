@@ -128,3 +128,18 @@ create policy "Organisateur saisit les resultats" on resultats for all
 -- ============================================================
 alter publication supabase_realtime add table resultats;
 alter publication supabase_realtime add table matchs;
+
+-- ============================================================
+-- MIGRATION — Phase finale à élimination directe après les poules
+-- (nombre de qualifiés par poule, matchs "exempts"/bye, tirs au but)
+-- ============================================================
+alter table tournois add column if not exists nombre_qualifies_par_poule int not null default 2;
+
+-- Un match "exempt" (bye) qualifie directement equipe_a_id pour le tour
+-- suivant quand le nombre d'équipes n'est pas une puissance de 2.
+alter table matchs alter column equipe_b_id drop not null;
+
+-- Score des tirs au but, utilisé uniquement pour départager un match à
+-- élimination directe terminé sur un score de parité.
+alter table resultats add column if not exists score_tab_a int;
+alter table resultats add column if not exists score_tab_b int;

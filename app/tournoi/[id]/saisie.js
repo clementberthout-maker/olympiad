@@ -2,6 +2,7 @@ import { View, Text, TextInput, StyleSheet, Pressable, Alert } from 'react-nativ
 import { useState, useEffect } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { supabase } from '../../../lib/supabase';
+import { estPhaseDePoule } from '../../../lib/generation';
 
 export default function SaisieResultat() {
   const { matchId } = useLocalSearchParams();
@@ -9,6 +10,8 @@ export default function SaisieResultat() {
   const [match, setMatch] = useState(null);
   const [scoreA, setScoreA] = useState('');
   const [scoreB, setScoreB] = useState('');
+  const [scoreTabA, setScoreTabA] = useState('');
+  const [scoreTabB, setScoreTabB] = useState('');
   const [resultatExistant, setResultatExistant] = useState(false);
   const [enCours, setEnCours] = useState(false);
 
@@ -29,6 +32,8 @@ export default function SaisieResultat() {
       if (resultat) {
         setScoreA(String(resultat.score_a));
         setScoreB(String(resultat.score_b));
+        if (resultat.score_tab_a != null) setScoreTabA(String(resultat.score_tab_a));
+        if (resultat.score_tab_b != null) setScoreTabB(String(resultat.score_tab_b));
         setResultatExistant(true);
       } else {
         setResultatExistant(false);
@@ -37,12 +42,33 @@ export default function SaisieResultat() {
     chargerMatch();
   }, [matchId]);
 
-  async function validerResultat() {
+  function validerResultat() {
+    const a = parseInt(scoreA, 10) || 0;
+    const b = parseInt(scoreB, 10) || 0;
+    const estElimination = match && !estPhaseDePoule(match.phase);
+
+    if (estElimination && a === b) {
+      const tabA = parseInt(scoreTabA, 10);
+      const tabB = parseInt(scoreTabB, 10);
+      if (Number.isNaN(tabA) || Number.isNaN(tabB) || tabA === tabB) {
+        Alert.alert(
+          'Match à élimination directe',
+          "En cas d'égalité, indique un score de tirs au but différent pour désigner le vainqueur."
+        );
+        return;
+      }
+    }
+    enregistrer(a, b, estElimination && a === b);
+  }
+
+  async function enregistrer(a, b, avecTab) {
     setEnCours(true);
     const { error } = await supabase.from('resultats').upsert({
       match_id: matchId,
-      score_a: parseInt(scoreA, 10) || 0,
-      score_b: parseInt(scoreB, 10) || 0,
+      score_a: a,
+      score_b: b,
+      score_tab_a: avecTab ? parseInt(scoreTabA, 10) : null,
+      score_tab_b: avecTab ? parseInt(scoreTabB, 10) : null,
       statut: 'termine',
     });
     setEnCours(false);
@@ -109,6 +135,30 @@ export default function SaisieResultat() {
         />
       </View>
 
+      {!estPhaseDePoule(match.phase) && scoreA !== '' && scoreB !== '' && scoreA === scoreB && (
+        <View style={styles.blocTab}>
+          <Text style={styles.labelTab}>Égalité — score des tirs au but</Text>
+          <View style={styles.ligneEquipe}>
+            <Text style={styles.nomEquipe}>{match.equipe_a?.nom}</Text>
+            <TextInput
+              style={styles.score}
+              value={scoreTabA}
+              onChangeText={setScoreTabA}
+              keyboardType="number-pad"
+            />
+          </View>
+          <View style={styles.ligneEquipe}>
+            <Text style={styles.nomEquipe}>{match.equipe_b?.nom}</Text>
+            <TextInput
+              style={styles.score}
+              value={scoreTabB}
+              onChangeText={setScoreTabB}
+              keyboardType="number-pad"
+            />
+          </View>
+        </View>
+      )}
+
       <Pressable style={styles.bouton} onPress={validerResultat} disabled={enCours}>
         <Text style={styles.texteBouton}>{enCours ? 'Validation…' : 'Valider le résultat'}</Text>
       </Pressable>
@@ -136,6 +186,13 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   nomEquipe: { fontSize: 16 },
+  blocTab: {
+    backgroundColor: '#f7f7f8',
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 8,
+  },
+  labelTab: { fontSize: 12, color: '#888', fontWeight: '600', marginBottom: 8 },
   score: {
     width: 64,
     textAlign: 'center',

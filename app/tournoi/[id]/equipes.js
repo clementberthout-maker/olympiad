@@ -10,6 +10,7 @@ import {
   repartirEnPoules,
   genererCalendrierPoules,
   genererPremierTourEliminationDirecte,
+  resultatsAutoPourExempts,
 } from '../../../lib/generation';
 import CarteSelectionnable from '../../../components/CarteSelectionnable';
 import RouePicker from '../../../components/RouePicker';
@@ -72,6 +73,7 @@ export default function GestionEquipes() {
   const [pauseDebutM, setPauseDebutM] = useState(30);
   const [pauseFinH, setPauseFinH] = useState(13);
   const [pauseFinM, setPauseFinM] = useState(30);
+  const [nombreQualifies, setNombreQualifies] = useState(2);
 
   const [enCours, setEnCours] = useState(false);
 
@@ -102,6 +104,7 @@ export default function GestionEquipes() {
         setPauseFinH(h);
         setPauseFinM(m);
       }
+      if (t.nombre_qualifies_par_poule) setNombreQualifies(t.nombre_qualifies_par_poule);
     }
     const { data: eq } = await supabase
       .from('equipes')
@@ -147,6 +150,7 @@ export default function GestionEquipes() {
       pause_dejeuner: pauseDejeuner,
       heure_debut_pause: pauseDejeuner ? `${pad(pauseDebutH)}:${pad(pauseDebutM)}` : null,
       heure_fin_pause: pauseDejeuner ? `${pad(pauseFinH)}:${pad(pauseFinM)}` : null,
+      nombre_qualifies_par_poule: nombreQualifies,
     };
   }
 
@@ -207,8 +211,13 @@ export default function GestionEquipes() {
 
       if (tournoi.format === 'elimination_directe') {
         const matchs = genererPremierTourEliminationDirecte(equipes, id, reglages);
-        const { error } = await supabase.from('matchs').insert(matchs);
+        const { data: matchsInseres, error } = await supabase.from('matchs').insert(matchs).select();
         if (error) throw error;
+        const resultatsExempts = resultatsAutoPourExempts(matchsInseres);
+        if (resultatsExempts.length) {
+          const { error: erreurExempts } = await supabase.from('resultats').insert(resultatsExempts);
+          if (erreurExempts) throw erreurExempts;
+        }
       } else {
         const groupes = repartirEnPoules(equipes, nombrePoules);
         const poulesAvecEquipes = [];
@@ -343,6 +352,16 @@ export default function GestionEquipes() {
           <View style={styles.carte}>
             <Text style={styles.carteLabel}>Nombre de poules</Text>
             <Stepper valeur={nombrePoules} onChange={setNombrePoules} min={1} />
+          </View>
+        )}
+
+        {tournoi.format === 'mixte' && (
+          <View style={styles.carte}>
+            <Text style={styles.carteLabel}>Qualifiés par poule pour la phase finale</Text>
+            <Text style={styles.carteAide}>
+              Nombre d'équipes de chaque poule qui accèdent à la phase à élimination directe.
+            </Text>
+            <Stepper valeur={nombreQualifies} onChange={setNombreQualifies} min={1} />
           </View>
         )}
 

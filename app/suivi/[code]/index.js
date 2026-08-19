@@ -3,7 +3,9 @@ import { useState, useEffect } from 'react';
 import { useLocalSearchParams } from 'expo-router';
 import { supabase } from '../../../lib/supabase';
 import { calculerClassement } from '../../../lib/classement';
+import { grouperParPhase, grouperParTerrain } from '../../../lib/generation';
 import ClassementPoule from '../../../components/ClassementPoule';
+import BasculeVue from '../../../components/BasculeVue';
 
 // Écran de suivi unique pour équipes et spectateurs (lecture seule).
 export default function Suivi() {
@@ -13,6 +15,7 @@ export default function Suivi() {
   const [equipes, setEquipes] = useState([]);
   const [matchs, setMatchs] = useState([]);
   const [resultats, setResultats] = useState([]);
+  const [parTerrain, setParTerrain] = useState(false);
   const monEquipeId = null; // à remplacer une fois l'auth équipe définie
 
   useEffect(() => {
@@ -71,17 +74,23 @@ export default function Suivi() {
         })
     : null;
 
-  const tousLesResultats = matchs
-    .map((m) => ({ match: m, resultat: resultats.find((r) => r.match_id === m.id) }))
-    .filter((x) => x.resultat?.statut === 'termine')
-    .sort((a, b) => new Date(b.match.horaire) - new Date(a.match.horaire));
+  // Les matchs "exempts" (bye) n'intéressent pas le public : on les exclut
+  // des listes de résultats/à venir (ils ne se jouent jamais réellement).
+  const matchsAvecResultat = matchs
+    .filter((m) => m.equipe_b_id)
+    .map((m) => ({ ...m, resultat: resultats.find((r) => r.match_id === m.id) }));
 
-  const matchsAVenir = matchs
-    .filter((m) => {
-      const r = resultats.find((res) => res.match_id === m.id);
-      return !r || r.statut !== 'termine';
-    })
+  const resultatsTermines = matchsAvecResultat
+    .filter((m) => m.resultat?.statut === 'termine')
+    .sort((a, b) => new Date(b.horaire) - new Date(a.horaire));
+
+  const matchsAVenirListe = matchsAvecResultat
+    .filter((m) => m.resultat?.statut !== 'termine')
     .sort((a, b) => new Date(a.horaire) - new Date(b.horaire));
+
+  const grouper = parTerrain ? grouperParTerrain : grouperParPhase;
+  const groupesResultats = grouper(resultatsTermines);
+  const groupesAVenir = grouper(matchsAVenirListe);
 
   function nomEquipe(id) {
     return equipes.find((e) => e.id === id)?.nom ?? '—';
@@ -130,36 +139,57 @@ export default function Suivi() {
             />
           )}
 
+      {tournoi.nombre_terrains > 1 && (
+        <BasculeVue
+          valeur={parTerrain ? 'terrain' : 'poule'}
+          onChange={(v) => setParTerrain(v === 'terrain')}
+          options={[
+            { valeur: 'poule', label: 'Par poule' },
+            { valeur: 'terrain', label: 'Par terrain' },
+          ]}
+        />
+      )}
+
       <View style={styles.carte}>
         <Text style={styles.section}>Tous les résultats</Text>
-        {tousLesResultats.length === 0 && (
+        {resultatsTermines.length === 0 && (
           <Text style={styles.vide}>Aucun résultat pour l'instant.</Text>
         )}
-        {tousLesResultats.map(({ match, resultat }) => (
-          <View key={match.id} style={styles.ligneResultat}>
-            <Text style={styles.equipesResultat}>
-              {nomEquipe(match.equipe_a_id)} · {nomEquipe(match.equipe_b_id)}
-            </Text>
-            <Text style={styles.scoreResultat}>
-              {resultat.score_a} – {resultat.score_b}
-            </Text>
+        {groupesResultats.map(({ nom, matchs: matchsDuGroupe }) => (
+          <View key={nom} style={styles.sousGroupe}>
+            <Text style={styles.sousGroupeTitre}>{nom}</Text>
+            {matchsDuGroupe.map((match) => (
+              <View key={match.id} style={styles.ligneResultat}>
+                <Text style={styles.equipesResultat}>
+                  {nomEquipe(match.equipe_a_id)} · {nomEquipe(match.equipe_b_id)}
+                </Text>
+                <Text style={styles.scoreResultat}>
+                  {match.resultat.score_a} – {match.resultat.score_b}
+                </Text>
+              </View>
+            ))}
           </View>
         ))}
       </View>
 
-      {matchsAVenir.length > 0 && (
+      {matchsAVenirListe.length > 0 && (
         <View style={styles.carte}>
           <Text style={styles.section}>Matchs à venir</Text>
-          {matchsAVenir.map((match) => (
-            <View key={match.id} style={styles.ligneResultat}>
-              <Text style={styles.equipesResultat}>
-                {nomEquipe(match.equipe_a_id)} · {nomEquipe(match.equipe_b_id)}
-              </Text>
-              <Text style={styles.horaireAVenir}>
-                {new Date(match.horaire).toLocaleString('fr-FR', {
-                  weekday: 'short', hour: '2-digit', minute: '2-digit',
-                })}
-              </Text>
+          {groupesAVenir.map(({ nom, matchs: matchsDuGroupe }) => (
+            <View key={nom} style={styles.sousGroupe}>
+              <Text style={styles.sousGroupeTitre}>{nom}</Text>
+              {matchsDuGroupe.map((match) => (
+                <View key={match.id} style={styles.ligneResultat}>
+                  <Text style={styles.equipesResultat}>
+                    {nomEquipe(match.equipe_a_id)} · {nomEquipe(match.equipe_b_id)}
+                  </Text>
+                  <Text style={styles.horaireAVenir}>
+                    {new Date(match.horaire).toLocaleString('fr-FR', {
+                      weekday: 'short', hour: '2-digit', minute: '2-digit',
+                    })}
+                  </Text>
+                </View>
+              ))}
             </View>
           ))}
         </View>
@@ -192,6 +222,8 @@ const styles = StyleSheet.create({
   },
   section: { fontSize: 13, fontWeight: '600', color: '#888', marginBottom: 10 },
   vide: { fontSize: 13, color: '#999' },
+  sousGroupe: { marginBottom: 10 },
+  sousGroupeTitre: { fontSize: 11.5, fontWeight: '600', color: '#4338ca', marginBottom: 2 },
   ligneResultat: {
     flexDirection: 'row',
     justifyContent: 'space-between',
