@@ -93,21 +93,6 @@ create policy "Organisateur cree son tournoi" on tournois for insert
 create policy "Organisateur modifie son tournoi" on tournois for update
   using (auth.uid() = organisateur_id);
 
--- ⚠️ TEMPORAIRE — à retirer une fois l'authentification organisateur en place.
--- Autorise la création d'un tournoi sans compte, le temps de tester le reste
--- de l'application. Rend organisateur_id optionnel pour cette période.
-alter table tournois alter column organisateur_id drop not null;
-create policy "Temporaire - creation sans authentification" on tournois for insert
-  with check (organisateur_id is null);
-create policy "Temporaire - gestion equipes sans auth" on equipes for all
-  using ((select organisateur_id from tournois where id = tournoi_id) is null);
-create policy "Temporaire - gestion poules sans auth" on poules for all
-  using ((select organisateur_id from tournois where id = tournoi_id) is null);
-create policy "Temporaire - gestion matchs sans auth" on matchs for all
-  using ((select organisateur_id from tournois where id = tournoi_id) is null);
-create policy "Temporaire - gestion resultats sans auth" on resultats for all
-  using ((select organisateur_id from tournois t join matchs m on m.tournoi_id = t.id where m.id = match_id) is null);
-
 create policy "Organisateur gere les poules" on poules for all
   using (auth.uid() = (select organisateur_id from tournois where id = tournoi_id));
 
@@ -181,3 +166,23 @@ drop policy if exists "Un utilisateur supprime sa propre photo" on storage.objec
 create policy "Un utilisateur supprime sa propre photo"
 on storage.objects for delete
 using (bucket_id = 'avatars' and auth.uid()::text = split_part(name, '.', 1));
+
+-- ============================================================
+-- MIGRATION — Nettoyage des policies temporaires (pré-authentification)
+-- ============================================================
+-- Ces policies autorisaient la création/gestion d'un tournoi sans compte,
+-- le temps que l'authentification organisateur soit branchée. Elle l'est
+-- depuis longtemps (creer-tournoi.js exige une session) : elles ne servent
+-- plus qu'à laisser gérables d'éventuels tournois de test créés sans
+-- organisateur_id à l'époque.
+drop policy if exists "Temporaire - creation sans authentification" on tournois;
+drop policy if exists "Temporaire - gestion equipes sans auth" on equipes;
+drop policy if exists "Temporaire - gestion poules sans auth" on poules;
+drop policy if exists "Temporaire - gestion matchs sans auth" on matchs;
+drop policy if exists "Temporaire - gestion resultats sans auth" on resultats;
+
+-- Optionnel — à exécuter seulement si la requête ci-dessous renvoie 0 :
+--   select count(*) from tournois where organisateur_id is null;
+-- (sinon, ça bloquerait la migration à cause de tournois de test orphelins
+-- qu'il faudrait d'abord supprimer manuellement)
+-- alter table tournois alter column organisateur_id set not null;
