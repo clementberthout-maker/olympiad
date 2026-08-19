@@ -5,6 +5,7 @@ import {
 import { useState, useCallback } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../../../lib/supabase';
 import {
   repartirEnPoules,
@@ -302,9 +303,13 @@ export default function GestionEquipes() {
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
         <View style={styles.entete}>
           <Text style={styles.titre}>{tournoi.nom}</Text>
-          <View style={styles.badgeCode}>
-            <Text style={styles.texteBadgeCode}>{tournoi.code_acces}</Text>
-          </View>
+          <Pressable
+            style={styles.badgeQrCode}
+            onPress={() => router.push(`/tournoi/${id}/qrcode`)}
+            hitSlop={8}
+          >
+            <Ionicons name="qr-code-outline" size={28} color="#333" />
+          </Pressable>
         </View>
         <Text style={styles.soustitre}>
           {new Date(`${tournoi.date_debut}T00:00:00`).toLocaleDateString('fr-FR', {
@@ -475,8 +480,14 @@ const styles = StyleSheet.create({
   container: { padding: 20, paddingTop: 24, paddingBottom: 60 },
   entete: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   titre: { fontSize: 19, fontWeight: '600', flexShrink: 1 },
-  badgeCode: { backgroundColor: '#f0f0f2', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 4 },
-  texteBadgeCode: { fontSize: 11, color: '#666', fontFamily: 'monospace' },
+  badgeQrCode: {
+    backgroundColor: '#f0f0f2',
+    borderRadius: 10,
+    width: 48,
+    height: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   soustitre: { fontSize: 13, color: '#888', marginBottom: 10 },
   lienModifierInfos: { fontSize: 12, color: '#4338ca', marginBottom: 18 },
   ligneDoublePause: { flexDirection: 'row', gap: 24, marginTop: 8 },

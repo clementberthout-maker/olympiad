@@ -58,7 +58,11 @@ export default function Connexion() {
           <Text style={styles.texteBouton}>{enCours ? 'Connexion…' : 'Se connecter'}</Text>
         </Pressable>
 
-        <Pressable onPress={() => router.push('/inscription')}>
+        <Pressable onPress={() => router.push('/mot-de-passe-oublie')}>
+          <Text style={styles.lien}>Mot de passe oublié ?</Text>
+        </Pressable>
+
+        <Pressable onPress={() => router.push('/inscription')} style={{ marginTop: 14 }}>
           <Text style={styles.lien}>Pas encore de compte ? Créer un compte</Text>
         </Pressable>
       </ScrollView>

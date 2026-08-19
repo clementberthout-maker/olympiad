@@ -178,12 +178,7 @@ export default function Calendrier() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.entete}>
-        <Text style={styles.titre}>{tournoi.nom}</Text>
-        <Pressable onPress={() => router.push(`/tournoi/${id}/equipes?modifier=1`)} hitSlop={8}>
-          <Text style={styles.lienModifier}>Modifier mon tournoi</Text>
-        </Pressable>
-      </View>
+      <Text style={styles.titre}>{tournoi.nom}</Text>
       <Text style={styles.soustitre}>Touche un match pour saisir ou modifier son résultat</Text>
 
       {tournoi.nombre_terrains > 1 && phases.length > 0 && (
@@ -282,15 +277,23 @@ export default function Calendrier() {
           })}
         </>
       )}
+
+      <Pressable
+        style={styles.boutonModifier}
+        onPress={() => router.push(`/tournoi/${id}/equipes?modifier=1`)}
+        hitSlop={8}
+      >
+        <Text style={styles.lienModifier}>Modifier mon tournoi</Text>
+      </Pressable>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { padding: 20, paddingTop: 24, paddingBottom: 60 },
-  entete: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  titre: { fontSize: 19, fontWeight: '600', flexShrink: 1 },
-  lienModifier: { fontSize: 12, color: '#4338ca' },
+  titre: { fontSize: 19, fontWeight: '600' },
+  boutonModifier: { alignItems: 'center', marginTop: 28 },
+  lienModifier: { fontSize: 13, color: '#4338ca' },
   soustitre: { fontSize: 13, color: '#888', marginBottom: 20 },
   vide: { fontSize: 13, color: '#999' },
   sectionTitre: { fontSize: 15, fontWeight: '600', marginTop: 8, marginBottom: 10 },

@@ -18,6 +18,15 @@ export default function Profil() {
   const [nouvellePhotoUri, setNouvellePhotoUri] = useState(null);
   const [enCours, setEnCours] = useState(false);
 
+  const [emailActuel, setEmailActuel] = useState('');
+  const [nouvelEmail, setNouvelEmail] = useState('');
+  const [enCoursEmail, setEnCoursEmail] = useState(false);
+
+  const [ancienMotDePasse, setAncienMotDePasse] = useState('');
+  const [motDePasse, setMotDePasse] = useState('');
+  const [confirmationMotDePasse, setConfirmationMotDePasse] = useState('');
+  const [enCoursMotDePasse, setEnCoursMotDePasse] = useState(false);
+
   useFocusEffect(
     useCallback(() => {
       let actif = true;
@@ -39,6 +48,11 @@ export default function Profil() {
         setClub(profil?.club || '');
         setPhotoUrl(profil?.photo_url || null);
         setNouvellePhotoUri(null);
+        setEmailActuel(session.user.email || '');
+        setNouvelEmail('');
+        setAncienMotDePasse('');
+        setMotDePasse('');
+        setConfirmationMotDePasse('');
       }
       charger();
       return () => { actif = false; };
@@ -82,6 +96,64 @@ export default function Profil() {
     }
   }
 
+  async function changerEmail() {
+    if (!nouvelEmail.trim() || !nouvelEmail.includes('@')) {
+      Alert.alert('Adresse invalide', 'Merci de renseigner une adresse e-mail valide.');
+      return;
+    }
+    setEnCoursEmail(true);
+    const { error } = await supabase.auth.updateUser({ email: nouvelEmail.trim() });
+    setEnCoursEmail(false);
+    if (error) {
+      Alert.alert('Erreur', error.message);
+      return;
+    }
+    Alert.alert(
+      'Vérifie ta boîte mail',
+      `Un e-mail de confirmation a été envoyé à ${nouvelEmail.trim()}. Ta nouvelle adresse ne sera active qu'une fois le lien confirmé.`
+    );
+    setNouvelEmail('');
+  }
+
+  async function changerMotDePasse() {
+    if (!ancienMotDePasse) {
+      Alert.alert('Mot de passe actuel manquant', 'Merci de saisir ton mot de passe actuel.');
+      return;
+    }
+    if (motDePasse.length < 6) {
+      Alert.alert('Mot de passe trop court', 'Le mot de passe doit contenir au moins 6 caractères.');
+      return;
+    }
+    if (motDePasse !== confirmationMotDePasse) {
+      Alert.alert('Les mots de passe ne correspondent pas', 'Merci de vérifier la confirmation.');
+      return;
+    }
+    setEnCoursMotDePasse(true);
+
+    // Vérifie l'ancien mot de passe en se reconnectant avec, avant
+    // d'autoriser le changement.
+    const { error: erreurVerification } = await supabase.auth.signInWithPassword({
+      email: emailActuel,
+      password: ancienMotDePasse,
+    });
+    if (erreurVerification) {
+      setEnCoursMotDePasse(false);
+      Alert.alert('Mot de passe actuel incorrect', "Vérifie ton mot de passe actuel et réessaie.");
+      return;
+    }
+
+    const { error } = await supabase.auth.updateUser({ password: motDePasse });
+    setEnCoursMotDePasse(false);
+    if (error) {
+      Alert.alert('Erreur', error.message);
+      return;
+    }
+    setAncienMotDePasse('');
+    setMotDePasse('');
+    setConfirmationMotDePasse('');
+    Alert.alert('Mot de passe modifié');
+  }
+
   const apercu = nouvellePhotoUri || photoUrl;
 
   return (
@@ -113,6 +185,60 @@ export default function Profil() {
 
         <Pressable style={styles.bouton} onPress={enregistrer} disabled={enCours}>
           <Text style={styles.texteBouton}>{enCours ? 'Enregistrement…' : 'Enregistrer'}</Text>
+        </Pressable>
+
+        <View style={styles.separateur} />
+
+        <Text style={styles.titreSection}>Adresse e-mail</Text>
+        <Text style={styles.aideSection}>Actuelle : {emailActuel}</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Nouvelle adresse e-mail"
+          value={nouvelEmail}
+          onChangeText={setNouvelEmail}
+          autoCapitalize="none"
+          keyboardType="email-address"
+        />
+        <Pressable style={styles.boutonSecondaire} onPress={changerEmail} disabled={enCoursEmail}>
+          <Text style={styles.texteBoutonSecondaire}>
+            {enCoursEmail ? 'Envoi…' : "Changer l'adresse e-mail"}
+          </Text>
+        </Pressable>
+
+        <View style={styles.separateur} />
+
+        <View style={styles.ligneTitreSection}>
+          <Text style={styles.titreSection}>Mot de passe</Text>
+          <Pressable onPress={() => router.push('/mot-de-passe-oublie')}>
+            <Text style={styles.lienMotDePasseOublie}>Mot de passe oublié ?</Text>
+          </Pressable>
+        </View>
+
+        <Text style={styles.label}>Mot de passe actuel</Text>
+        <TextInput
+          style={styles.input}
+          value={ancienMotDePasse}
+          onChangeText={setAncienMotDePasse}
+          secureTextEntry
+        />
+        <Text style={styles.label}>Nouveau mot de passe</Text>
+        <TextInput
+          style={styles.input}
+          value={motDePasse}
+          onChangeText={setMotDePasse}
+          secureTextEntry
+        />
+        <Text style={styles.label}>Confirmer le nouveau mot de passe</Text>
+        <TextInput
+          style={styles.input}
+          value={confirmationMotDePasse}
+          onChangeText={setConfirmationMotDePasse}
+          secureTextEntry
+        />
+        <Pressable style={styles.boutonSecondaire} onPress={changerMotDePasse} disabled={enCoursMotDePasse}>
+          <Text style={styles.texteBoutonSecondaire}>
+            {enCoursMotDePasse ? 'Modification…' : 'Changer le mot de passe'}
+          </Text>
         </Pressable>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -153,4 +279,22 @@ const styles = StyleSheet.create({
     marginTop: 28,
   },
   texteBouton: { color: '#fff', fontSize: 16, fontWeight: '500' },
+  separateur: { height: 1, backgroundColor: '#eee', marginTop: 32, marginBottom: 4 },
+  titreSection: { fontSize: 15, fontWeight: '600', marginTop: 20, marginBottom: 4 },
+  aideSection: { fontSize: 12, color: '#888', marginBottom: 10 },
+  ligneTitreSection: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  lienMotDePasseOublie: { fontSize: 12, color: '#4338ca' },
+  boutonSecondaire: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  texteBoutonSecondaire: { fontSize: 14, fontWeight: '500', color: '#333' },
 });
