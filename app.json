@@ -1,0 +1,19 @@
+{
+  "expo": {
+    "name": "OLYMPIAD",
+    "slug": "olympiad",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "scheme": "olympiad",
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#ffffff"
+      }
+    },
+    "plugins": ["expo-router"]
+  }
+}
