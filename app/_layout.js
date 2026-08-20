@@ -14,11 +14,11 @@ function NavigationThemee() {
     <Stack
       screenOptions={{
         headerTitle: '',
-        headerBackTitleVisible: false,
+        headerBackButtonDisplayMode: 'minimal',
         headerShadowVisible: false,
         headerStyle: { backgroundColor: couleurs.fond },
         headerTintColor: couleurs.accent,
-        headerTitleStyle: { fontFamily: POLICE_TITRE, color: couleurs.texte, fontSize: 16 },
+        headerTitleStyle: { fontFamily: POLICE_TITRE, color: couleurs.texte, fontSize: 27 },
         contentStyle: { backgroundColor: couleurs.fond },
       }}
     >
@@ -32,28 +32,12 @@ function NavigationThemee() {
       />
       <Stack.Screen name="rejoindre" options={{ headerTitle: 'OLYMPIAD' }} />
       <Stack.Screen name="creer-tournoi" options={{ headerTitle: 'OLYMPIAD' }} />
-      <Stack.Screen
-        name="tournoi/[id]/equipes"
-        options={{
-          headerTitle: 'OLYMPIAD',
-          headerLeft: () => null,
-          headerBackVisible: false,
-          gestureEnabled: false,
-        }}
-      />
+      <Stack.Screen name="tournoi/[id]/equipes" options={{ headerTitle: 'OLYMPIAD' }} />
       <Stack.Screen name="tournoi/[id]/calendrier" options={{ headerTitle: 'OLYMPIAD' }} />
       <Stack.Screen name="tournoi/[id]/saisie" options={{ headerTitle: 'OLYMPIAD' }} />
       <Stack.Screen name="tournoi/[id]/qrcode" options={{ headerTitle: 'OLYMPIAD' }} />
       <Stack.Screen name="suivi/[code]/index" options={{ headerTitle: 'OLYMPIAD' }} />
-      <Stack.Screen
-        name="profil"
-        options={{
-          headerTitle: 'OLYMPIAD',
-          headerLeft: () => null,
-          headerBackVisible: false,
-          gestureEnabled: false,
-        }}
-      />
+      <Stack.Screen name="profil" options={{ headerTitle: 'OLYMPIAD' }} />
     </Stack>
   );
 }

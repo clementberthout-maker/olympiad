@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { useState, useEffect, useMemo } from 'react';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { supabase } from '../../../lib/supabase';
 import { calculerClassement } from '../../../lib/classement';
 import { grouperParPhase, grouperParTerrain } from '../../../lib/generation';
@@ -29,7 +29,7 @@ export default function Suivi() {
       const { data: t } = await supabase
         .from('tournois')
         .select('*')
-        .eq('code_acces', code)
+        .ilike('code_acces', String(code).trim())
         .single();
       if (!t) {
         setIntrouvable(true);
@@ -69,11 +69,17 @@ export default function Suivi() {
   if (introuvable) {
     return (
       <View style={styles.conteneurIntrouvable}>
+        <Stack.Screen
+          options={{ headerLeft: () => null, headerBackVisible: false, gestureEnabled: false }}
+        />
         <Text style={styles.titreIntrouvable}>Tournoi introuvable</Text>
         <Text style={styles.texteIntrouvable}>
           Ce code d'accès ne correspond à aucun tournoi. Vérifie le code ou le QR code utilisé.
         </Text>
-        <Pressable style={styles.boutonRetour} onPress={() => router.replace('/rejoindre')}>
+        <Pressable
+          style={styles.boutonRetour}
+          onPress={() => (router.canGoBack() ? router.back() : router.replace('/rejoindre'))}
+        >
           <Text style={styles.texteBoutonRetour}>Réessayer</Text>
         </Pressable>
       </View>

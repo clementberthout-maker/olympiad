@@ -53,7 +53,7 @@ export default function RejoindreTournoi() {
   );
 
   function accederAuTournoi(valeur) {
-    const codeFinal = (valeur ?? code).trim();
+    const codeFinal = (valeur ?? code).trim().toLowerCase();
     if (codeFinal) router.push(`/suivi/${codeFinal}`);
   }
 

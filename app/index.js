@@ -128,7 +128,7 @@ function creerStyles(c) {
   return StyleSheet.create({
     container: { flex: 1, padding: 24, paddingTop: 90, backgroundColor: c.fond },
     titre: {
-      fontSize: 46, fontFamily: POLICE_TITRE, textAlign: 'center',
+      fontSize: 60, fontFamily: POLICE_TITRE, textAlign: 'center',
       letterSpacing: 1, color: c.texte,
     },
     soustitre: {

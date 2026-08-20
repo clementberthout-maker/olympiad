@@ -3,7 +3,7 @@ import {
   ScrollView, KeyboardAvoidingView, Platform, Keyboard,
 } from 'react-native';
 import { useState, useCallback, useMemo } from 'react';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../../../lib/supabase';
@@ -79,6 +79,8 @@ export default function GestionEquipes() {
   const [pauseFinH, setPauseFinH] = useState(13);
   const [pauseFinM, setPauseFinM] = useState(30);
   const [nombreQualifies, setNombreQualifies] = useState(2);
+  const [matchTroisiemePlace, setMatchTroisiemePlace] = useState(false);
+  const [calendrierGenere, setCalendrierGenere] = useState(false);
 
   const [enCours, setEnCours] = useState(false);
 
@@ -110,6 +112,7 @@ export default function GestionEquipes() {
         setPauseFinM(m);
       }
       if (t.nombre_qualifies_par_poule) setNombreQualifies(t.nombre_qualifies_par_poule);
+      if (typeof t.match_troisieme_place === 'boolean') setMatchTroisiemePlace(t.match_troisieme_place);
     }
     const { data: eq } = await supabase
       .from('equipes')
@@ -117,6 +120,12 @@ export default function GestionEquipes() {
       .eq('tournoi_id', id)
       .order('created_at');
     setEquipes(eq || []);
+
+    const { count } = await supabase
+      .from('matchs')
+      .select('id', { count: 'exact', head: true })
+      .eq('tournoi_id', id);
+    setCalendrierGenere(Boolean(count));
   }, [id]);
 
   useFocusEffect(
@@ -138,8 +147,27 @@ export default function GestionEquipes() {
   }
 
   async function supprimerEquipe(equipeId) {
-    await supabase.from('equipes').delete().eq('id', equipeId);
+    const { error } = await supabase.from('equipes').delete().eq('id', equipeId);
+    if (error) {
+      Alert.alert('Erreur', error.message);
+      return;
+    }
     charger();
+  }
+
+  function confirmerSuppressionEquipe(equipe) {
+    if (!calendrierGenere) {
+      supprimerEquipe(equipe.id);
+      return;
+    }
+    Alert.alert(
+      'Retirer cette équipe ?',
+      `"${equipe.nom}" a déjà des matchs dans le calendrier : ils seront supprimés, avec leurs résultats éventuels.`,
+      [
+        { text: 'Annuler', style: 'cancel' },
+        { text: 'Retirer', style: 'destructive', onPress: () => supprimerEquipe(equipe.id) },
+      ]
+    );
   }
 
   function reglagesActuels() {
@@ -156,6 +184,7 @@ export default function GestionEquipes() {
       heure_debut_pause: pauseDejeuner ? `${pad(pauseDebutH)}:${pad(pauseDebutM)}` : null,
       heure_fin_pause: pauseDejeuner ? `${pad(pauseFinH)}:${pad(pauseFinM)}` : null,
       nombre_qualifies_par_poule: nombreQualifies,
+      match_troisieme_place: matchTroisiemePlace,
     };
   }
 
@@ -299,12 +328,20 @@ export default function GestionEquipes() {
   if (!tournoi) return null;
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
-    >
-      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+    <>
+      {/* Venant de "Modifier mon tournoi" (calendrier déjà généré) : la
+          flèche de retour par défaut suffit (voir _layout.js). Lors de la
+          création initiale (juste après creer-tournoi.js), il n'y a rien
+          de cohérent vers quoi revenir : on la masque explicitement. */}
+      {!vientDuCalendrier && (
+        <Stack.Screen options={{ headerLeft: () => null, headerBackVisible: false, gestureEnabled: false }} />
+      )}
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+      >
+        <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
         <View style={styles.entete}>
           <Text style={styles.titre}>{tournoi.nom}</Text>
           <Pressable
@@ -360,7 +397,7 @@ export default function GestionEquipes() {
             renderItem={({ item }) => (
               <View style={styles.ligneEquipe}>
                 <Text style={styles.nomEquipe}>{item.nom}</Text>
-                <Pressable onPress={() => supprimerEquipe(item.id)} hitSlop={8}>
+                <Pressable onPress={() => confirmerSuppressionEquipe(item)} hitSlop={8} style={styles.boutonSupprimer}>
                   <Text style={styles.supprimer}>Retirer</Text>
                 </Pressable>
               </View>
@@ -389,6 +426,31 @@ export default function GestionEquipes() {
               Nombre d'équipes de chaque poule qui accèdent à la phase à élimination directe.
             </Text>
             <Stepper valeur={nombreQualifies} onChange={setNombreQualifies} min={1} styles={styles} />
+          </View>
+        )}
+
+        {tournoi.format !== 'poules' && (
+          <View style={styles.carte}>
+            <Text style={styles.carteLabel}>Match pour la 3e place</Text>
+            <Text style={styles.carteAide}>
+              Ajoute un match de classement entre les deux équipes battues en demi-finale.
+            </Text>
+            <View style={styles.ligneChoix}>
+              <View style={{ flex: 1 }}>
+                <CarteSelectionnable
+                  label="Oui"
+                  selectionnee={matchTroisiemePlace}
+                  onPress={() => setMatchTroisiemePlace(true)}
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <CarteSelectionnable
+                  label="Non"
+                  selectionnee={!matchTroisiemePlace}
+                  onPress={() => setMatchTroisiemePlace(false)}
+                />
+              </View>
+            </View>
           </View>
         )}
 
@@ -476,7 +538,8 @@ export default function GestionEquipes() {
           <Text style={styles.texteBoutonSupprimerTournoi}>Supprimer ce tournoi</Text>
         </Pressable>
       </ScrollView>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </>
   );
 }
 
@@ -544,8 +607,10 @@ function creerStyles(c) {
       paddingVertical: 10,
       paddingHorizontal: 12,
       marginBottom: 6,
+      gap: 10,
     },
-    nomEquipe: { fontFamily: POLICE_TEXTE, fontSize: 14, color: c.texte },
+    nomEquipe: { fontFamily: POLICE_TEXTE, fontSize: 14, color: c.texte, flex: 1, flexShrink: 1 },
+    boutonSupprimer: { flexShrink: 0 },
     supprimer: { fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 12, color: c.danger },
     vide: { fontFamily: POLICE_TEXTE, fontSize: 13, color: c.texteAttenue, paddingVertical: 8 },
     stepper: { flexDirection: 'row', alignItems: 'center', gap: 16 },

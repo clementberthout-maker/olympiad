@@ -181,6 +181,30 @@ drop policy if exists "Temporaire - gestion poules sans auth" on poules;
 drop policy if exists "Temporaire - gestion matchs sans auth" on matchs;
 drop policy if exists "Temporaire - gestion resultats sans auth" on resultats;
 
+-- ============================================================
+-- MIGRATION — Match pour la 3e place
+-- ============================================================
+-- Si activé, un match de classement entre les deux équipes battues en
+-- demi-finale est proposé en même temps que la génération de la finale
+-- (voir genererMatchTroisiemePlace dans lib/generation.js).
+alter table tournois add column if not exists match_troisieme_place boolean not null default false;
+
+-- ============================================================
+-- MIGRATION — Suppression d'une équipe déjà engagée dans le calendrier
+-- ============================================================
+-- Par défaut (contrainte non nommée), une clé étrangère Postgres est en
+-- RESTRICT : supprimer une équipe déjà référencée par des matchs échouait
+-- silencieusement côté app (l'erreur n'était pas remontée). On passe ces
+-- deux FK en CASCADE : supprimer une équipe supprime aussi ses matchs (et,
+-- déjà en cascade via resultats, leurs résultats saisis).
+alter table matchs drop constraint if exists matchs_equipe_a_id_fkey;
+alter table matchs add constraint matchs_equipe_a_id_fkey
+  foreign key (equipe_a_id) references equipes(id) on delete cascade;
+
+alter table matchs drop constraint if exists matchs_equipe_b_id_fkey;
+alter table matchs add constraint matchs_equipe_b_id_fkey
+  foreign key (equipe_b_id) references equipes(id) on delete cascade;
+
 -- Optionnel — à exécuter seulement si la requête ci-dessous renvoie 0 :
 --   select count(*) from tournois where organisateur_id is null;
 -- (sinon, ça bloquerait la migration à cause de tournois de test orphelins

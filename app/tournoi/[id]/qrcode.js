@@ -3,6 +3,7 @@ import { useState, useCallback, useMemo } from 'react';
 import { useLocalSearchParams } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import * as Linking from 'expo-linking';
+import * as Clipboard from 'expo-clipboard';
 import QRCode from 'react-native-qrcode-svg';
 import { supabase } from '../../../lib/supabase';
 import { useTheme } from '../../../lib/ThemeContext';
@@ -13,6 +14,7 @@ export default function QrCodeTournoi() {
   const { couleurs } = useTheme();
   const styles = useMemo(() => creerStyles(couleurs), [couleurs]);
   const [tournoi, setTournoi] = useState(null);
+  const [copie, setCopie] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -34,6 +36,12 @@ export default function QrCodeTournoi() {
     });
   }
 
+  async function copierLeCode() {
+    await Clipboard.setStringAsync(tournoi.code_acces);
+    setCopie(true);
+    setTimeout(() => setCopie(false), 2000);
+  }
+
   return (
     <View style={styles.container}>
       <Text style={styles.titre}>{tournoi.nom}</Text>
@@ -47,7 +55,10 @@ export default function QrCodeTournoi() {
       </View>
 
       <Text style={styles.labelCode}>Ou avec le code d'accès</Text>
-      <Text style={styles.code}>{tournoi.code_acces}</Text>
+      <Pressable style={styles.ligneCode} onPress={copierLeCode} hitSlop={8}>
+        <Text style={styles.code}>{tournoi.code_acces}</Text>
+        <Text style={styles.lienCopier}>{copie ? 'Copié !' : 'Copier'}</Text>
+      </Pressable>
 
       <Pressable style={styles.bouton} onPress={partager}>
         <Text style={styles.texteBouton}>Partager le lien</Text>
@@ -74,9 +85,11 @@ function creerStyles(c) {
       padding: 20,
     },
     labelCode: { fontFamily: POLICE_TEXTE, fontSize: 12, color: c.texteAttenue, marginTop: 28 },
+    ligneCode: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 6 },
     code: {
-      fontFamily: POLICE_TITRE, fontSize: 22, color: c.texte, marginTop: 6, letterSpacing: 1,
+      fontFamily: POLICE_TITRE, fontSize: 22, color: c.texte, letterSpacing: 1,
     },
+    lienCopier: { fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 12.5, color: c.lien },
     bouton: {
       backgroundColor: c.accent,
       borderRadius: 10,

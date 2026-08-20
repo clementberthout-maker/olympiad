@@ -8,6 +8,8 @@ import {
   estPhaseDePoule,
   genererPhaseFinaleDepuisPoules,
   genererTourSuivant,
+  genererMatchTroisiemePlace,
+  NOM_MATCH_TROISIEME_PLACE,
   resultatsAutoPourExempts,
   idEquipeGagnante,
   grouperParTerrain,
@@ -130,8 +132,13 @@ export default function Calendrier() {
   async function genererProchainTour() {
     setEnCours(true);
     try {
-      const reglages = reglagesDepuisTournoi(tournoi, matchsBruts);
-      const matchs = genererTourSuivant(dernierePhaseElim.matchs, id, reglages);
+      let reglages = reglagesDepuisTournoi(tournoi, matchsBruts);
+      let matchs = [];
+      if (peutGenererTroisiemePlace) {
+        matchs = genererMatchTroisiemePlace(dernierePhaseElim.matchs, id, reglages);
+        reglages = reglagesDepuisTournoi(tournoi, [...matchsBruts, ...matchs]);
+      }
+      matchs = [...matchs, ...genererTourSuivant(dernierePhaseElim.matchs, id, reglages)];
       await insererMatchs(matchs);
       charger();
     } catch (e) {
@@ -145,10 +152,14 @@ export default function Calendrier() {
 
   const phasesElim = phases.filter(({ nom }) => !estPhaseDePoule(nom));
   const phasesPoule = phases.filter(({ nom }) => estPhaseDePoule(nom));
+  // Le match pour la 3e place se joue en parallèle de la finale : il ne
+  // fait pas partie du tableau principal et ne doit pas influencer sa
+  // progression (dernière phase jouée, vainqueur du tournoi...).
+  const phasesElimPrincipales = phasesElim.filter(({ nom }) => nom !== NOM_MATCH_TROISIEME_PLACE);
 
   let dernierePhaseElim = null;
-  if (phasesElim.length) {
-    dernierePhaseElim = phasesElim.reduce((plusRecente, p) => {
+  if (phasesElimPrincipales.length) {
+    dernierePhaseElim = phasesElimPrincipales.reduce((plusRecente, p) => {
       const dateMax = Math.max(...p.matchs.map((m) => new Date(m.created_at).getTime()));
       if (!plusRecente || dateMax > plusRecente.dateMax) return { ...p, dateMax };
       return plusRecente;
@@ -160,10 +171,33 @@ export default function Calendrier() {
     : false;
   const estFinale = dernierePhaseElim?.nom === 'Finale';
   const peutGenererTourSuivant = dernierePhaseTerminee && !estFinale;
+  const troisiemePlaceDejaGeneree = phasesElim.some(({ nom }) => nom === NOM_MATCH_TROISIEME_PLACE);
+  const peutGenererTroisiemePlace = tournoi.match_troisieme_place
+    && peutGenererTourSuivant
+    && dernierePhaseElim?.nom === 'Demi-finale'
+    && dernierePhaseElim.matchs.length === 2
+    && dernierePhaseElim.matchs.every((m) => m.equipe_b_id)
+    && !troisiemePlaceDejaGeneree;
+  const matchFinal = estFinale ? dernierePhaseElim.matchs[0] : null;
   const vainqueurId = dernierePhaseTerminee && estFinale
-    ? idEquipeGagnante(dernierePhaseElim.matchs[0])
+    ? idEquipeGagnante(matchFinal)
     : null;
   const nomVainqueur = vainqueurId ? equipes.find((e) => e.id === vainqueurId)?.nom : null;
+  const deuxiemeId = vainqueurId && matchFinal.equipe_b_id
+    ? (vainqueurId === matchFinal.equipe_a_id ? matchFinal.equipe_b_id : matchFinal.equipe_a_id)
+    : null;
+  const nomDeuxieme = deuxiemeId ? equipes.find((e) => e.id === deuxiemeId)?.nom : null;
+
+  const phaseTroisiemePlace = phasesElim.find(({ nom }) => nom === NOM_MATCH_TROISIEME_PLACE);
+  const troisiemePlaceTerminee = phaseTroisiemePlace
+    ? phaseTroisiemePlace.matchs.every((m) => m.resultat?.statut === 'termine')
+    : false;
+  const troisiemeId = troisiemePlaceTerminee ? idEquipeGagnante(phaseTroisiemePlace.matchs[0]) : null;
+  const nomTroisieme = troisiemeId ? equipes.find((e) => e.id === troisiemeId)?.nom : null;
+
+  const afficherPodium = Boolean(
+    tournoi.match_troisieme_place && nomVainqueur && nomDeuxieme && troisiemePlaceTerminee && nomTroisieme
+  );
 
   const poulesTerminees = poules.length > 0 && phasesPoule.every(
     ({ matchs }) => matchs.every((m) => m.resultat?.statut === 'termine')
@@ -246,7 +280,23 @@ export default function Calendrier() {
         </View>
       ))}
 
-      {nomVainqueur && (
+      {afficherPodium ? (
+        <View style={styles.podium}>
+          <Text style={styles.podiumTitre}>Podium</Text>
+          <View style={styles.ligneePodium}>
+            <Text style={styles.podiumMedaille}>🥇</Text>
+            <Text style={styles.podiumEquipe}>{nomVainqueur}</Text>
+          </View>
+          <View style={styles.ligneePodium}>
+            <Text style={styles.podiumMedaille}>🥈</Text>
+            <Text style={styles.podiumEquipe}>{nomDeuxieme}</Text>
+          </View>
+          <View style={styles.ligneePodium}>
+            <Text style={styles.podiumMedaille}>🥉</Text>
+            <Text style={styles.podiumEquipe}>{nomTroisieme}</Text>
+          </View>
+        </View>
+      ) : nomVainqueur && (
         <View style={styles.bandeauVainqueur}>
           <Text style={styles.texteVainqueur}>🏆 Vainqueur : {nomVainqueur}</Text>
         </View>
@@ -263,7 +313,11 @@ export default function Calendrier() {
       {peutGenererTourSuivant && (
         <Pressable style={styles.boutonGenerer} onPress={genererProchainTour} disabled={enCours}>
           <Text style={styles.texteBoutonGenerer}>
-            {enCours ? 'Génération…' : 'Générer le tour suivant'}
+            {enCours
+              ? 'Génération…'
+              : peutGenererTroisiemePlace
+                ? 'Générer la finale et le match pour la 3e place'
+                : 'Générer le tour suivant'}
           </Text>
         </Pressable>
       )}
@@ -344,6 +398,23 @@ function creerStyles(c) {
       marginBottom: 16,
     },
     texteVainqueur: { fontFamily: POLICE_TITRE, fontSize: 18, letterSpacing: 0.3, color: c.accent },
+    podium: {
+      backgroundColor: c.surface,
+      borderColor: c.accent,
+      borderWidth: 1,
+      borderRadius: 10,
+      padding: 16,
+      marginBottom: 16,
+    },
+    podiumTitre: {
+      fontFamily: POLICE_TITRE, fontSize: 18, letterSpacing: 0.3, color: c.accent,
+      textAlign: 'center', marginBottom: 10,
+    },
+    ligneePodium: {
+      flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 4,
+    },
+    podiumMedaille: { fontSize: 20 },
+    podiumEquipe: { fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 15, color: c.texte },
     boutonGenerer: {
       backgroundColor: c.accent,
       borderRadius: 10,
