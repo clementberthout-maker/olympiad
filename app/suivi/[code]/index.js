@@ -1,6 +1,6 @@
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { useState, useEffect } from 'react';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { supabase } from '../../../lib/supabase';
 import { calculerClassement } from '../../../lib/classement';
 import { grouperParPhase, grouperParTerrain } from '../../../lib/generation';
@@ -10,12 +10,14 @@ import BasculeVue from '../../../components/BasculeVue';
 // Écran de suivi unique pour équipes et spectateurs (lecture seule).
 export default function Suivi() {
   const { code } = useLocalSearchParams();
+  const router = useRouter();
   const [tournoi, setTournoi] = useState(null);
   const [poules, setPoules] = useState([]);
   const [equipes, setEquipes] = useState([]);
   const [matchs, setMatchs] = useState([]);
   const [resultats, setResultats] = useState([]);
   const [parTerrain, setParTerrain] = useState(false);
+  const [introuvable, setIntrouvable] = useState(false);
   const monEquipeId = null; // à remplacer une fois l'auth équipe définie
 
   useEffect(() => {
@@ -25,7 +27,10 @@ export default function Suivi() {
         .select('*')
         .eq('code_acces', code)
         .single();
-      if (!t) return;
+      if (!t) {
+        setIntrouvable(true);
+        return;
+      }
       setTournoi(t);
 
       const { data: p } = await supabase.from('poules').select('*').eq('tournoi_id', t.id).order('nom');
@@ -56,6 +61,20 @@ export default function Suivi() {
 
     return () => supabase.removeChannel(canal);
   }, [code]);
+
+  if (introuvable) {
+    return (
+      <View style={styles.conteneurIntrouvable}>
+        <Text style={styles.titreIntrouvable}>Tournoi introuvable</Text>
+        <Text style={styles.texteIntrouvable}>
+          Ce code d'accès ne correspond à aucun tournoi. Vérifie le code ou le QR code utilisé.
+        </Text>
+        <Pressable style={styles.boutonRetour} onPress={() => router.replace('/rejoindre')}>
+          <Text style={styles.texteBoutonRetour}>Réessayer</Text>
+        </Pressable>
+      </View>
+    );
+  }
 
   if (!tournoi) {
     return (
@@ -200,6 +219,17 @@ export default function Suivi() {
 
 const styles = StyleSheet.create({
   container: { padding: 20, paddingTop: 24, paddingBottom: 60 },
+  conteneurIntrouvable: { flex: 1, padding: 24, alignItems: 'center', justifyContent: 'center' },
+  titreIntrouvable: { fontSize: 19, fontWeight: '600', textAlign: 'center' },
+  texteIntrouvable: { fontSize: 13, color: '#888', textAlign: 'center', marginTop: 8, marginBottom: 24 },
+  boutonRetour: {
+    backgroundColor: '#111',
+    borderRadius: 10,
+    paddingVertical: 14,
+    paddingHorizontal: 28,
+    alignItems: 'center',
+  },
+  texteBoutonRetour: { color: '#fff', fontSize: 15, fontWeight: '500' },
   chargement: { fontSize: 14, color: '#999' },
   titre: { fontSize: 19, fontWeight: '600' },
   date: { fontSize: 13, color: '#888', marginBottom: 18 },
