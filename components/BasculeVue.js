@@ -1,8 +1,14 @@
 import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { useMemo } from 'react';
+import { useTheme } from '../lib/ThemeContext';
+import { POLICE_TEXTE_SEMIBOLD } from '../lib/theme';
 
 // Sélecteur à deux options (ex : "Par poule" / "Par terrain"), utilisé sur
 // le calendrier organisateur et l'écran de suivi public.
 export default function BasculeVue({ options, valeur, onChange }) {
+  const { couleurs } = useTheme();
+  const styles = useMemo(() => creerStyles(couleurs), [couleurs]);
+
   return (
     <View style={styles.conteneur}>
       {options.map((option) => {
@@ -21,21 +27,25 @@ export default function BasculeVue({ options, valeur, onChange }) {
   );
 }
 
-const styles = StyleSheet.create({
-  conteneur: {
-    flexDirection: 'row',
-    backgroundColor: '#f0f0f2',
-    borderRadius: 10,
-    padding: 3,
-    marginBottom: 18,
-  },
-  option: {
-    flex: 1,
-    paddingVertical: 8,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  optionActive: { backgroundColor: '#111' },
-  texte: { fontSize: 13, fontWeight: '500', color: '#666' },
-  texteActif: { color: '#fff' },
-});
+function creerStyles(c) {
+  return StyleSheet.create({
+    conteneur: {
+      flexDirection: 'row',
+      backgroundColor: c.surface,
+      borderWidth: 1,
+      borderColor: c.bordure,
+      borderRadius: 10,
+      padding: 3,
+      marginBottom: 18,
+    },
+    option: {
+      flex: 1,
+      paddingVertical: 8,
+      borderRadius: 8,
+      alignItems: 'center',
+    },
+    optionActive: { backgroundColor: c.accent },
+    texte: { fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 13, color: c.texteAttenue },
+    texteActif: { color: c.accentEncre },
+  });
+}

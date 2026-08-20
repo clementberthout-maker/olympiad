@@ -1,13 +1,17 @@
 import { View, Text, StyleSheet, Pressable, Share } from 'react-native';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useLocalSearchParams } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import * as Linking from 'expo-linking';
 import QRCode from 'react-native-qrcode-svg';
 import { supabase } from '../../../lib/supabase';
+import { useTheme } from '../../../lib/ThemeContext';
+import { POLICE_TITRE, POLICE_TEXTE, POLICE_TEXTE_SEMIBOLD } from '../../../lib/theme';
 
 export default function QrCodeTournoi() {
   const { id } = useLocalSearchParams();
+  const { couleurs } = useTheme();
+  const styles = useMemo(() => creerStyles(couleurs), [couleurs]);
   const [tournoi, setTournoi] = useState(null);
 
   useFocusEffect(
@@ -52,30 +56,35 @@ export default function QrCodeTournoi() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 24, paddingTop: 32, alignItems: 'center' },
-  titre: { fontSize: 20, fontWeight: '600', textAlign: 'center' },
-  soustitre: {
-    fontSize: 13, color: '#888', textAlign: 'center', marginTop: 8, marginBottom: 28,
-  },
-  carteQr: {
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#eee',
-    borderRadius: 16,
-    padding: 20,
-  },
-  labelCode: { fontSize: 12, color: '#888', marginTop: 28 },
-  code: {
-    fontSize: 20, fontWeight: '600', fontFamily: 'monospace', marginTop: 6, letterSpacing: 1,
-  },
-  bouton: {
-    backgroundColor: '#111',
-    borderRadius: 10,
-    paddingVertical: 14,
-    paddingHorizontal: 32,
-    alignItems: 'center',
-    marginTop: 32,
-  },
-  texteBouton: { color: '#fff', fontSize: 15, fontWeight: '500' },
-});
+function creerStyles(c) {
+  return StyleSheet.create({
+    container: { flex: 1, padding: 24, paddingTop: 32, alignItems: 'center', backgroundColor: c.fond },
+    titre: { fontFamily: POLICE_TITRE, fontSize: 22, letterSpacing: 0.3, color: c.texte, textAlign: 'center' },
+    soustitre: {
+      fontFamily: POLICE_TEXTE, fontSize: 13, color: c.texteAttenue, textAlign: 'center', marginTop: 8, marginBottom: 28,
+    },
+    // La carte du QR reste toujours claire (fond blanc, code sombre) pour
+    // garantir une bonne lisibilité par un lecteur, quel que soit le thème
+    // choisi dans l'app.
+    carteQr: {
+      backgroundColor: '#ffffff',
+      borderWidth: 1,
+      borderColor: '#eeeeee',
+      borderRadius: 16,
+      padding: 20,
+    },
+    labelCode: { fontFamily: POLICE_TEXTE, fontSize: 12, color: c.texteAttenue, marginTop: 28 },
+    code: {
+      fontFamily: POLICE_TITRE, fontSize: 22, color: c.texte, marginTop: 6, letterSpacing: 1,
+    },
+    bouton: {
+      backgroundColor: c.accent,
+      borderRadius: 10,
+      paddingVertical: 15,
+      paddingHorizontal: 32,
+      alignItems: 'center',
+      marginTop: 32,
+    },
+    texteBouton: { color: c.accentEncre, fontFamily: POLICE_TITRE, fontSize: 16, letterSpacing: 0.3 },
+  });
+}

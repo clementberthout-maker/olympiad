@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { View, Text, Pressable, Modal, StyleSheet } from 'react-native';
+import { useTheme } from '../lib/ThemeContext';
+import { POLICE_TITRE, POLICE_TEXTE, POLICE_TEXTE_SEMIBOLD } from '../lib/theme';
 
 const MOIS = [
   'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
@@ -23,6 +25,8 @@ function construireGrille(annee, mois) {
 // Sélecteur de date sous forme de calendrier visuel (sans saisie manuelle),
 // utilisé pour la date du tournoi à la création.
 export default function SelecteurDate({ value, onChange, placeholder = 'Choisir une date' }) {
+  const { couleurs } = useTheme();
+  const styles = useMemo(() => creerStyles(couleurs), [couleurs]);
   const [visible, setVisible] = useState(false);
   const dateInitiale = value ? new Date(`${value}T00:00:00`) : new Date();
   const [vueAnnee, setVueAnnee] = useState(dateInitiale.getFullYear());
@@ -103,42 +107,47 @@ export default function SelecteurDate({ value, onChange, placeholder = 'Choisir 
   );
 }
 
-const styles = StyleSheet.create({
-  champ: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 12,
-  },
-  texteChamp: { fontSize: 15, color: '#111' },
-  placeholder: { fontSize: 15, color: '#999' },
-  fond: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  carte: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 20,
-    width: 320,
-  },
-  entete: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
-  flecheZone: { padding: 8 },
-  fleche: { fontSize: 22, color: '#111' },
-  titreMois: { fontSize: 15, fontWeight: '600' },
-  ligneJours: { flexDirection: 'row', marginBottom: 4 },
-  jourEntete: { flex: 1, textAlign: 'center', fontSize: 12, color: '#999' },
-  grille: { flexDirection: 'row', flexWrap: 'wrap' },
-  cellule: {
-    width: '14.28%',
-    aspectRatio: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 8,
-  },
-  celluleSelectionnee: { backgroundColor: '#111' },
-  texteCellule: { fontSize: 14, color: '#333' },
-  texteCelluleSelectionne: { color: '#fff', fontWeight: '600' },
-});
+function creerStyles(c) {
+  return StyleSheet.create({
+    champ: {
+      borderWidth: 1,
+      borderColor: c.bordure,
+      backgroundColor: c.surface2,
+      borderRadius: 10,
+      padding: 13,
+    },
+    texteChamp: { fontFamily: POLICE_TEXTE, fontSize: 14.5, color: c.texte },
+    placeholder: { fontFamily: POLICE_TEXTE, fontSize: 14.5, color: c.texteAttenue },
+    fond: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.5)',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    carte: {
+      backgroundColor: c.surface,
+      borderWidth: 1,
+      borderColor: c.bordure,
+      borderRadius: 16,
+      padding: 20,
+      width: 320,
+    },
+    entete: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
+    flecheZone: { padding: 8 },
+    fleche: { fontSize: 22, color: c.accent },
+    titreMois: { fontFamily: POLICE_TITRE, fontSize: 16, color: c.texte, letterSpacing: 0.3 },
+    ligneJours: { flexDirection: 'row', marginBottom: 4 },
+    jourEntete: { flex: 1, textAlign: 'center', fontFamily: POLICE_TEXTE, fontSize: 12, color: c.texteAttenue },
+    grille: { flexDirection: 'row', flexWrap: 'wrap' },
+    cellule: {
+      width: '14.28%',
+      aspectRatio: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: 8,
+    },
+    celluleSelectionnee: { backgroundColor: c.accent },
+    texteCellule: { fontFamily: POLICE_TEXTE, fontSize: 14, color: c.texte },
+    texteCelluleSelectionne: { fontFamily: POLICE_TEXTE_SEMIBOLD, color: c.accentEncre },
+  });
+}

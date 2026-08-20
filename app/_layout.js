@@ -1,12 +1,25 @@
+import { View } from 'react-native';
 import { Stack } from 'expo-router';
+import { useFonts, BebasNeue_400Regular } from '@expo-google-fonts/bebas-neue';
+import {
+  WorkSans_400Regular, WorkSans_500Medium, WorkSans_600SemiBold, WorkSans_700Bold,
+} from '@expo-google-fonts/work-sans';
+import { ThemeProvider, useTheme } from '../lib/ThemeContext';
+import { POLICE_TITRE } from '../lib/theme';
 
-export default function Layout() {
+function NavigationThemee() {
+  const { couleurs } = useTheme();
+
   return (
     <Stack
       screenOptions={{
         headerTitle: '',
         headerBackTitleVisible: false,
         headerShadowVisible: false,
+        headerStyle: { backgroundColor: couleurs.fond },
+        headerTintColor: couleurs.accent,
+        headerTitleStyle: { fontFamily: POLICE_TITRE, color: couleurs.texte, fontSize: 16 },
+        contentStyle: { backgroundColor: couleurs.fond },
       }}
     >
       <Stack.Screen name="index" options={{ headerShown: false }} />
@@ -42,5 +55,23 @@ export default function Layout() {
         }}
       />
     </Stack>
+  );
+}
+
+export default function Layout() {
+  const [policesChargees] = useFonts({
+    BebasNeue_400Regular,
+    WorkSans_400Regular,
+    WorkSans_500Medium,
+    WorkSans_600SemiBold,
+    WorkSans_700Bold,
+  });
+
+  if (!policesChargees) return <View style={{ flex: 1, backgroundColor: '#0b0f18' }} />;
+
+  return (
+    <ThemeProvider>
+      <NavigationThemee />
+    </ThemeProvider>
   );
 }

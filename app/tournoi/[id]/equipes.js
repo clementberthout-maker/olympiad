@@ -2,7 +2,7 @@ import {
   View, Text, TextInput, StyleSheet, Pressable, FlatList, Alert,
   ScrollView, KeyboardAvoidingView, Platform, Keyboard,
 } from 'react-native';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -16,6 +16,8 @@ import {
 import CarteSelectionnable from '../../../components/CarteSelectionnable';
 import RouePicker from '../../../components/RouePicker';
 import SelecteurDate from '../../../components/SelecteurDate';
+import { useTheme } from '../../../lib/ThemeContext';
+import { POLICE_TITRE, POLICE_TEXTE, POLICE_TEXTE_SEMIBOLD } from '../../../lib/theme';
 
 function pad(n) {
   return String(n).padStart(2, '0');
@@ -31,7 +33,7 @@ const DUREES_MATCH = plage(1, 180);
 const DUREES_MI_TEMPS = plage(1, 60);
 const DUREES_PAUSE = plage(0, 60);
 
-function Stepper({ valeur, onChange, min = 0, pas = 1 }) {
+function Stepper({ valeur, onChange, min = 0, pas = 1, styles }) {
   return (
     <View style={styles.stepper}>
       <Pressable style={styles.stepperBouton} onPress={() => onChange(Math.max(min, valeur - pas))}>
@@ -48,6 +50,8 @@ function Stepper({ valeur, onChange, min = 0, pas = 1 }) {
 export default function GestionEquipes() {
   const { id, modifier } = useLocalSearchParams(); // id du tournoi
   const router = useRouter();
+  const { couleurs } = useTheme();
+  const styles = useMemo(() => creerStyles(couleurs), [couleurs]);
   const vientDuCalendrier = modifier === '1';
   const [tournoi, setTournoi] = useState(null);
   const [equipes, setEquipes] = useState([]);
@@ -308,7 +312,7 @@ export default function GestionEquipes() {
             onPress={() => router.push(`/tournoi/${id}/qrcode`)}
             hitSlop={8}
           >
-            <Ionicons name="qr-code-outline" size={28} color="#333" />
+            <Ionicons name="qr-code-outline" size={28} color={couleurs.texte} />
           </Pressable>
         </View>
         <Text style={styles.soustitre}>
@@ -368,13 +372,13 @@ export default function GestionEquipes() {
         <View style={styles.carte}>
           <Text style={styles.carteLabel}>Terrains disponibles</Text>
           <Text style={styles.carteAide}>Plusieurs matchs pourront se jouer en même temps.</Text>
-          <Stepper valeur={nombreTerrains} onChange={setNombreTerrains} min={1} />
+          <Stepper valeur={nombreTerrains} onChange={setNombreTerrains} min={1} styles={styles} />
         </View>
 
         {tournoi.format !== 'elimination_directe' && (
           <View style={styles.carte}>
             <Text style={styles.carteLabel}>Nombre de poules</Text>
-            <Stepper valeur={nombrePoules} onChange={setNombrePoules} min={1} />
+            <Stepper valeur={nombrePoules} onChange={setNombrePoules} min={1} styles={styles} />
           </View>
         )}
 
@@ -384,7 +388,7 @@ export default function GestionEquipes() {
             <Text style={styles.carteAide}>
               Nombre d'équipes de chaque poule qui accèdent à la phase à élimination directe.
             </Text>
-            <Stepper valeur={nombreQualifies} onChange={setNombreQualifies} min={1} />
+            <Stepper valeur={nombreQualifies} onChange={setNombreQualifies} min={1} styles={styles} />
           </View>
         )}
 
@@ -476,89 +480,102 @@ export default function GestionEquipes() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { padding: 20, paddingTop: 24, paddingBottom: 60 },
-  entete: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  titre: { fontSize: 19, fontWeight: '600', flexShrink: 1 },
-  badgeQrCode: {
-    backgroundColor: '#f0f0f2',
-    borderRadius: 10,
-    width: 48,
-    height: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  soustitre: { fontSize: 13, color: '#888', marginBottom: 10 },
-  lienModifierInfos: { fontSize: 12, color: '#4338ca', marginBottom: 18 },
-  ligneDoublePause: { flexDirection: 'row', gap: 24, marginTop: 8 },
-  carte: {
-    backgroundColor: '#f7f7f8',
-    borderRadius: 14,
-    padding: 16,
-    marginBottom: 14,
-  },
-  carteLabel: { fontSize: 12, color: '#888', fontWeight: '600', marginBottom: 4 },
-  carteAide: { fontSize: 12, color: '#aaa', marginBottom: 10 },
-  ligneAjout: { flexDirection: 'row', gap: 8, marginBottom: 4, marginTop: 6 },
-  ligneRoues: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 },
-  deuxPoints: { fontSize: 18, fontWeight: '600', color: '#333' },
-  ligneChoix: { flexDirection: 'row', gap: 10, marginTop: 6 },
-  input: {
-    flex: 1,
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#e5e5e5',
-    borderRadius: 8,
-    padding: 10,
-    fontSize: 14,
-  },
-  boutonAjout: {
-    backgroundColor: '#111',
-    borderRadius: 8,
-    width: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  texteBoutonAjout: { color: '#fff', fontSize: 18, fontWeight: '500' },
-  liste: { marginTop: 8 },
-  ligneEquipe: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    marginBottom: 6,
-  },
-  nomEquipe: { fontSize: 14 },
-  supprimer: { fontSize: 12, color: '#c00' },
-  vide: { fontSize: 13, color: '#999', paddingVertical: 8 },
-  stepper: { flexDirection: 'row', alignItems: 'center', gap: 16 },
-  stepperBouton: {
-    width: 36, height: 36, borderRadius: 8, backgroundColor: '#fff',
-    borderWidth: 1, borderColor: '#e5e5e5', alignItems: 'center', justifyContent: 'center',
-  },
-  stepperTexte: { fontSize: 18, fontWeight: '600' },
-  stepperValeur: { fontSize: 16, fontWeight: '600', minWidth: 24, textAlign: 'center' },
-  boutonSauvegarder: {
-    backgroundColor: '#111',
-    borderRadius: 10,
-    paddingVertical: 14,
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  texteBoutonSauvegarder: { color: '#fff', fontSize: 16, fontWeight: '500' },
-  boutonRegenerer: {
-    borderWidth: 1,
-    borderColor: '#f3c5c5',
-    borderRadius: 10,
-    paddingVertical: 14,
-    alignItems: 'center',
-    marginTop: 12,
-  },
-  texteBoutonRegenerer: { color: '#c00', fontSize: 15, fontWeight: '500' },
-  avertissement: { fontSize: 11.5, color: '#aaa', textAlign: 'center', marginTop: 8 },
-  boutonSupprimerTournoi: { alignItems: 'center', marginTop: 32 },
-  texteBoutonSupprimerTournoi: { fontSize: 13, color: '#c00', textDecorationLine: 'underline' },
-});
+function creerStyles(c) {
+  return StyleSheet.create({
+    container: { padding: 20, paddingTop: 24, paddingBottom: 60, backgroundColor: c.fond },
+    entete: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+    titre: { fontFamily: POLICE_TITRE, fontSize: 24, letterSpacing: 0.3, color: c.texte, flexShrink: 1 },
+    badgeQrCode: {
+      backgroundColor: c.surface,
+      borderWidth: 1,
+      borderColor: c.bordure,
+      borderRadius: 10,
+      width: 48,
+      height: 48,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    soustitre: { fontFamily: POLICE_TEXTE, fontSize: 13, color: c.texteAttenue, marginBottom: 10 },
+    lienModifierInfos: { fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 12.5, color: c.lien, marginBottom: 18 },
+    ligneDoublePause: { flexDirection: 'row', gap: 24, marginTop: 8 },
+    carte: {
+      backgroundColor: c.surface,
+      borderWidth: 1,
+      borderColor: c.bordure,
+      borderRadius: 14,
+      padding: 16,
+      marginBottom: 14,
+    },
+    carteLabel: {
+      fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.4,
+      color: c.texteAttenue, marginBottom: 4,
+    },
+    carteAide: { fontFamily: POLICE_TEXTE, fontSize: 12, color: c.texteAttenue, marginBottom: 10 },
+    ligneAjout: { flexDirection: 'row', gap: 8, marginBottom: 4, marginTop: 6 },
+    ligneRoues: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 },
+    deuxPoints: { fontSize: 18, fontFamily: POLICE_TEXTE_SEMIBOLD, color: c.texte },
+    ligneChoix: { flexDirection: 'row', gap: 10, marginTop: 6 },
+    input: {
+      flex: 1,
+      backgroundColor: c.surface2,
+      borderWidth: 1,
+      borderColor: c.bordure,
+      borderRadius: 8,
+      padding: 10,
+      fontSize: 14,
+      fontFamily: POLICE_TEXTE,
+      color: c.texte,
+    },
+    boutonAjout: {
+      backgroundColor: c.accent,
+      borderRadius: 8,
+      width: 44,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    texteBoutonAjout: { color: c.accentEncre, fontSize: 18, fontFamily: POLICE_TEXTE_SEMIBOLD },
+    liste: { marginTop: 8 },
+    ligneEquipe: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      backgroundColor: c.surface2,
+      borderRadius: 8,
+      paddingVertical: 10,
+      paddingHorizontal: 12,
+      marginBottom: 6,
+    },
+    nomEquipe: { fontFamily: POLICE_TEXTE, fontSize: 14, color: c.texte },
+    supprimer: { fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 12, color: c.danger },
+    vide: { fontFamily: POLICE_TEXTE, fontSize: 13, color: c.texteAttenue, paddingVertical: 8 },
+    stepper: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+    stepperBouton: {
+      width: 36, height: 36, borderRadius: 8, backgroundColor: c.surface2,
+      borderWidth: 1, borderColor: c.bordure, alignItems: 'center', justifyContent: 'center',
+    },
+    stepperTexte: { fontSize: 18, fontFamily: POLICE_TEXTE_SEMIBOLD, color: c.texte },
+    stepperValeur: { fontSize: 16, fontFamily: POLICE_TEXTE_SEMIBOLD, color: c.texte, minWidth: 24, textAlign: 'center' },
+    boutonSauvegarder: {
+      backgroundColor: c.accent,
+      borderRadius: 10,
+      paddingVertical: 15,
+      alignItems: 'center',
+      marginTop: 4,
+    },
+    texteBoutonSauvegarder: { color: c.accentEncre, fontFamily: POLICE_TITRE, fontSize: 17, letterSpacing: 0.4 },
+    boutonRegenerer: {
+      borderWidth: 1,
+      borderColor: c.danger,
+      borderRadius: 10,
+      paddingVertical: 14,
+      alignItems: 'center',
+      marginTop: 12,
+    },
+    texteBoutonRegenerer: { color: c.danger, fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 14.5 },
+    avertissement: { fontFamily: POLICE_TEXTE, fontSize: 11.5, color: c.texteAttenue, textAlign: 'center', marginTop: 8 },
+    boutonSupprimerTournoi: { alignItems: 'center', marginTop: 32 },
+    texteBoutonSupprimerTournoi: {
+      fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 13, color: c.danger, textDecorationLine: 'underline',
+    },
+  });
+}

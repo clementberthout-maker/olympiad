@@ -2,12 +2,16 @@ import {
   View, Text, TextInput, StyleSheet, Pressable, Alert,
   KeyboardAvoidingView, ScrollView, Platform,
 } from 'react-native';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { supabase } from '../lib/supabase';
+import { useTheme } from '../lib/ThemeContext';
+import { POLICE_TITRE, POLICE_TEXTE, POLICE_TEXTE_SEMIBOLD } from '../lib/theme';
 
 export default function ReinitialiserMotDePasse() {
   const router = useRouter();
+  const { couleurs } = useTheme();
+  const styles = useMemo(() => creerStyles(couleurs), [couleurs]);
   const { code } = useLocalSearchParams();
   const [pret, setPret] = useState(false);
   const [motDePasse, setMotDePasse] = useState('');
@@ -85,24 +89,32 @@ export default function ReinitialiserMotDePasse() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flexGrow: 1, padding: 20, paddingTop: 60 },
-  titre: { fontSize: 22, fontWeight: '600' },
-  soustitre: { fontSize: 13, color: '#888', marginTop: 8, marginBottom: 24 },
-  label: { fontSize: 12, color: '#888', marginTop: 14, marginBottom: 6 },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 15,
-  },
-  bouton: {
-    backgroundColor: '#111',
-    borderRadius: 10,
-    paddingVertical: 14,
-    alignItems: 'center',
-    marginTop: 24,
-  },
-  texteBouton: { color: '#fff', fontSize: 16, fontWeight: '500' },
-});
+function creerStyles(c) {
+  return StyleSheet.create({
+    container: { flexGrow: 1, padding: 20, paddingTop: 60, backgroundColor: c.fond },
+    titre: { fontSize: 30, fontFamily: POLICE_TITRE, color: c.texte },
+    soustitre: { fontFamily: POLICE_TEXTE, fontSize: 13, color: c.texteAttenue, marginTop: 8, marginBottom: 24 },
+    label: {
+      fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 11.5, textTransform: 'uppercase', letterSpacing: 0.4,
+      color: c.texteAttenue, marginTop: 14, marginBottom: 6,
+    },
+    input: {
+      borderWidth: 1,
+      borderColor: c.bordure,
+      backgroundColor: c.surface2,
+      borderRadius: 10,
+      padding: 13,
+      fontSize: 14.5,
+      fontFamily: POLICE_TEXTE,
+      color: c.texte,
+    },
+    bouton: {
+      backgroundColor: c.accent,
+      borderRadius: 10,
+      paddingVertical: 15,
+      alignItems: 'center',
+      marginTop: 24,
+    },
+    texteBouton: { color: c.accentEncre, fontFamily: POLICE_TITRE, fontSize: 17, letterSpacing: 0.4 },
+  });
+}

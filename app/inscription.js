@@ -2,13 +2,17 @@ import {
   View, Text, TextInput, StyleSheet, Pressable, ScrollView, Alert,
   KeyboardAvoidingView, Platform, Image,
 } from 'react-native';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'expo-router';
 import { supabase } from '../lib/supabase';
 import { choisirPhoto, televerserPhoto } from '../lib/profil';
+import { useTheme } from '../lib/ThemeContext';
+import { POLICE_TITRE, POLICE_TEXTE, POLICE_TEXTE_SEMIBOLD } from '../lib/theme';
 
 export default function Inscription() {
   const router = useRouter();
+  const { couleurs } = useTheme();
+  const styles = useMemo(() => creerStyles(couleurs), [couleurs]);
   const [nom, setNom] = useState('');
   const [prenom, setPrenom] = useState('');
   const [club, setClub] = useState('');
@@ -76,7 +80,7 @@ export default function Inscription() {
       <Text style={styles.soustitre}>Nécessaire pour créer et gérer tes tournois</Text>
 
       <Text style={styles.label}>Nom</Text>
-      <TextInput style={styles.input} value={nom} onChangeText={setNom} returnKeyType="next" />
+      <TextInput style={styles.input} value={nom} onChangeText={setNom} returnKeyType="next" placeholderTextColor={couleurs.texteAttenue} />
 
       <Text style={styles.label}>Prénom</Text>
       <TextInput style={styles.input} value={prenom} onChangeText={setPrenom} returnKeyType="next" />
@@ -124,37 +128,45 @@ export default function Inscription() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { padding: 20, paddingTop: 40, paddingBottom: 60 },
-  titre: { fontSize: 22, fontWeight: '600' },
-  soustitre: { fontSize: 13, color: '#888', marginBottom: 24 },
-  label: { fontSize: 12, color: '#888', marginTop: 14, marginBottom: 6 },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 15,
-  },
-  boutonPhoto: {
-    marginTop: 20,
-    borderWidth: 1,
-    borderColor: '#eee',
-    borderStyle: 'dashed',
-    borderRadius: 10,
-    paddingVertical: 14,
-    alignItems: 'center',
-  },
-  textePhoto: { fontSize: 13, color: '#999' },
-  apercuPhoto: { width: 64, height: 64, borderRadius: 32 },
-  bouton: {
-    backgroundColor: '#111',
-    borderRadius: 10,
-    paddingVertical: 14,
-    alignItems: 'center',
-    marginTop: 24,
-    marginBottom: 16,
-  },
-  texteBouton: { color: '#fff', fontSize: 16, fontWeight: '500' },
-  lien: { fontSize: 13, color: '#4338ca', textAlign: 'center' },
-});
+function creerStyles(c) {
+  return StyleSheet.create({
+    container: { padding: 20, paddingTop: 40, paddingBottom: 60, backgroundColor: c.fond, flexGrow: 1 },
+    titre: { fontSize: 30, fontFamily: POLICE_TITRE, color: c.texte },
+    soustitre: { fontFamily: POLICE_TEXTE, fontSize: 13, color: c.texteAttenue, marginBottom: 24 },
+    label: {
+      fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 11.5, textTransform: 'uppercase', letterSpacing: 0.4,
+      color: c.texteAttenue, marginTop: 14, marginBottom: 6,
+    },
+    input: {
+      borderWidth: 1,
+      borderColor: c.bordure,
+      backgroundColor: c.surface2,
+      borderRadius: 10,
+      padding: 13,
+      fontSize: 14.5,
+      fontFamily: POLICE_TEXTE,
+      color: c.texte,
+    },
+    boutonPhoto: {
+      marginTop: 20,
+      borderWidth: 1.5,
+      borderColor: c.bordure,
+      borderStyle: 'dashed',
+      borderRadius: 10,
+      paddingVertical: 14,
+      alignItems: 'center',
+    },
+    textePhoto: { fontFamily: POLICE_TEXTE, fontSize: 13, color: c.texteAttenue },
+    apercuPhoto: { width: 64, height: 64, borderRadius: 32 },
+    bouton: {
+      backgroundColor: c.accent,
+      borderRadius: 10,
+      paddingVertical: 15,
+      alignItems: 'center',
+      marginTop: 24,
+      marginBottom: 16,
+    },
+    texteBouton: { color: c.accentEncre, fontFamily: POLICE_TITRE, fontSize: 17, letterSpacing: 0.4 },
+    lien: { fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 13, color: c.lien, textAlign: 'center' },
+  });
+}

@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, Pressable, ScrollView, Alert } from 'react-native';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import { supabase } from '../../../lib/supabase';
@@ -14,6 +14,8 @@ import {
 } from '../../../lib/generation';
 import ClassementPoule from '../../../components/ClassementPoule';
 import BasculeVue from '../../../components/BasculeVue';
+import { useTheme } from '../../../lib/ThemeContext';
+import { POLICE_TITRE, POLICE_TEXTE, POLICE_TEXTE_SEMIBOLD } from '../../../lib/theme';
 
 function reglagesDepuisTournoi(tournoi, matchsExistants) {
   const dureeMatchMinutes = tournoi.duree_match + (tournoi.mi_temps ? tournoi.duree_mi_temps : 0);
@@ -41,6 +43,8 @@ function reglagesDepuisTournoi(tournoi, matchsExistants) {
 export default function Calendrier() {
   const { id } = useLocalSearchParams(); // id du tournoi
   const router = useRouter();
+  const { couleurs } = useTheme();
+  const styles = useMemo(() => creerStyles(couleurs), [couleurs]);
   const [tournoi, setTournoi] = useState(null);
   const [poules, setPoules] = useState([]);
   const [equipes, setEquipes] = useState([]);
@@ -289,56 +293,64 @@ export default function Calendrier() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { padding: 20, paddingTop: 24, paddingBottom: 60 },
-  titre: { fontSize: 19, fontWeight: '600' },
-  boutonModifier: { alignItems: 'center', marginTop: 28 },
-  lienModifier: { fontSize: 13, color: '#4338ca' },
-  soustitre: { fontSize: 13, color: '#888', marginBottom: 20 },
-  vide: { fontSize: 13, color: '#999' },
-  sectionTitre: { fontSize: 15, fontWeight: '600', marginTop: 8, marginBottom: 10 },
-  groupe: { marginBottom: 22 },
-  nomPhase: { fontSize: 13, fontWeight: '600', color: '#4338ca', marginBottom: 8 },
-  ligneMatch: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#f7f7f8',
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 6,
-  },
-  infoMatch: { flexShrink: 1 },
-  equipes: { fontSize: 14, fontWeight: '500' },
-  horaire: { fontSize: 12, color: '#888', marginTop: 2 },
-  score: { fontSize: 15, fontWeight: '600' },
-  aVenir: { fontSize: 12, color: '#999' },
-  ligneExempt: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#fafafa',
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 6,
-  },
-  exempt: { fontSize: 12, color: '#aaa', fontStyle: 'italic' },
-  bandeauVainqueur: {
-    backgroundColor: '#fef9c3',
-    borderColor: '#fde68a',
-    borderWidth: 1,
-    borderRadius: 10,
-    padding: 14,
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  texteVainqueur: { fontSize: 16, fontWeight: '600', color: '#854d0e' },
-  boutonGenerer: {
-    backgroundColor: '#111',
-    borderRadius: 10,
-    paddingVertical: 14,
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  texteBoutonGenerer: { color: '#fff', fontSize: 15, fontWeight: '500' },
-});
+function creerStyles(c) {
+  return StyleSheet.create({
+    container: { padding: 20, paddingTop: 24, paddingBottom: 60, backgroundColor: c.fond },
+    titre: { fontFamily: POLICE_TITRE, fontSize: 24, letterSpacing: 0.3, color: c.texte },
+    boutonModifier: { alignItems: 'center', marginTop: 28 },
+    lienModifier: { fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 13, color: c.lien },
+    soustitre: { fontFamily: POLICE_TEXTE, fontSize: 12.5, color: c.texteAttenue, marginBottom: 20 },
+    vide: { fontFamily: POLICE_TEXTE, fontSize: 13, color: c.texteAttenue },
+    sectionTitre: { fontFamily: POLICE_TITRE, fontSize: 18, letterSpacing: 0.2, color: c.texte, marginTop: 8, marginBottom: 10 },
+    groupe: { marginBottom: 22 },
+    nomPhase: {
+      fontFamily: POLICE_TITRE, fontSize: 14, letterSpacing: 0.4, color: c.accent, marginBottom: 8,
+    },
+    ligneMatch: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      backgroundColor: c.surface,
+      borderWidth: 1,
+      borderColor: c.bordure,
+      borderRadius: 10,
+      padding: 12,
+      marginBottom: 6,
+    },
+    infoMatch: { flexShrink: 1 },
+    equipes: { fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 14, color: c.texte },
+    horaire: { fontFamily: POLICE_TEXTE, fontSize: 12, color: c.texteAttenue, marginTop: 2 },
+    score: { fontFamily: POLICE_TITRE, fontSize: 17, color: c.texte },
+    aVenir: { fontFamily: POLICE_TEXTE, fontSize: 12, color: c.texteAttenue },
+    ligneExempt: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      backgroundColor: c.fond,
+      borderWidth: 1,
+      borderColor: c.bordure,
+      borderRadius: 10,
+      padding: 12,
+      marginBottom: 6,
+    },
+    exempt: { fontFamily: POLICE_TEXTE, fontSize: 12, color: c.texteAttenue, fontStyle: 'italic' },
+    bandeauVainqueur: {
+      backgroundColor: c.surface,
+      borderColor: c.accent,
+      borderWidth: 1,
+      borderRadius: 10,
+      padding: 14,
+      alignItems: 'center',
+      marginBottom: 16,
+    },
+    texteVainqueur: { fontFamily: POLICE_TITRE, fontSize: 18, letterSpacing: 0.3, color: c.accent },
+    boutonGenerer: {
+      backgroundColor: c.accent,
+      borderRadius: 10,
+      paddingVertical: 15,
+      alignItems: 'center',
+      marginBottom: 20,
+    },
+    texteBoutonGenerer: { color: c.accentEncre, fontFamily: POLICE_TITRE, fontSize: 16, letterSpacing: 0.3 },
+  });
+}

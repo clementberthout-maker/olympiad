@@ -1,5 +1,7 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useMemo } from 'react';
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
+import { useTheme } from '../lib/ThemeContext';
+import { POLICE_TEXTE, POLICE_TEXTE_SEMIBOLD } from '../lib/theme';
 
 const HAUTEUR_ITEM = 36;
 
@@ -7,6 +9,8 @@ const HAUTEUR_ITEM = 36;
 // `valeurs` est un tableau de nombres ; `formatValeur` permet de formater
 // l'affichage (ex : padding à 2 chiffres pour les heures/minutes).
 export default function RouePicker({ valeurs, valeur, onChange, largeur = 64, formatValeur = (v) => String(v) }) {
+  const { couleurs } = useTheme();
+  const styles = useMemo(() => creerStyles(couleurs), [couleurs]);
   const scrollRef = useRef(null);
   const indexInitial = Math.max(0, valeurs.indexOf(valeur));
 
@@ -48,18 +52,20 @@ export default function RouePicker({ valeurs, valeur, onChange, largeur = 64, fo
   );
 }
 
-const styles = StyleSheet.create({
-  conteneur: { overflow: 'hidden' },
-  surbrillance: {
-    position: 'absolute',
-    top: HAUTEUR_ITEM,
-    left: 0,
-    right: 0,
-    height: HAUTEUR_ITEM,
-    backgroundColor: '#eee',
-    borderRadius: 8,
-  },
-  item: { alignItems: 'center', justifyContent: 'center' },
-  texte: { fontSize: 16, color: '#bbb' },
-  texteSelectionne: { color: '#111', fontWeight: '600' },
-});
+function creerStyles(c) {
+  return StyleSheet.create({
+    conteneur: { overflow: 'hidden' },
+    surbrillance: {
+      position: 'absolute',
+      top: HAUTEUR_ITEM,
+      left: 0,
+      right: 0,
+      height: HAUTEUR_ITEM,
+      backgroundColor: c.surface,
+      borderRadius: 8,
+    },
+    item: { alignItems: 'center', justifyContent: 'center' },
+    texte: { fontFamily: POLICE_TEXTE, fontSize: 16, color: c.texteAttenue },
+    texteSelectionne: { fontFamily: POLICE_TEXTE_SEMIBOLD, color: c.texte },
+  });
+}

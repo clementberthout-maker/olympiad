@@ -1,12 +1,16 @@
 import { View, Text, TextInput, StyleSheet, Pressable, Alert } from 'react-native';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { supabase } from '../../../lib/supabase';
 import { estPhaseDePoule } from '../../../lib/generation';
+import { useTheme } from '../../../lib/ThemeContext';
+import { POLICE_TITRE, POLICE_TEXTE, POLICE_TEXTE_SEMIBOLD } from '../../../lib/theme';
 
 export default function SaisieResultat() {
   const { matchId } = useLocalSearchParams();
   const router = useRouter();
+  const { couleurs } = useTheme();
+  const styles = useMemo(() => creerStyles(couleurs), [couleurs]);
   const [match, setMatch] = useState(null);
   const [scoreA, setScoreA] = useState('');
   const [scoreB, setScoreB] = useState('');
@@ -176,47 +180,56 @@ export default function SaisieResultat() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, paddingTop: 32 },
-  contexte: { fontSize: 13, color: '#666', marginBottom: 24 },
-  ligneEquipe: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  nomEquipe: { fontSize: 16 },
-  blocTab: {
-    backgroundColor: '#f7f7f8',
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 8,
-  },
-  labelTab: { fontSize: 12, color: '#888', fontWeight: '600', marginBottom: 8 },
-  score: {
-    width: 64,
-    textAlign: 'center',
-    fontSize: 20,
-    fontWeight: '600',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    paddingVertical: 8,
-  },
-  bouton: {
-    backgroundColor: '#111',
-    borderRadius: 10,
-    paddingVertical: 14,
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  texteBouton: { color: '#fff', fontSize: 16, fontWeight: '500' },
-  boutonSupprimer: {
-    borderRadius: 10,
-    paddingVertical: 14,
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  texteBoutonSupprimer: { color: '#c00', fontSize: 14, fontWeight: '500' },
-  note: { fontSize: 12, color: '#999', marginTop: 16, textAlign: 'center' },
-});
+function creerStyles(c) {
+  return StyleSheet.create({
+    container: { flex: 1, padding: 20, paddingTop: 32, backgroundColor: c.fond },
+    contexte: { fontFamily: POLICE_TEXTE, fontSize: 13, color: c.texteAttenue, marginBottom: 24 },
+    ligneEquipe: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 16,
+    },
+    nomEquipe: { fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 16, color: c.texte },
+    blocTab: {
+      backgroundColor: c.surface,
+      borderWidth: 1,
+      borderColor: c.bordure,
+      borderRadius: 10,
+      padding: 12,
+      marginBottom: 8,
+    },
+    labelTab: {
+      fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 11.5, textTransform: 'uppercase', letterSpacing: 0.4,
+      color: c.texteAttenue, marginBottom: 8,
+    },
+    score: {
+      width: 64,
+      textAlign: 'center',
+      fontFamily: POLICE_TITRE,
+      fontSize: 22,
+      color: c.texte,
+      borderWidth: 1,
+      borderColor: c.bordure,
+      backgroundColor: c.surface2,
+      borderRadius: 8,
+      paddingVertical: 8,
+    },
+    bouton: {
+      backgroundColor: c.accent,
+      borderRadius: 10,
+      paddingVertical: 15,
+      alignItems: 'center',
+      marginTop: 20,
+    },
+    texteBouton: { color: c.accentEncre, fontFamily: POLICE_TITRE, fontSize: 17, letterSpacing: 0.4 },
+    boutonSupprimer: {
+      borderRadius: 10,
+      paddingVertical: 14,
+      alignItems: 'center',
+      marginTop: 10,
+    },
+    texteBoutonSupprimer: { color: c.danger, fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 14 },
+    note: { fontFamily: POLICE_TEXTE, fontSize: 12, color: c.texteAttenue, marginTop: 16, textAlign: 'center' },
+  });
+}

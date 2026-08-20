@@ -1,11 +1,13 @@
 import {
   View, Text, TextInput, StyleSheet, Pressable, KeyboardAvoidingView, ScrollView, Platform, Alert,
 } from 'react-native';
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useMemo } from 'react';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as Linking from 'expo-linking';
+import { useTheme } from '../lib/ThemeContext';
+import { POLICE_TITRE, POLICE_TEXTE, POLICE_TEXTE_MEDIUM } from '../lib/theme';
 
 // Retrouve le code d'accès à partir du texte scanné : soit un lien OLYMPIAD
 // (ex: olympiad://suivi/ABC123 ou exp://.../--/suivi/ABC123), soit
@@ -33,6 +35,8 @@ function estCodeValide(texte) {
 
 export default function RejoindreTournoi() {
   const router = useRouter();
+  const { couleurs } = useTheme();
+  const styles = useMemo(() => creerStyles(couleurs), [couleurs]);
   const [code, setCode] = useState('');
   const [permission, demanderPermission] = useCameraPermissions();
   const [scanActif, setScanActif] = useState(true);
@@ -127,48 +131,56 @@ export default function RejoindreTournoi() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flexGrow: 1, padding: 20, paddingTop: 60 },
-  titre: { fontSize: 22, fontWeight: '600' },
-  soustitre: { fontSize: 13, color: '#888', marginTop: 8, marginBottom: 24 },
-  cadreCamera: {
-    alignSelf: 'center',
-    width: 260,
-    height: 260,
-    borderRadius: 16,
-    overflow: 'hidden',
-    backgroundColor: '#f0f0f2',
-  },
-  camera: { flex: 1 },
-  zonePermission: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
-  },
-  textePermission: { fontSize: 13, color: '#888', textAlign: 'center' },
-  boutonAutoriser: {
-    backgroundColor: '#111',
-    borderRadius: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    marginTop: 14,
-  },
-  texteBoutonAutoriser: { color: '#fff', fontSize: 13, fontWeight: '500' },
-  separateurTexte: { fontSize: 12, color: '#bbb', textAlign: 'center', marginVertical: 20 },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 15,
-    marginBottom: 16,
-  },
-  bouton: {
-    backgroundColor: '#111',
-    borderRadius: 10,
-    paddingVertical: 14,
-    alignItems: 'center',
-  },
-  texteBouton: { color: '#fff', fontSize: 16, fontWeight: '500' },
-});
+function creerStyles(c) {
+  return StyleSheet.create({
+    container: { flexGrow: 1, padding: 20, paddingTop: 60, backgroundColor: c.fond },
+    titre: { fontSize: 30, fontFamily: POLICE_TITRE, color: c.texte },
+    soustitre: { fontFamily: POLICE_TEXTE, fontSize: 13, color: c.texteAttenue, marginTop: 8, marginBottom: 24 },
+    cadreCamera: {
+      alignSelf: 'center',
+      width: 260,
+      height: 260,
+      borderRadius: 16,
+      borderWidth: 1.5,
+      borderColor: c.bordure,
+      borderStyle: 'dashed',
+      overflow: 'hidden',
+      backgroundColor: c.surface,
+    },
+    camera: { flex: 1 },
+    zonePermission: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 20,
+    },
+    textePermission: { fontFamily: POLICE_TEXTE, fontSize: 13, color: c.texteAttenue, textAlign: 'center' },
+    boutonAutoriser: {
+      backgroundColor: c.accent,
+      borderRadius: 8,
+      paddingVertical: 10,
+      paddingHorizontal: 16,
+      marginTop: 14,
+    },
+    texteBoutonAutoriser: { color: c.accentEncre, fontFamily: POLICE_TEXTE_MEDIUM, fontSize: 13 },
+    separateurTexte: { fontFamily: POLICE_TEXTE, fontSize: 12, color: c.texteAttenue, textAlign: 'center', marginVertical: 20 },
+    input: {
+      borderWidth: 1,
+      borderColor: c.bordure,
+      backgroundColor: c.surface2,
+      borderRadius: 10,
+      padding: 13,
+      fontSize: 14.5,
+      fontFamily: POLICE_TEXTE,
+      color: c.texte,
+      marginBottom: 16,
+    },
+    bouton: {
+      backgroundColor: c.accent,
+      borderRadius: 10,
+      paddingVertical: 15,
+      alignItems: 'center',
+    },
+    texteBouton: { color: c.accentEncre, fontFamily: POLICE_TITRE, fontSize: 17, letterSpacing: 0.4 },
+  });
+}

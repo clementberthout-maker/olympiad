@@ -1,10 +1,12 @@
 import { View, Text, TextInput, StyleSheet, Pressable, ScrollView, Alert, KeyboardAvoidingView, Platform } from 'react-native';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'expo-router';
 import { supabase } from '../lib/supabase';
 import { genererCodeAcces } from '../lib/codeAcces';
 import CarteSelectionnable from '../components/CarteSelectionnable';
 import SelecteurDate from '../components/SelecteurDate';
+import { useTheme } from '../lib/ThemeContext';
+import { POLICE_TITRE, POLICE_TEXTE, POLICE_TEXTE_SEMIBOLD } from '../lib/theme';
 
 const FORMATS = [
   { valeur: 'mixte', label: 'Poules puis élimination directe' },
@@ -24,6 +26,8 @@ const DEPARTAGES_ELIMINATION = [
 
 export default function CreerTournoi() {
   const router = useRouter();
+  const { couleurs } = useTheme();
+  const styles = useMemo(() => creerStyles(couleurs), [couleurs]);
   const [nom, setNom] = useState('');
   const [date, setDate] = useState('');
   const [format, setFormat] = useState('mixte');
@@ -145,23 +149,33 @@ export default function CreerTournoi() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { padding: 20, paddingBottom: 60 },
-  eyebrow: { fontSize: 13, color: '#666', marginBottom: 16 },
-  label: { fontSize: 12, color: '#888', marginTop: 18, marginBottom: 6 },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 15,
-  },
-  bouton: {
-    backgroundColor: '#111',
-    borderRadius: 10,
-    paddingVertical: 14,
-    alignItems: 'center',
-    marginTop: 28,
-  },
-  texteBouton: { color: '#fff', fontSize: 16, fontWeight: '500' },
-});
+function creerStyles(c) {
+  return StyleSheet.create({
+    container: { padding: 20, paddingBottom: 60, backgroundColor: c.fond },
+    eyebrow: {
+      fontFamily: POLICE_TITRE, fontSize: 15, letterSpacing: 0.6, color: c.accent, marginBottom: 16,
+    },
+    label: {
+      fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 11.5, textTransform: 'uppercase', letterSpacing: 0.4,
+      color: c.texteAttenue, marginTop: 18, marginBottom: 6,
+    },
+    input: {
+      borderWidth: 1,
+      borderColor: c.bordure,
+      backgroundColor: c.surface2,
+      borderRadius: 10,
+      padding: 13,
+      fontSize: 14.5,
+      fontFamily: POLICE_TEXTE,
+      color: c.texte,
+    },
+    bouton: {
+      backgroundColor: c.accent,
+      borderRadius: 10,
+      paddingVertical: 15,
+      alignItems: 'center',
+      marginTop: 28,
+    },
+    texteBouton: { color: c.accentEncre, fontFamily: POLICE_TITRE, fontSize: 18, letterSpacing: 0.4 },
+  });
+}

@@ -1,11 +1,15 @@
 import { View, Text, StyleSheet, Pressable, FlatList, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
+import { useTheme } from '../lib/ThemeContext';
+import { POLICE_TITRE, POLICE_TEXTE_MEDIUM, POLICE_TEXTE_SEMIBOLD } from '../lib/theme';
 
 export default function Accueil() {
   const router = useRouter();
+  const { couleurs } = useTheme();
+  const styles = useMemo(() => creerStyles(couleurs), [couleurs]);
   const [session, setSession] = useState(null);
   const [profil, setProfil] = useState(null);
   const [mesTournois, setMesTournois] = useState([]);
@@ -120,43 +124,59 @@ export default function Accueil() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 24, paddingTop: 90 },
-  titre: { fontSize: 32, fontWeight: '700', textAlign: 'center', letterSpacing: 0.5 },
-  soustitre: { fontSize: 15, color: '#666', textAlign: 'center', marginBottom: 36 },
-  boutonPrincipal: {
-    backgroundColor: '#111',
-    borderRadius: 10,
-    paddingVertical: 15,
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  texteBoutonPrincipal: { color: '#fff', fontSize: 16, fontWeight: '500' },
-  boutonSecondaire: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 10,
-    paddingVertical: 15,
-    alignItems: 'center',
-  },
-  texteBoutonSecondaire: { fontSize: 15, fontWeight: '500', color: '#333' },
-  sectionTitre: { fontSize: 13, fontWeight: '600', color: '#888', marginTop: 28, marginBottom: 10 },
-  carteTournoi: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#f7f7f8',
-    borderRadius: 10,
-    padding: 14,
-    marginBottom: 8,
-  },
-  nomTournoi: { fontSize: 15, fontWeight: '500' },
-  dateTournoi: { fontSize: 12, color: '#888', marginTop: 2 },
-  chevron: { fontSize: 20, color: '#bbb' },
-  bas: { marginTop: 'auto', alignItems: 'center', paddingTop: 40 },
-  avatar: { width: 36, height: 36, borderRadius: 18, marginBottom: 8 },
-  connecteComme: { fontSize: 12, color: '#999', marginBottom: 6 },
-  ligneLiensBas: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  separateurLiens: { fontSize: 13, color: '#ccc' },
-  lienBas: { fontSize: 13, color: '#4338ca' },
-});
+function creerStyles(c) {
+  return StyleSheet.create({
+    container: { flex: 1, padding: 24, paddingTop: 90, backgroundColor: c.fond },
+    titre: {
+      fontSize: 46, fontFamily: POLICE_TITRE, textAlign: 'center',
+      letterSpacing: 1, color: c.texte,
+    },
+    soustitre: {
+      fontFamily: POLICE_TEXTE_MEDIUM, fontSize: 15, color: c.texteAttenue,
+      textAlign: 'center', marginBottom: 36,
+    },
+    boutonPrincipal: {
+      backgroundColor: c.accent,
+      borderRadius: 10,
+      paddingVertical: 15,
+      alignItems: 'center',
+      marginBottom: 10,
+    },
+    texteBoutonPrincipal: { color: c.accentEncre, fontFamily: POLICE_TITRE, fontSize: 19, letterSpacing: 0.5 },
+    boutonSecondaire: {
+      borderWidth: 1,
+      borderColor: c.bordure,
+      backgroundColor: c.surface2,
+      borderRadius: 10,
+      paddingVertical: 15,
+      alignItems: 'center',
+    },
+    texteBoutonSecondaire: { fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 15, color: c.texte },
+    sectionTitre: {
+      fontFamily: POLICE_TITRE, fontSize: 15, letterSpacing: 0.6,
+      color: c.texteAttenue, marginTop: 28, marginBottom: 10,
+    },
+    carteTournoi: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      backgroundColor: c.surface,
+      borderWidth: 1,
+      borderColor: c.bordure,
+      borderLeftWidth: 3,
+      borderLeftColor: c.accent,
+      borderRadius: 10,
+      padding: 14,
+      marginBottom: 8,
+    },
+    nomTournoi: { fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 15, color: c.texte },
+    dateTournoi: { fontFamily: POLICE_TEXTE_MEDIUM, fontSize: 12, color: c.texteAttenue, marginTop: 2 },
+    chevron: { fontSize: 20, color: c.texteAttenue },
+    bas: { marginTop: 'auto', alignItems: 'center', paddingTop: 40 },
+    avatar: { width: 36, height: 36, borderRadius: 18, marginBottom: 8 },
+    connecteComme: { fontFamily: POLICE_TEXTE_MEDIUM, fontSize: 12, color: c.texteAttenue, marginBottom: 6 },
+    ligneLiensBas: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    separateurLiens: { fontSize: 13, color: c.bordure },
+    lienBas: { fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 13, color: c.lien },
+  });
+}

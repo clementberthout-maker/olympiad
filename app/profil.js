@@ -2,14 +2,19 @@ import {
   View, Text, TextInput, StyleSheet, Pressable, ScrollView, Alert,
   KeyboardAvoidingView, Platform, Image,
 } from 'react-native';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import { supabase } from '../lib/supabase';
 import { choisirPhoto, televerserPhoto } from '../lib/profil';
+import { useTheme } from '../lib/ThemeContext';
+import { POLICE_TITRE, POLICE_TEXTE, POLICE_TEXTE_SEMIBOLD } from '../lib/theme';
+import BasculeTheme from '../components/BasculeTheme';
 
 export default function Profil() {
   const router = useRouter();
+  const { couleurs } = useTheme();
+  const styles = useMemo(() => creerStyles(couleurs), [couleurs]);
   const [userId, setUserId] = useState(null);
   const [nom, setNom] = useState('');
   const [prenom, setPrenom] = useState('');
@@ -189,6 +194,12 @@ export default function Profil() {
 
         <View style={styles.separateur} />
 
+        <Text style={styles.titreSection}>Apparence</Text>
+        <Text style={styles.aideSection}>Choisis l'affichage clair ou sombre de l'app.</Text>
+        <BasculeTheme />
+
+        <View style={styles.separateur} />
+
         <Text style={styles.titreSection}>Adresse e-mail</Text>
         <Text style={styles.aideSection}>Actuelle : {emailActuel}</Text>
         <TextInput
@@ -245,56 +256,64 @@ export default function Profil() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { padding: 20, paddingTop: 40, paddingBottom: 60 },
-  titre: { fontSize: 22, fontWeight: '600', marginBottom: 24 },
-  label: { fontSize: 12, color: '#888', marginTop: 14, marginBottom: 6 },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 15,
-  },
-  boutonPhoto: {
-    alignSelf: 'center',
-    borderWidth: 1,
-    borderColor: '#eee',
-    borderStyle: 'dashed',
-    borderRadius: 40,
-    width: 80,
-    height: 80,
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-  },
-  textePhoto: { fontSize: 11, color: '#999', textAlign: 'center', paddingHorizontal: 6 },
-  apercuPhoto: { width: 80, height: 80, borderRadius: 40 },
-  aidePhoto: { fontSize: 11, color: '#aaa', textAlign: 'center', marginTop: 8 },
-  bouton: {
-    backgroundColor: '#111',
-    borderRadius: 10,
-    paddingVertical: 14,
-    alignItems: 'center',
-    marginTop: 28,
-  },
-  texteBouton: { color: '#fff', fontSize: 16, fontWeight: '500' },
-  separateur: { height: 1, backgroundColor: '#eee', marginTop: 32, marginBottom: 4 },
-  titreSection: { fontSize: 15, fontWeight: '600', marginTop: 20, marginBottom: 4 },
-  aideSection: { fontSize: 12, color: '#888', marginBottom: 10 },
-  ligneTitreSection: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  lienMotDePasseOublie: { fontSize: 12, color: '#4338ca' },
-  boutonSecondaire: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 10,
-    paddingVertical: 12,
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  texteBoutonSecondaire: { fontSize: 14, fontWeight: '500', color: '#333' },
-});
+function creerStyles(c) {
+  return StyleSheet.create({
+    container: { padding: 20, paddingTop: 40, paddingBottom: 60, backgroundColor: c.fond },
+    titre: { fontFamily: POLICE_TITRE, fontSize: 28, letterSpacing: 0.3, color: c.texte, marginBottom: 24 },
+    label: {
+      fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 11.5, textTransform: 'uppercase', letterSpacing: 0.4,
+      color: c.texteAttenue, marginTop: 14, marginBottom: 6,
+    },
+    input: {
+      borderWidth: 1,
+      borderColor: c.bordure,
+      backgroundColor: c.surface2,
+      borderRadius: 10,
+      padding: 13,
+      fontSize: 14.5,
+      fontFamily: POLICE_TEXTE,
+      color: c.texte,
+    },
+    boutonPhoto: {
+      alignSelf: 'center',
+      borderWidth: 1,
+      borderColor: c.bordure,
+      borderStyle: 'dashed',
+      borderRadius: 40,
+      width: 80,
+      height: 80,
+      alignItems: 'center',
+      justifyContent: 'center',
+      overflow: 'hidden',
+    },
+    textePhoto: { fontFamily: POLICE_TEXTE, fontSize: 11, color: c.texteAttenue, textAlign: 'center', paddingHorizontal: 6 },
+    apercuPhoto: { width: 80, height: 80, borderRadius: 40 },
+    aidePhoto: { fontFamily: POLICE_TEXTE, fontSize: 11, color: c.texteAttenue, textAlign: 'center', marginTop: 8 },
+    bouton: {
+      backgroundColor: c.accent,
+      borderRadius: 10,
+      paddingVertical: 15,
+      alignItems: 'center',
+      marginTop: 28,
+    },
+    texteBouton: { color: c.accentEncre, fontFamily: POLICE_TITRE, fontSize: 17, letterSpacing: 0.4 },
+    separateur: { height: 1, backgroundColor: c.bordure, marginTop: 32, marginBottom: 4 },
+    titreSection: { fontFamily: POLICE_TITRE, fontSize: 17, letterSpacing: 0.2, color: c.texte, marginTop: 20, marginBottom: 4 },
+    aideSection: { fontFamily: POLICE_TEXTE, fontSize: 12, color: c.texteAttenue, marginBottom: 10 },
+    ligneTitreSection: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    lienMotDePasseOublie: { fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 12, color: c.lien },
+    boutonSecondaire: {
+      borderWidth: 1,
+      borderColor: c.bordure,
+      borderRadius: 10,
+      paddingVertical: 13,
+      alignItems: 'center',
+      marginTop: 10,
+    },
+    texteBoutonSecondaire: { fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 14, color: c.texte },
+  });
+}

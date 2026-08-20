@@ -27,7 +27,8 @@
         {
           "cameraPermission": "OLYMPIAD a besoin d'accéder à l'appareil photo pour scanner le QR code d'un tournoi."
         }
-      ]
+      ],
+      "expo-font"
     ]
   }
 }
