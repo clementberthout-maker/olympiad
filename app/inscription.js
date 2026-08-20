@@ -116,7 +116,7 @@ export default function Inscription() {
         <Text style={styles.texteBouton}>{enCours ? 'Création…' : 'Créer mon compte'}</Text>
       </Pressable>
 
-      <Pressable onPress={() => router.push('/connexion')}>
+      <Pressable onPress={() => router.replace('/connexion')}>
         <Text style={styles.lien}>Déjà inscrit ? Se connecter</Text>
       </Pressable>
       </ScrollView>

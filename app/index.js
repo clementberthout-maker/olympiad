@@ -61,7 +61,7 @@ export default function Accueil() {
       </Pressable>
 
       <Pressable style={styles.boutonSecondaire} onPress={() => router.push('/rejoindre')}>
-        <Text style={styles.texteBoutonSecondaire}>Rejoindre un tournoi (code d'accès)</Text>
+        <Text style={styles.texteBoutonSecondaire}>Rejoindre un tournoi</Text>
       </Pressable>
 
       {session && mesTournois.length > 0 && (

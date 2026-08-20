@@ -21,6 +21,12 @@
         {
           "photosPermission": "OLYMPIAD a besoin d'accéder à tes photos pour définir ta photo de profil."
         }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "OLYMPIAD a besoin d'accéder à l'appareil photo pour scanner le QR code d'un tournoi."
+        }
       ]
     ]
   }
