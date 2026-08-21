@@ -7,11 +7,13 @@ import * as Clipboard from 'expo-clipboard';
 import QRCode from 'react-native-qrcode-svg';
 import { supabase } from '../../../lib/supabase';
 import { useTheme } from '../../../lib/ThemeContext';
+import { useLangue } from '../../../lib/LangueContext';
 import { POLICE_TITRE, POLICE_TEXTE, POLICE_TEXTE_SEMIBOLD } from '../../../lib/theme';
 
 export default function QrCodeTournoi() {
   const { id } = useLocalSearchParams();
   const { couleurs } = useTheme();
+  const { t } = useLangue();
   const styles = useMemo(() => creerStyles(couleurs), [couleurs]);
   const [tournoi, setTournoi] = useState(null);
   const [copie, setCopie] = useState(false);
@@ -32,7 +34,7 @@ export default function QrCodeTournoi() {
 
   function partager() {
     Share.share({
-      message: `Suis le tournoi "${tournoi.nom}" sur OLYMPIAD !\nCode d'accès : ${tournoi.code_acces}\n${lien}`,
+      message: t('qrcode.messagePartage', { nom: tournoi.nom, code: tournoi.code_acces, lien }),
     });
   }
 
@@ -45,23 +47,20 @@ export default function QrCodeTournoi() {
   return (
     <View style={styles.container}>
       <Text style={styles.titre}>{tournoi.nom}</Text>
-      <Text style={styles.soustitre}>
-        Fais scanner ce QR code aux équipes et spectateurs pour qu'ils accèdent directement au
-        suivi du tournoi.
-      </Text>
+      <Text style={styles.soustitre}>{t('qrcode.sousTitre')}</Text>
 
       <View style={styles.carteQr}>
         <QRCode value={lien} size={220} />
       </View>
 
-      <Text style={styles.labelCode}>Ou avec le code d'accès</Text>
+      <Text style={styles.labelCode}>{t('qrcode.ouAvecLeCode')}</Text>
       <Pressable style={styles.ligneCode} onPress={copierLeCode} hitSlop={8}>
         <Text style={styles.code}>{tournoi.code_acces}</Text>
-        <Text style={styles.lienCopier}>{copie ? 'Copié !' : 'Copier'}</Text>
+        <Text style={styles.lienCopier}>{copie ? t('qrcode.copie') : t('qrcode.copier')}</Text>
       </Pressable>
 
       <Pressable style={styles.bouton} onPress={partager}>
-        <Text style={styles.texteBouton}>Partager le lien</Text>
+        <Text style={styles.texteBouton}>{t('qrcode.partagerLeLien')}</Text>
       </Pressable>
     </View>
   );

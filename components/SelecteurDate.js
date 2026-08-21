@@ -1,13 +1,8 @@
 import { useState, useMemo } from 'react';
 import { View, Text, Pressable, Modal, StyleSheet } from 'react-native';
 import { useTheme } from '../lib/ThemeContext';
+import { useLangue } from '../lib/LangueContext';
 import { POLICE_TITRE, POLICE_TEXTE, POLICE_TEXTE_SEMIBOLD } from '../lib/theme';
-
-const MOIS = [
-  'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
-  'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre',
-];
-const JOURS = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
 
 function pad(n) {
   return String(n).padStart(2, '0');
@@ -24,8 +19,11 @@ function construireGrille(annee, mois) {
 
 // Sélecteur de date sous forme de calendrier visuel (sans saisie manuelle),
 // utilisé pour la date du tournoi à la création.
-export default function SelecteurDate({ value, onChange, placeholder = 'Choisir une date' }) {
+export default function SelecteurDate({ value, onChange, placeholder }) {
   const { couleurs } = useTheme();
+  const { t, langue } = useLangue();
+  const MOIS = t('selecteurDate.mois');
+  const JOURS = t('selecteurDate.jours');
   const styles = useMemo(() => creerStyles(couleurs), [couleurs]);
   const [visible, setVisible] = useState(false);
   const dateInitiale = value ? new Date(`${value}T00:00:00`) : new Date();
@@ -50,10 +48,10 @@ export default function SelecteurDate({ value, onChange, placeholder = 'Choisir 
   }
 
   const texteAffiche = value
-    ? new Date(`${value}T00:00:00`).toLocaleDateString('fr-FR', {
+    ? new Date(`${value}T00:00:00`).toLocaleDateString(langue === 'en' ? 'en-US' : 'fr-FR', {
         day: 'numeric', month: 'long', year: 'numeric',
       })
-    : placeholder;
+    : (placeholder ?? t('selecteurDate.placeholder'));
 
   return (
     <>

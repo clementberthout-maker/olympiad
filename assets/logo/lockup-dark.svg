@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 140" width="1120" height="280">
+<rect width="560" height="140" rx="18" fill="#0b0f18"></rect>
+<g transform="translate(30,26) scale(0.88)" fill="#ebb517">
+<rect x="18" y="26" width="8" height="48" rx="2" opacity="0.28"></rect>
+<rect x="32" y="26" width="8" height="48" rx="2" opacity="0.6"></rect>
+<rect x="46" y="26" width="8" height="48" rx="2" opacity="1"></rect>
+<rect x="60" y="26" width="8" height="48" rx="2" opacity="0.6"></rect>
+<rect x="74" y="26" width="8" height="48" rx="2" opacity="0.28"></rect>
+</g>
+<text x="140" y="88" text-anchor="start" font-family="Bebas Neue, Helvetica, Arial, sans-serif" font-size="56" letter-spacing="4" fill="#f2f5fb">OLYMPIAD</text>
+</svg>

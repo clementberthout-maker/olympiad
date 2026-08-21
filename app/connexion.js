@@ -1,31 +1,68 @@
 import { View, Text, TextInput, StyleSheet, Pressable, Alert, KeyboardAvoidingView, ScrollView, Platform } from 'react-native';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import { supabase } from '../lib/supabase';
 import { useTheme } from '../lib/ThemeContext';
+import { useLangue } from '../lib/LangueContext';
 import { POLICE_TITRE, POLICE_TEXTE, POLICE_TEXTE_SEMIBOLD } from '../lib/theme';
+import { enregistrerIdentifiants, recupererIdentifiants } from '../lib/identifiantsEnregistres';
 
 export default function Connexion() {
   const router = useRouter();
   const { couleurs } = useTheme();
+  const { t } = useLangue();
   const styles = useMemo(() => creerStyles(couleurs), [couleurs]);
   const [email, setEmail] = useState('');
   const [motDePasse, setMotDePasse] = useState('');
   const [enCours, setEnCours] = useState(false);
+  const [identifiantsSauvegardes, setIdentifiantsSauvegardes] = useState(null);
+
+  useEffect(() => {
+    recupererIdentifiants().then((identifiants) => {
+      if (identifiants) {
+        setEmail(identifiants.email);
+        setMotDePasse(identifiants.motDePasse);
+        setIdentifiantsSauvegardes(identifiants);
+      }
+    });
+  }, []);
+
+  function proposerEnregistrement() {
+    Alert.alert(
+      t('connexion.enregistrerIdentifiantsTitre'),
+      t('connexion.enregistrerIdentifiantsMessage'),
+      [
+        { text: t('connexion.nonMerci'), style: 'cancel', onPress: () => router.replace('/') },
+        {
+          text: t('connexion.enregistrer'),
+          onPress: async () => {
+            await enregistrerIdentifiants(email, motDePasse);
+            router.replace('/');
+          },
+        },
+      ]
+    );
+  }
 
   async function seConnecter() {
     if (!email || !motDePasse) {
-      Alert.alert('Champs manquants', 'Merci de renseigner ton email et ton mot de passe.');
+      Alert.alert(t('connexion.champsManquantsTitre'), t('connexion.champsManquantsMessage'));
       return;
     }
     setEnCours(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password: motDePasse });
     setEnCours(false);
     if (error) {
-      Alert.alert('Connexion impossible', error.message);
+      Alert.alert(t('connexion.connexionImpossible'), error.message);
       return;
     }
-    router.replace('/');
+    const dejaEnregistres = identifiantsSauvegardes?.email === email
+      && identifiantsSauvegardes?.motDePasse === motDePasse;
+    if (dejaEnregistres) {
+      router.replace('/');
+      return;
+    }
+    proposerEnregistrement();
   }
 
   return (
@@ -35,10 +72,10 @@ export default function Connexion() {
       keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
     >
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <Text style={styles.titre}>Connexion</Text>
-        <Text style={styles.soustitre}>Accède à tes tournois</Text>
+        <Text style={styles.titre}>{t('connexion.titre')}</Text>
+        <Text style={styles.soustitre}>{t('connexion.sousTitre')}</Text>
 
-        <Text style={styles.label}>Adresse e-mail</Text>
+        <Text style={styles.label}>{t('connexion.email')}</Text>
         <TextInput
           style={styles.input}
           value={email}
@@ -48,7 +85,7 @@ export default function Connexion() {
           returnKeyType="next"
         />
 
-        <Text style={styles.label}>Mot de passe</Text>
+        <Text style={styles.label}>{t('connexion.motDePasse')}</Text>
         <TextInput
           style={styles.input}
           value={motDePasse}
@@ -59,15 +96,15 @@ export default function Connexion() {
         />
 
         <Pressable style={styles.bouton} onPress={seConnecter} disabled={enCours}>
-          <Text style={styles.texteBouton}>{enCours ? 'Connexion…' : 'Se connecter'}</Text>
+          <Text style={styles.texteBouton}>{enCours ? t('connexion.connexionEnCours') : t('connexion.seConnecter')}</Text>
         </Pressable>
 
         <Pressable onPress={() => router.push('/mot-de-passe-oublie')}>
-          <Text style={styles.lien}>Mot de passe oublié ?</Text>
+          <Text style={styles.lien}>{t('connexion.motDePasseOublie')}</Text>
         </Pressable>
 
         <Pressable onPress={() => router.replace('/inscription')} style={{ marginTop: 14 }}>
-          <Text style={styles.lien}>Pas encore de compte ? Créer un compte</Text>
+          <Text style={styles.lien}>{t('connexion.pasEncoreDeCompte')}</Text>
         </Pressable>
       </ScrollView>
     </KeyboardAvoidingView>

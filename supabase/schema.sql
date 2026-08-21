@@ -172,7 +172,7 @@ using (bucket_id = 'avatars' and auth.uid()::text = split_part(name, '.', 1));
 -- ============================================================
 -- Ces policies autorisaient la création/gestion d'un tournoi sans compte,
 -- le temps que l'authentification organisateur soit branchée. Elle l'est
--- depuis longtemps (creer-tournoi.js exige une session) : elles ne servent
+-- depuis longtemps (choisir-sport.js exige une session) : elles ne servent
 -- plus qu'à laisser gérables d'éventuels tournois de test créés sans
 -- organisateur_id à l'époque.
 drop policy if exists "Temporaire - creation sans authentification" on tournois;
@@ -210,3 +210,33 @@ alter table matchs add constraint matchs_equipe_b_id_fkey
 -- (sinon, ça bloquerait la migration à cause de tournois de test orphelins
 -- qu'il faudrait d'abord supprimer manuellement)
 -- alter table tournois alter column organisateur_id set not null;
+
+-- ============================================================
+-- MIGRATION — Sport du tournoi (football, rugby...)
+-- ============================================================
+-- Choisi en tout premier lors de la création (voir creer-tournoi.js) : les
+-- réglages qui en dépendent (pour l'instant, uniquement le vocabulaire du
+-- score — "buts" ou "points", voir lib/sports.js) s'adaptent en fonction.
+alter table tournois add column if not exists sport text not null default 'football'
+  check (sport in ('football', 'rugby'));
+
+-- ============================================================
+-- MIGRATION — Départage rugby (élimination directe) et points bonus
+-- ============================================================
+-- Le rugby n'a pas de tirs au but : en cas d'égalité en élimination directe,
+-- l'organisateur choisit entre prolongation, mort subite ou un drop goal
+-- décisif (voir creer-tournoi.js). Football garde ses valeurs existantes.
+alter table tournois drop constraint if exists tournois_mode_departage_check;
+alter table tournois add constraint tournois_mode_departage_check
+  check (mode_departage in (
+    'prolongations_tab', 'tab_direct', -- football
+    'prolongation', 'mort_subite', 'drop_goal', -- rugby
+    'autre'
+  ));
+
+-- Points bonus (rugby) : réglage optionnel de l'organisateur, saisi ensuite
+-- match par match sur l'écran de saisie du score (voir tournoi/[id]/saisie.js)
+-- et ajouté au total de points en poule (voir lib/classement.js).
+alter table tournois add column if not exists points_bonus boolean not null default false;
+alter table resultats add column if not exists bonus_a int not null default 0;
+alter table resultats add column if not exists bonus_b int not null default 0;

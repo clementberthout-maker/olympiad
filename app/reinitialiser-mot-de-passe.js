@@ -6,11 +6,13 @@ import { useState, useEffect, useMemo } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { supabase } from '../lib/supabase';
 import { useTheme } from '../lib/ThemeContext';
+import { useLangue } from '../lib/LangueContext';
 import { POLICE_TITRE, POLICE_TEXTE, POLICE_TEXTE_SEMIBOLD } from '../lib/theme';
 
 export default function ReinitialiserMotDePasse() {
   const router = useRouter();
   const { couleurs } = useTheme();
+  const { t } = useLangue();
   const styles = useMemo(() => creerStyles(couleurs), [couleurs]);
   const { code } = useLocalSearchParams();
   const [pret, setPret] = useState(false);
@@ -22,18 +24,18 @@ export default function ReinitialiserMotDePasse() {
     async function echangerLeCode() {
       if (!code) {
         Alert.alert(
-          'Lien invalide',
-          "Ce lien de réinitialisation n'est plus valide. Refais une demande depuis l'écran de connexion.",
-          [{ text: 'OK', onPress: () => router.replace('/connexion') }]
+          t('reinitialiserMotDePasse.lienInvalideTitre'),
+          t('reinitialiserMotDePasse.lienInvalideMessage'),
+          [{ text: t('commun.ok'), onPress: () => router.replace('/connexion') }]
         );
         return;
       }
       const { error } = await supabase.auth.exchangeCodeForSession(code);
       if (error) {
         Alert.alert(
-          'Lien expiré',
-          "Ce lien de réinitialisation a expiré ou a déjà été utilisé. Refais une demande.",
-          [{ text: 'OK', onPress: () => router.replace('/connexion') }]
+          t('reinitialiserMotDePasse.lienExpireTitre'),
+          t('reinitialiserMotDePasse.lienExpireMessage'),
+          [{ text: t('commun.ok'), onPress: () => router.replace('/connexion') }]
         );
         return;
       }
@@ -44,22 +46,22 @@ export default function ReinitialiserMotDePasse() {
 
   async function valider() {
     if (motDePasse.length < 6) {
-      Alert.alert('Mot de passe trop court', 'Le mot de passe doit contenir au moins 6 caractères.');
+      Alert.alert(t('reinitialiserMotDePasse.motDePasseTropCourtTitre'), t('reinitialiserMotDePasse.motDePasseTropCourtMessage'));
       return;
     }
     if (motDePasse !== confirmation) {
-      Alert.alert('Les mots de passe ne correspondent pas', 'Merci de vérifier la confirmation.');
+      Alert.alert(t('reinitialiserMotDePasse.motsDePasseDifferentsTitre'), t('reinitialiserMotDePasse.motsDePasseDifferentsMessage'));
       return;
     }
     setEnCours(true);
     const { error } = await supabase.auth.updateUser({ password: motDePasse });
     setEnCours(false);
     if (error) {
-      Alert.alert('Erreur', error.message);
+      Alert.alert(t('commun.erreur'), error.message);
       return;
     }
-    Alert.alert('Mot de passe modifié', 'Tu peux maintenant utiliser ton nouveau mot de passe.', [
-      { text: 'OK', onPress: () => router.replace('/') },
+    Alert.alert(t('reinitialiserMotDePasse.motDePasseModifieTitre'), t('reinitialiserMotDePasse.motDePasseModifieMessage'), [
+      { text: t('commun.ok'), onPress: () => router.replace('/') },
     ]);
   }
 
@@ -72,17 +74,17 @@ export default function ReinitialiserMotDePasse() {
       keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
     >
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <Text style={styles.titre}>Nouveau mot de passe</Text>
-        <Text style={styles.soustitre}>Choisis un nouveau mot de passe pour ton compte.</Text>
+        <Text style={styles.titre}>{t('reinitialiserMotDePasse.titre')}</Text>
+        <Text style={styles.soustitre}>{t('reinitialiserMotDePasse.sousTitre')}</Text>
 
-        <Text style={styles.label}>Nouveau mot de passe</Text>
+        <Text style={styles.label}>{t('reinitialiserMotDePasse.nouveauMotDePasse')}</Text>
         <TextInput style={styles.input} value={motDePasse} onChangeText={setMotDePasse} secureTextEntry />
 
-        <Text style={styles.label}>Confirmer le mot de passe</Text>
+        <Text style={styles.label}>{t('reinitialiserMotDePasse.confirmerLeMotDePasse')}</Text>
         <TextInput style={styles.input} value={confirmation} onChangeText={setConfirmation} secureTextEntry />
 
         <Pressable style={styles.bouton} onPress={valider} disabled={enCours}>
-          <Text style={styles.texteBouton}>{enCours ? 'Enregistrement…' : 'Valider'}</Text>
+          <Text style={styles.texteBouton}>{enCours ? t('reinitialiserMotDePasse.enregistrementEnCours') : t('reinitialiserMotDePasse.valider')}</Text>
         </Pressable>
       </ScrollView>
     </KeyboardAvoidingView>

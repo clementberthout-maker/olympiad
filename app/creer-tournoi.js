@@ -1,93 +1,66 @@
 import { View, Text, TextInput, StyleSheet, Pressable, ScrollView, Alert, KeyboardAvoidingView, Platform } from 'react-native';
-import { useState, useEffect, useMemo } from 'react';
-import { useRouter } from 'expo-router';
-import { supabase } from '../lib/supabase';
-import { genererCodeAcces } from '../lib/codeAcces';
+import { useState, useMemo } from 'react';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import CarteSelectionnable from '../components/CarteSelectionnable';
 import SelecteurDate from '../components/SelecteurDate';
 import { useTheme } from '../lib/ThemeContext';
+import { useLangue } from '../lib/LangueContext';
 import { POLICE_TITRE, POLICE_TEXTE, POLICE_TEXTE_SEMIBOLD } from '../lib/theme';
 
-const FORMATS = [
-  { valeur: 'mixte', label: 'Poules puis élimination directe' },
-  { valeur: 'poules', label: 'Poules uniquement' },
-  { valeur: 'elimination_directe', label: 'Élimination directe uniquement' },
-];
-
-const DEPARTAGES_POULE = [
-  { valeur: 'diff_buts', label: 'Différence de buts' },
-  { valeur: 'confrontation_directe', label: 'Confrontation directe' },
-];
-
-const DEPARTAGES_ELIMINATION = [
-  { valeur: 'prolongations_tab', label: 'Prolongations puis tirs au but' },
-  { valeur: 'tab_direct', label: 'Tirs au but directs' },
-];
-
 export default function CreerTournoi() {
+  const { sport: sportParam } = useLocalSearchParams(); // choisi sur l'écran précédent, voir choisir-sport.js
+  const sport = sportParam || 'football';
   const router = useRouter();
   const { couleurs } = useTheme();
+  const { t } = useLangue();
   const styles = useMemo(() => creerStyles(couleurs), [couleurs]);
   const [nom, setNom] = useState('');
   const [date, setDate] = useState('');
   const [format, setFormat] = useState('mixte');
   const [departagePoule, setDepartagePoule] = useState('diff_buts');
-  const [departageElimination, setDepartageElimination] = useState('prolongations_tab');
-  const [enCours, setEnCours] = useState(false);
-  const [session, setSession] = useState(null);
+  // Le rugby n'a pas de tirs au but : valeur par défaut différente selon le
+  // sport (voir departagesElimination ci-dessous pour les options proposées).
+  const [departageElimination, setDepartageElimination] = useState(
+    sport === 'rugby' ? 'prolongation' : 'prolongations_tab'
+  );
+  const [reglagesAvancesOuverts, setReglagesAvancesOuverts] = useState(false);
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (!data.session) {
-        router.replace('/inscription');
-        return;
-      }
-      setSession(data.session);
-    });
-  }, []);
+  const formats = useMemo(() => ([
+    { valeur: 'mixte', label: t('creerTournoi.formatMixte') },
+    { valeur: 'poules', label: t('creerTournoi.formatPoules') },
+    { valeur: 'elimination_directe', label: t('creerTournoi.formatElimination') },
+  ]), [t]);
 
-  async function creerTournoi() {
+  const departagesPoule = useMemo(() => ([
+    { valeur: 'diff_buts', label: t(`sports.${sport}.libelleDiffScore`) },
+    { valeur: 'confrontation_directe', label: t('creerTournoi.confrontationDirecte') },
+  ]), [sport, t]);
+
+  const departagesElimination = useMemo(() => (
+    sport === 'rugby'
+      ? [
+        { valeur: 'prolongation', label: t('creerTournoi.prolongation') },
+        { valeur: 'mort_subite', label: t('creerTournoi.mortSubite') },
+        { valeur: 'drop_goal', label: t('creerTournoi.dropGoal') },
+      ]
+      : [
+        { valeur: 'prolongations_tab', label: t('creerTournoi.prolongationsTab') },
+        { valeur: 'tab_direct', label: t('creerTournoi.tabDirect') },
+      ]
+  ), [sport, t]);
+
+  // Le tournoi n'est créé en base qu'une fois tous les réglages (équipes,
+  // horaires...) renseignés à l'étape suivante — voir tournoi/[id]/equipes.js.
+  // Cet écran se contente de collecter les premières informations.
+  function allerEtapeSuivante() {
     if (!nom || !date) {
-      Alert.alert('Champs manquants', 'Merci de renseigner le nom et la date du tournoi.');
+      Alert.alert(t('creerTournoi.champsManquantsTitre'), t('creerTournoi.champsManquantsMessage'));
       return;
     }
-    if (!session) return;
-    setEnCours(true);
-
-    let code = genererCodeAcces(nom, date);
-    let data, error;
-    for (let tentative = 0; tentative < 5; tentative++) {
-      ({ data, error } = await supabase
-        .from('tournois')
-        .insert({
-          nom,
-          date_debut: date,
-          format,
-          critere_departage_poule: departagePoule,
-          mode_departage: departageElimination,
-          code_acces: code,
-          organisateur_id: session.user.id,
-        })
-        .select()
-        .single());
-
-      if (!error) break;
-      if (error.code === '23505') {
-        // Code déjà pris (même nom + même date) : on ajoute un suffixe aléatoire
-        code = `${genererCodeAcces(nom, date)}${Math.floor(10 + Math.random() * 90)}`;
-        continue;
-      }
-      break;
-    }
-
-    setEnCours(false);
-
-    if (error) {
-      Alert.alert('Erreur', error.message);
-      return;
-    }
-
-    router.replace(`/tournoi/${data.id}/equipes`);
+    router.push({
+      pathname: '/tournoi/[id]/equipes',
+      params: { id: 'nouveau', sport, nom, date, format, departagePoule, departageElimination },
+    });
   }
 
   return (
@@ -97,22 +70,22 @@ export default function CreerTournoi() {
       keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
     >
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-      <Text style={styles.eyebrow}>Football</Text>
+      <Text style={styles.eyebrow}>{t(`sports.${sport}.label`)}</Text>
 
-      <Text style={styles.label}>Nom du tournoi</Text>
+      <Text style={styles.label}>{t('creerTournoi.nomDuTournoi')}</Text>
       <TextInput
         style={styles.input}
-        placeholder="Tournoi de fin d'année"
+        placeholder={t('creerTournoi.placeholderNom')}
         value={nom}
         onChangeText={setNom}
         returnKeyType="done"
       />
 
-      <Text style={styles.label}>Date</Text>
-      <SelecteurDate value={date} onChange={setDate} placeholder="Choisir la date du tournoi" />
+      <Text style={styles.label}>{t('creerTournoi.date')}</Text>
+      <SelecteurDate value={date} onChange={setDate} placeholder={t('creerTournoi.choisirLaDate')} />
 
-      <Text style={styles.label}>Format</Text>
-      {FORMATS.map((f) => (
+      <Text style={styles.label}>{t('creerTournoi.format')}</Text>
+      {formats.map((f) => (
         <CarteSelectionnable
           key={f.valeur}
           label={f.label}
@@ -121,28 +94,43 @@ export default function CreerTournoi() {
         />
       ))}
 
-      <Text style={styles.label}>Départage · égalité en poule</Text>
-      {DEPARTAGES_POULE.map((d) => (
-        <CarteSelectionnable
-          key={d.valeur}
-          label={d.label}
-          selectionnee={departagePoule === d.valeur}
-          onPress={() => setDepartagePoule(d.valeur)}
-        />
-      ))}
+      <Pressable
+        style={styles.enteteAvance}
+        onPress={() => setReglagesAvancesOuverts((v) => !v)}
+      >
+        <Text style={styles.labelAvance}>{t('creerTournoi.reglagesAvances')}</Text>
+        <Text style={styles.chevronAvance}>{reglagesAvancesOuverts ? '︿' : '﹀'}</Text>
+      </Pressable>
+      {!reglagesAvancesOuverts && (
+        <Text style={styles.aideAvance}>{t('creerTournoi.aideAvance')}</Text>
+      )}
 
-      <Text style={styles.label}>Départage · match nul en élimination directe</Text>
-      {DEPARTAGES_ELIMINATION.map((d) => (
-        <CarteSelectionnable
-          key={d.valeur}
-          label={d.label}
-          selectionnee={departageElimination === d.valeur}
-          onPress={() => setDepartageElimination(d.valeur)}
-        />
-      ))}
+      {reglagesAvancesOuverts && (
+        <>
+          <Text style={styles.label}>{t('creerTournoi.departagePoule')}</Text>
+          {departagesPoule.map((d) => (
+            <CarteSelectionnable
+              key={d.valeur}
+              label={d.label}
+              selectionnee={departagePoule === d.valeur}
+              onPress={() => setDepartagePoule(d.valeur)}
+            />
+          ))}
 
-      <Pressable style={styles.bouton} onPress={creerTournoi} disabled={enCours}>
-        <Text style={styles.texteBouton}>{enCours ? 'Création…' : 'Créer le tournoi'}</Text>
+          <Text style={styles.label}>{t('creerTournoi.departageElimination')}</Text>
+          {departagesElimination.map((d) => (
+            <CarteSelectionnable
+              key={d.valeur}
+              label={d.label}
+              selectionnee={departageElimination === d.valeur}
+              onPress={() => setDepartageElimination(d.valeur)}
+            />
+          ))}
+        </>
+      )}
+
+      <Pressable style={styles.bouton} onPress={allerEtapeSuivante}>
+        <Text style={styles.texteBouton}>{t('creerTournoi.suivant')}</Text>
       </Pressable>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -169,6 +157,18 @@ function creerStyles(c) {
       fontFamily: POLICE_TEXTE,
       color: c.texte,
     },
+    enteteAvance: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginTop: 24,
+      paddingVertical: 10,
+      borderTopWidth: 1,
+      borderColor: c.bordure,
+    },
+    labelAvance: { fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 14, color: c.texte },
+    chevronAvance: { fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 13, color: c.texteAttenue },
+    aideAvance: { fontFamily: POLICE_TEXTE, fontSize: 12, color: c.texteAttenue, marginTop: 2 },
     bouton: {
       backgroundColor: c.accent,
       borderRadius: 10,

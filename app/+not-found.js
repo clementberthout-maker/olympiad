@@ -2,6 +2,7 @@ import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { useMemo } from 'react';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../lib/ThemeContext';
+import { useLangue } from '../lib/LangueContext';
 import { POLICE_TITRE, POLICE_TEXTE } from '../lib/theme';
 
 // Filet de sécurité : affiché si l'app essaie d'ouvrir un lien ou un code
@@ -9,16 +10,15 @@ import { POLICE_TITRE, POLICE_TEXTE } from '../lib/theme';
 export default function NotFound() {
   const router = useRouter();
   const { couleurs } = useTheme();
+  const { t } = useLangue();
   const styles = useMemo(() => creerStyles(couleurs), [couleurs]);
 
   return (
     <View style={styles.container}>
-      <Text style={styles.titre}>Page introuvable</Text>
-      <Text style={styles.soustitre}>
-        Ce lien ou ce code ne correspond à aucun tournoi. Vérifie le QR code ou le code d'accès.
-      </Text>
+      <Text style={styles.titre}>{t('notFound.titre')}</Text>
+      <Text style={styles.soustitre}>{t('notFound.sousTitre')}</Text>
       <Pressable style={styles.bouton} onPress={() => router.replace('/')}>
-        <Text style={styles.texteBouton}>Retour à l'accueil</Text>
+        <Text style={styles.texteBouton}>{t('notFound.retourAlAccueil')}</Text>
       </Pressable>
     </View>
   );

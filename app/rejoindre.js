@@ -7,6 +7,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as Linking from 'expo-linking';
 import { useTheme } from '../lib/ThemeContext';
+import { useLangue } from '../lib/LangueContext';
 import { POLICE_TITRE, POLICE_TEXTE, POLICE_TEXTE_MEDIUM } from '../lib/theme';
 
 // Retrouve le code d'accès à partir du texte scanné : soit un lien OLYMPIAD
@@ -36,6 +37,7 @@ function estCodeValide(texte) {
 export default function RejoindreTournoi() {
   const router = useRouter();
   const { couleurs } = useTheme();
+  const { t } = useLangue();
   const styles = useMemo(() => creerStyles(couleurs), [couleurs]);
   const [code, setCode] = useState('');
   const [permission, demanderPermission] = useCameraPermissions();
@@ -63,8 +65,8 @@ export default function RejoindreTournoi() {
 
     const codeScanne = extraireCode(data);
     if (!estCodeValide(codeScanne)) {
-      Alert.alert('QR code non reconnu', "Ce QR code ne correspond pas à un tournoi OLYMPIAD.", [
-        { text: 'OK', onPress: () => { dejaScanneRef.current = false; } },
+      Alert.alert(t('rejoindre.qrCodeNonReconnuTitre'), t('rejoindre.qrCodeNonReconnuMessage'), [
+        { text: t('commun.ok'), onPress: () => { dejaScanneRef.current = false; } },
       ]);
       return;
     }
@@ -80,10 +82,8 @@ export default function RejoindreTournoi() {
       keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
     >
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <Text style={styles.titre}>Rejoindre un tournoi</Text>
-        <Text style={styles.soustitre}>
-          Scanne le QR code du tournoi, ou saisis le code d'accès communiqué par l'organisateur
-        </Text>
+        <Text style={styles.titre}>{t('rejoindre.titre')}</Text>
+        <Text style={styles.soustitre}>{t('rejoindre.sousTitre')}</Text>
 
         <View style={styles.cadreCamera}>
           {permission?.granted && scanActif ? (
@@ -97,25 +97,25 @@ export default function RejoindreTournoi() {
             <View style={styles.zonePermission}>
               <Text style={styles.textePermission}>
                 {permission?.granted
-                  ? 'QR code détecté…'
+                  ? t('rejoindre.qrCodeDetecte')
                   : permission?.canAskAgain === false
-                    ? "Autorise l'accès à la caméra dans les réglages de ton téléphone pour scanner un QR code."
-                    : "Autorise l'accès à la caméra pour scanner un QR code."}
+                    ? t('rejoindre.autoriseCameraReglages')
+                    : t('rejoindre.autoriseCamera')}
               </Text>
               {!permission?.granted && permission?.canAskAgain !== false && (
                 <Pressable style={styles.boutonAutoriser} onPress={demanderPermission}>
-                  <Text style={styles.texteBoutonAutoriser}>Autoriser la caméra</Text>
+                  <Text style={styles.texteBoutonAutoriser}>{t('rejoindre.autoriserLaCamera')}</Text>
                 </Pressable>
               )}
             </View>
           )}
         </View>
 
-        <Text style={styles.separateurTexte}>ou</Text>
+        <Text style={styles.separateurTexte}>{t('rejoindre.ou')}</Text>
 
         <TextInput
           style={styles.input}
-          placeholder="ex : tournoifinannee20260818"
+          placeholder={t('rejoindre.placeholderCode')}
           value={code}
           onChangeText={setCode}
           autoCapitalize="none"
@@ -124,7 +124,7 @@ export default function RejoindreTournoi() {
         />
 
         <Pressable style={styles.bouton} onPress={() => accederAuTournoi()}>
-          <Text style={styles.texteBouton}>Accéder au tournoi</Text>
+          <Text style={styles.texteBouton}>{t('rejoindre.accederAuTournoi')}</Text>
         </Pressable>
       </ScrollView>
     </KeyboardAvoidingView>

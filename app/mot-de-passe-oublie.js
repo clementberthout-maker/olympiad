@@ -7,18 +7,20 @@ import { useRouter } from 'expo-router';
 import * as Linking from 'expo-linking';
 import { supabase } from '../lib/supabase';
 import { useTheme } from '../lib/ThemeContext';
+import { useLangue } from '../lib/LangueContext';
 import { POLICE_TITRE, POLICE_TEXTE, POLICE_TEXTE_SEMIBOLD } from '../lib/theme';
 
 export default function MotDePasseOublie() {
   const router = useRouter();
   const { couleurs } = useTheme();
+  const { t } = useLangue();
   const styles = useMemo(() => creerStyles(couleurs), [couleurs]);
   const [email, setEmail] = useState('');
   const [enCours, setEnCours] = useState(false);
 
   async function envoyer() {
     if (!email || !email.includes('@')) {
-      Alert.alert('Adresse invalide', 'Merci de renseigner ton adresse e-mail.');
+      Alert.alert(t('motDePasseOublie.adresseInvalideTitre'), t('motDePasseOublie.adresseInvalideMessage'));
       return;
     }
     setEnCours(true);
@@ -27,13 +29,13 @@ export default function MotDePasseOublie() {
     });
     setEnCours(false);
     if (error) {
-      Alert.alert('Erreur', error.message);
+      Alert.alert(t('commun.erreur'), error.message);
       return;
     }
     Alert.alert(
-      'Vérifie ta boîte mail',
-      `Si un compte existe pour ${email.trim()}, un lien de réinitialisation vient de lui être envoyé.`,
-      [{ text: 'OK', onPress: () => router.replace('/connexion') }]
+      t('motDePasseOublie.verifieTaBoiteMailTitre'),
+      t('motDePasseOublie.verifieTaBoiteMailMessage', { email: email.trim() }),
+      [{ text: t('commun.ok'), onPress: () => router.replace('/connexion') }]
     );
   }
 
@@ -44,12 +46,10 @@ export default function MotDePasseOublie() {
       keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
     >
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <Text style={styles.titre}>Mot de passe oublié</Text>
-        <Text style={styles.soustitre}>
-          Indique ton adresse e-mail, tu recevras un lien pour choisir un nouveau mot de passe.
-        </Text>
+        <Text style={styles.titre}>{t('motDePasseOublie.titre')}</Text>
+        <Text style={styles.soustitre}>{t('motDePasseOublie.sousTitre')}</Text>
 
-        <Text style={styles.label}>Adresse e-mail</Text>
+        <Text style={styles.label}>{t('motDePasseOublie.email')}</Text>
         <TextInput
           style={styles.input}
           value={email}
@@ -61,11 +61,11 @@ export default function MotDePasseOublie() {
         />
 
         <Pressable style={styles.bouton} onPress={envoyer} disabled={enCours}>
-          <Text style={styles.texteBouton}>{enCours ? 'Envoi…' : 'Envoyer le lien'}</Text>
+          <Text style={styles.texteBouton}>{enCours ? t('motDePasseOublie.envoiEnCours') : t('motDePasseOublie.envoyerLeLien')}</Text>
         </Pressable>
 
         <Pressable onPress={() => router.back()}>
-          <Text style={styles.lien}>Retour à la connexion</Text>
+          <Text style={styles.lien}>{t('motDePasseOublie.retourALaConnexion')}</Text>
         </Pressable>
       </ScrollView>
     </KeyboardAvoidingView>

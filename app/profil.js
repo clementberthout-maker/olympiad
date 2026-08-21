@@ -8,12 +8,15 @@ import { useFocusEffect } from '@react-navigation/native';
 import { supabase } from '../lib/supabase';
 import { choisirPhoto, televerserPhoto } from '../lib/profil';
 import { useTheme } from '../lib/ThemeContext';
+import { useLangue } from '../lib/LangueContext';
 import { POLICE_TITRE, POLICE_TEXTE, POLICE_TEXTE_SEMIBOLD } from '../lib/theme';
 import BasculeTheme from '../components/BasculeTheme';
+import { recupererIdentifiants, oublierIdentifiants, enregistrerIdentifiants } from '../lib/identifiantsEnregistres';
 
 export default function Profil() {
   const router = useRouter();
   const { couleurs } = useTheme();
+  const { t } = useLangue();
   const styles = useMemo(() => creerStyles(couleurs), [couleurs]);
   const [userId, setUserId] = useState(null);
   const [nom, setNom] = useState('');
@@ -31,6 +34,8 @@ export default function Profil() {
   const [motDePasse, setMotDePasse] = useState('');
   const [confirmationMotDePasse, setConfirmationMotDePasse] = useState('');
   const [enCoursMotDePasse, setEnCoursMotDePasse] = useState(false);
+
+  const [identifiantsEnregistres, setIdentifiantsEnregistres] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -58,11 +63,32 @@ export default function Profil() {
         setAncienMotDePasse('');
         setMotDePasse('');
         setConfirmationMotDePasse('');
+
+        const identifiants = await recupererIdentifiants();
+        if (actif) setIdentifiantsEnregistres(!!identifiants);
       }
       charger();
       return () => { actif = false; };
     }, [])
   );
+
+  function confirmerOubliIdentifiants() {
+    Alert.alert(
+      t('profil.oublierIdentifiantsTitre'),
+      t('profil.oublierIdentifiantsMessage'),
+      [
+        { text: t('commun.annuler'), style: 'cancel' },
+        {
+          text: t('accueil.oublier'),
+          style: 'destructive',
+          onPress: async () => {
+            await oublierIdentifiants();
+            setIdentifiantsEnregistres(false);
+          },
+        },
+      ]
+    );
+  }
 
   async function selectionnerPhoto() {
     const uri = await choisirPhoto();
@@ -71,7 +97,7 @@ export default function Profil() {
 
   async function enregistrer() {
     if (!nom || !prenom) {
-      Alert.alert('Champs manquants', 'Le nom et le prénom sont obligatoires.');
+      Alert.alert(t('profil.champsManquantsTitre'), t('profil.champsManquantsMessage'));
       return;
     }
     setEnCours(true);
@@ -89,13 +115,11 @@ export default function Profil() {
       if (!data || data.length === 0) {
         // La mise à jour n'a touché aucune ligne : la policy RLS
         // d'update sur "profils" n'a probablement pas été appliquée.
-        throw new Error(
-          "La mise à jour n'a pas été enregistrée (vérifie que la migration SQL a bien été exécutée sur Supabase)."
-        );
+        throw new Error(t('profil.migrationNonAppliquee'));
       }
       router.replace('/');
     } catch (e) {
-      Alert.alert('Erreur', e.message);
+      Alert.alert(t('commun.erreur'), e.message);
     } finally {
       setEnCours(false);
     }
@@ -103,34 +127,34 @@ export default function Profil() {
 
   async function changerEmail() {
     if (!nouvelEmail.trim() || !nouvelEmail.includes('@')) {
-      Alert.alert('Adresse invalide', 'Merci de renseigner une adresse e-mail valide.');
+      Alert.alert(t('profil.adresseInvalideTitre'), t('profil.adresseInvalideMessage'));
       return;
     }
     setEnCoursEmail(true);
     const { error } = await supabase.auth.updateUser({ email: nouvelEmail.trim() });
     setEnCoursEmail(false);
     if (error) {
-      Alert.alert('Erreur', error.message);
+      Alert.alert(t('commun.erreur'), error.message);
       return;
     }
     Alert.alert(
-      'Vérifie ta boîte mail',
-      `Un e-mail de confirmation a été envoyé à ${nouvelEmail.trim()}. Ta nouvelle adresse ne sera active qu'une fois le lien confirmé.`
+      t('profil.verifieTaBoiteMailTitre'),
+      t('profil.verifieTaBoiteMailMessage', { email: nouvelEmail.trim() })
     );
     setNouvelEmail('');
   }
 
   async function changerMotDePasse() {
     if (!ancienMotDePasse) {
-      Alert.alert('Mot de passe actuel manquant', 'Merci de saisir ton mot de passe actuel.');
+      Alert.alert(t('profil.motDePasseActuelManquantTitre'), t('profil.motDePasseActuelManquantMessage'));
       return;
     }
     if (motDePasse.length < 6) {
-      Alert.alert('Mot de passe trop court', 'Le mot de passe doit contenir au moins 6 caractères.');
+      Alert.alert(t('profil.motDePasseTropCourtTitre'), t('profil.motDePasseTropCourtMessage'));
       return;
     }
     if (motDePasse !== confirmationMotDePasse) {
-      Alert.alert('Les mots de passe ne correspondent pas', 'Merci de vérifier la confirmation.');
+      Alert.alert(t('profil.motsDePasseDifferentsTitre'), t('profil.motsDePasseDifferentsMessage'));
       return;
     }
     setEnCoursMotDePasse(true);
@@ -143,20 +167,23 @@ export default function Profil() {
     });
     if (erreurVerification) {
       setEnCoursMotDePasse(false);
-      Alert.alert('Mot de passe actuel incorrect', "Vérifie ton mot de passe actuel et réessaie.");
+      Alert.alert(t('profil.motDePasseActuelIncorrectTitre'), t('profil.motDePasseActuelIncorrectMessage'));
       return;
     }
 
     const { error } = await supabase.auth.updateUser({ password: motDePasse });
     setEnCoursMotDePasse(false);
     if (error) {
-      Alert.alert('Erreur', error.message);
+      Alert.alert(t('commun.erreur'), error.message);
       return;
+    }
+    if (identifiantsEnregistres) {
+      await enregistrerIdentifiants(emailActuel, motDePasse);
     }
     setAncienMotDePasse('');
     setMotDePasse('');
     setConfirmationMotDePasse('');
-    Alert.alert('Mot de passe modifié');
+    Alert.alert(t('profil.motDePasseModifie'));
   }
 
   const apercu = nouvellePhotoUri || photoUrl;
@@ -168,43 +195,56 @@ export default function Profil() {
       keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
     >
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <Text style={styles.titre}>Mon profil</Text>
+        <Text style={styles.titre}>{t('profil.titre')}</Text>
 
         <Pressable style={styles.boutonPhoto} onPress={selectionnerPhoto}>
           {apercu ? (
             <Image source={{ uri: apercu }} style={styles.apercuPhoto} />
           ) : (
-            <Text style={styles.textePhoto}>Ajouter une photo</Text>
+            <Text style={styles.textePhoto}>{t('profil.ajouterUnePhoto')}</Text>
           )}
         </Pressable>
-        <Text style={styles.aidePhoto}>Touche la photo pour la changer</Text>
+        <Text style={styles.aidePhoto}>{t('profil.toucheLaPhoto')}</Text>
 
-        <Text style={styles.label}>Nom</Text>
+        <Text style={styles.label}>{t('profil.nom')}</Text>
         <TextInput style={styles.input} value={nom} onChangeText={setNom} returnKeyType="next" />
 
-        <Text style={styles.label}>Prénom</Text>
+        <Text style={styles.label}>{t('profil.prenom')}</Text>
         <TextInput style={styles.input} value={prenom} onChangeText={setPrenom} returnKeyType="next" />
 
-        <Text style={styles.label}>Club (optionnel)</Text>
+        <Text style={styles.label}>{t('profil.club')}</Text>
         <TextInput style={styles.input} value={club} onChangeText={setClub} returnKeyType="done" />
 
         <Pressable style={styles.bouton} onPress={enregistrer} disabled={enCours}>
-          <Text style={styles.texteBouton}>{enCours ? 'Enregistrement…' : 'Enregistrer'}</Text>
+          <Text style={styles.texteBouton}>
+            {enCours ? t('profil.enregistrementEnCours') : t('profil.enregistrer')}
+          </Text>
         </Pressable>
 
         <View style={styles.separateur} />
 
-        <Text style={styles.titreSection}>Apparence</Text>
-        <Text style={styles.aideSection}>Choisis l'affichage clair ou sombre de l'app.</Text>
+        <Text style={styles.titreSection}>{t('profil.apparence')}</Text>
+        <Text style={styles.aideSection}>{t('profil.apparenceAide')}</Text>
         <BasculeTheme />
+
+        {identifiantsEnregistres && (
+          <>
+            <View style={styles.separateur} />
+            <Text style={styles.titreSection}>{t('profil.identifiantsEnregistres')}</Text>
+            <Text style={styles.aideSection}>{t('profil.identifiantsEnregistresAide')}</Text>
+            <Pressable style={styles.boutonSecondaire} onPress={confirmerOubliIdentifiants}>
+              <Text style={styles.texteBoutonSecondaire}>{t('profil.oublierIdentifiants')}</Text>
+            </Pressable>
+          </>
+        )}
 
         <View style={styles.separateur} />
 
-        <Text style={styles.titreSection}>Adresse e-mail</Text>
-        <Text style={styles.aideSection}>Actuelle : {emailActuel}</Text>
+        <Text style={styles.titreSection}>{t('profil.adresseEmail')}</Text>
+        <Text style={styles.aideSection}>{t('profil.actuelle', { email: emailActuel })}</Text>
         <TextInput
           style={styles.input}
-          placeholder="Nouvelle adresse e-mail"
+          placeholder={t('profil.placeholderNouvelEmail')}
           value={nouvelEmail}
           onChangeText={setNouvelEmail}
           autoCapitalize="none"
@@ -212,34 +252,34 @@ export default function Profil() {
         />
         <Pressable style={styles.boutonSecondaire} onPress={changerEmail} disabled={enCoursEmail}>
           <Text style={styles.texteBoutonSecondaire}>
-            {enCoursEmail ? 'Envoi…' : "Changer l'adresse e-mail"}
+            {enCoursEmail ? t('profil.envoiEnCours') : t('profil.changerAdresseEmail')}
           </Text>
         </Pressable>
 
         <View style={styles.separateur} />
 
         <View style={styles.ligneTitreSection}>
-          <Text style={styles.titreSection}>Mot de passe</Text>
+          <Text style={styles.titreSection}>{t('profil.motDePasse')}</Text>
           <Pressable onPress={() => router.push('/mot-de-passe-oublie')}>
-            <Text style={styles.lienMotDePasseOublie}>Mot de passe oublié ?</Text>
+            <Text style={styles.lienMotDePasseOublie}>{t('profil.motDePasseOublie')}</Text>
           </Pressable>
         </View>
 
-        <Text style={styles.label}>Mot de passe actuel</Text>
+        <Text style={styles.label}>{t('profil.motDePasseActuel')}</Text>
         <TextInput
           style={styles.input}
           value={ancienMotDePasse}
           onChangeText={setAncienMotDePasse}
           secureTextEntry
         />
-        <Text style={styles.label}>Nouveau mot de passe</Text>
+        <Text style={styles.label}>{t('profil.nouveauMotDePasse')}</Text>
         <TextInput
           style={styles.input}
           value={motDePasse}
           onChangeText={setMotDePasse}
           secureTextEntry
         />
-        <Text style={styles.label}>Confirmer le nouveau mot de passe</Text>
+        <Text style={styles.label}>{t('profil.confirmerLeNouveauMotDePasse')}</Text>
         <TextInput
           style={styles.input}
           value={confirmationMotDePasse}
@@ -248,7 +288,7 @@ export default function Profil() {
         />
         <Pressable style={styles.boutonSecondaire} onPress={changerMotDePasse} disabled={enCoursMotDePasse}>
           <Text style={styles.texteBoutonSecondaire}>
-            {enCoursMotDePasse ? 'Modification…' : 'Changer le mot de passe'}
+            {enCoursMotDePasse ? t('profil.modificationEnCours') : t('profil.changerLeMotDePasse')}
           </Text>
         </Pressable>
       </ScrollView>

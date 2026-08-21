@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, Pressable, ScrollView, Alert } from 'react-native';
 import { useState, useCallback, useMemo } from 'react';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import { supabase } from '../../../lib/supabase';
 import { calculerClassement } from '../../../lib/classement';
@@ -16,7 +16,9 @@ import {
 } from '../../../lib/generation';
 import ClassementPoule from '../../../components/ClassementPoule';
 import BasculeVue from '../../../components/BasculeVue';
+import BoutonRetour from '../../../components/BoutonRetour';
 import { useTheme } from '../../../lib/ThemeContext';
+import { useLangue } from '../../../lib/LangueContext';
 import { POLICE_TITRE, POLICE_TEXTE, POLICE_TEXTE_SEMIBOLD } from '../../../lib/theme';
 
 function reglagesDepuisTournoi(tournoi, matchsExistants) {
@@ -43,9 +45,16 @@ function reglagesDepuisTournoi(tournoi, matchsExistants) {
 }
 
 export default function Calendrier() {
-  const { id } = useLocalSearchParams(); // id du tournoi
+  const { id, cree } = useLocalSearchParams(); // id du tournoi
   const router = useRouter();
+  // On arrive ici juste après avoir créé le tournoi (voir
+  // tournoi/[id]/equipes.js) : la pile contient encore l'écran de création
+  // initial (creer-tournoi.js), qui n'a plus lieu d'être puisque le tournoi
+  // existe déjà — un retour naturel y ramènerait sur un formulaire obsolète.
+  // On propose donc explicitement un retour vers l'accueil à la place.
+  const vientDEtreCree = cree === '1';
   const { couleurs } = useTheme();
+  const { t, langue } = useLangue();
   const styles = useMemo(() => creerStyles(couleurs), [couleurs]);
   const [tournoi, setTournoi] = useState(null);
   const [poules, setPoules] = useState([]);
@@ -106,7 +115,7 @@ export default function Calendrier() {
 
   async function genererPhaseFinale() {
     if (equipesQualifiees < 2) {
-      Alert.alert('Pas assez de qualifiés', "Il faut au moins 2 équipes qualifiées pour générer la phase finale.");
+      Alert.alert(t('calendrier.pasAssezQualifiesTitre'), t('calendrier.pasAssezQualifiesMessage'));
       return;
     }
     setEnCours(true);
@@ -114,7 +123,7 @@ export default function Calendrier() {
       const poulesAvecClassement = poules.map((poule) => {
         const equipesPoule = equipes.filter((e) => e.poule_id === poule.id);
         const matchsPoule = matchsBruts.filter((m) => m.phase === poule.nom);
-        return { classement: calculerClassement(equipesPoule, matchsPoule, resultats, tournoi.critere_departage_poule) };
+        return { classement: calculerClassement(equipesPoule, matchsPoule, resultats, tournoi.critere_departage_poule, tournoi.sport) };
       });
       const reglages = reglagesDepuisTournoi(tournoi, matchsBruts);
       const matchs = genererPhaseFinaleDepuisPoules(
@@ -123,7 +132,7 @@ export default function Calendrier() {
       await insererMatchs(matchs);
       charger();
     } catch (e) {
-      Alert.alert('Erreur', e.message);
+      Alert.alert(t('commun.erreur'), e.message);
     } finally {
       setEnCours(false);
     }
@@ -142,13 +151,17 @@ export default function Calendrier() {
       await insererMatchs(matchs);
       charger();
     } catch (e) {
-      Alert.alert('Erreur', e.message);
+      Alert.alert(t('commun.erreur'), e.message);
     } finally {
       setEnCours(false);
     }
   }
 
-  if (!tournoi) return null;
+  if (!tournoi) {
+    return vientDEtreCree ? (
+      <Stack.Screen options={{ headerLeft: () => <BoutonRetour canGoBack onPress={() => router.replace('/')} /> }} />
+    ) : null;
+  }
 
   const phasesElim = phases.filter(({ nom }) => !estPhaseDePoule(nom));
   const phasesPoule = phases.filter(({ nom }) => estPhaseDePoule(nom));
@@ -215,23 +228,29 @@ export default function Calendrier() {
     : [...phasesPoule, ...phasesElim];
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <>
+      {vientDEtreCree && (
+        <Stack.Screen
+          options={{ headerLeft: () => <BoutonRetour canGoBack onPress={() => router.replace('/')} /> }}
+        />
+      )}
+      <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.titre}>{tournoi.nom}</Text>
-      <Text style={styles.soustitre}>Touche un match pour saisir ou modifier son résultat</Text>
+      <Text style={styles.soustitre}>{t('calendrier.toucheUnMatch')}</Text>
 
       {tournoi.nombre_terrains > 1 && phases.length > 0 && (
         <BasculeVue
           valeur={parTerrain ? 'terrain' : 'poule'}
           onChange={(v) => setParTerrain(v === 'terrain')}
           options={[
-            { valeur: 'poule', label: 'Par poule' },
-            { valeur: 'terrain', label: 'Par terrain' },
+            { valeur: 'poule', label: t('calendrier.parPoule') },
+            { valeur: 'terrain', label: t('calendrier.parTerrain') },
           ]}
         />
       )}
 
       {phases.length === 0 && (
-        <Text style={styles.vide}>Aucun match généré pour l'instant.</Text>
+        <Text style={styles.vide}>{t('calendrier.aucunMatch')}</Text>
       )}
 
       {groupesAffiches.map(({ nom, matchs }) => (
@@ -242,7 +261,7 @@ export default function Calendrier() {
               return (
                 <View key={match.id} style={styles.ligneExempt}>
                   <Text style={styles.equipes}>{match.equipe_a?.nom}</Text>
-                  <Text style={styles.exempt}>Exempt · qualifié·e directement</Text>
+                  <Text style={styles.exempt}>{t('calendrier.exempt')}</Text>
                 </View>
               );
             }
@@ -258,21 +277,21 @@ export default function Calendrier() {
                     {match.equipe_a?.nom} · {match.equipe_b?.nom}
                   </Text>
                   <Text style={styles.horaire}>
-                    {new Date(match.horaire).toLocaleString('fr-FR', {
+                    {new Date(match.horaire).toLocaleString(langue === 'en' ? 'en-US' : 'fr-FR', {
                       weekday: 'short', hour: '2-digit', minute: '2-digit',
                     })}
-                    {parTerrain ? ` · ${match.phase}` : match.terrain ? ` · terrain ${match.terrain}` : ''}
+                    {parTerrain ? ` · ${match.phase}` : match.terrain ? ` · ${t('saisie.terrain', { n: match.terrain })}` : ''}
                   </Text>
                 </View>
                 {termine ? (
                   <Text style={styles.score}>
                     {match.resultat.score_a} – {match.resultat.score_b}
                     {!estPhaseDePoule(match.phase) && match.resultat.score_a === match.resultat.score_b
-                      ? ` (tab ${match.resultat.score_tab_a}-${match.resultat.score_tab_b})`
+                      ? ` ${t('calendrier.scoreTab', { a: match.resultat.score_tab_a, b: match.resultat.score_tab_b })}`
                       : ''}
                   </Text>
                 ) : (
-                  <Text style={styles.aVenir}>À venir</Text>
+                  <Text style={styles.aVenir}>{t('calendrier.aVenir')}</Text>
                 )}
               </Pressable>
             );
@@ -282,7 +301,7 @@ export default function Calendrier() {
 
       {afficherPodium ? (
         <View style={styles.podium}>
-          <Text style={styles.podiumTitre}>Podium</Text>
+          <Text style={styles.podiumTitre}>{t('calendrier.podium')}</Text>
           <View style={styles.ligneePodium}>
             <Text style={styles.podiumMedaille}>🥇</Text>
             <Text style={styles.podiumEquipe}>{nomVainqueur}</Text>
@@ -298,14 +317,14 @@ export default function Calendrier() {
         </View>
       ) : nomVainqueur && (
         <View style={styles.bandeauVainqueur}>
-          <Text style={styles.texteVainqueur}>🏆 Vainqueur : {nomVainqueur}</Text>
+          <Text style={styles.texteVainqueur}>{t('calendrier.vainqueur', { nom: nomVainqueur })}</Text>
         </View>
       )}
 
       {peutGenererPhaseFinale && (
         <Pressable style={styles.boutonGenerer} onPress={genererPhaseFinale} disabled={enCours}>
           <Text style={styles.texteBoutonGenerer}>
-            {enCours ? 'Génération…' : 'Générer la phase finale'}
+            {enCours ? t('calendrier.generationEnCours') : t('calendrier.genererLaPhaseFinale')}
           </Text>
         </Pressable>
       )}
@@ -314,24 +333,24 @@ export default function Calendrier() {
         <Pressable style={styles.boutonGenerer} onPress={genererProchainTour} disabled={enCours}>
           <Text style={styles.texteBoutonGenerer}>
             {enCours
-              ? 'Génération…'
+              ? t('calendrier.generationEnCours')
               : peutGenererTroisiemePlace
-                ? 'Générer la finale et le match pour la 3e place'
-                : 'Générer le tour suivant'}
+                ? t('calendrier.genererFinaleEtTroisieme')
+                : t('calendrier.genererLeTourSuivant')}
           </Text>
         </Pressable>
       )}
 
       {poules.length > 0 && (
         <>
-          <Text style={styles.sectionTitre}>Classement</Text>
+          <Text style={styles.sectionTitre}>{t('calendrier.classement')}</Text>
           {poules.map((poule) => {
             const equipesPoule = equipes.filter((e) => e.poule_id === poule.id);
             const matchsPoule = matchsBruts.filter((m) => m.phase === poule.nom);
             const classement = calculerClassement(
-              equipesPoule, matchsPoule, resultats, tournoi.critere_departage_poule
+              equipesPoule, matchsPoule, resultats, tournoi.critere_departage_poule, tournoi.sport
             );
-            return <ClassementPoule key={poule.id} nom={poule.nom} classement={classement} />;
+            return <ClassementPoule key={poule.id} nom={poule.nom} classement={classement} sport={tournoi.sport} />;
           })}
         </>
       )}
@@ -341,9 +360,10 @@ export default function Calendrier() {
         onPress={() => router.push(`/tournoi/${id}/equipes?modifier=1`)}
         hitSlop={8}
       >
-        <Text style={styles.lienModifier}>Modifier mon tournoi</Text>
+        <Text style={styles.lienModifier}>{t('calendrier.modifierMonTournoi')}</Text>
       </Pressable>
-    </ScrollView>
+      </ScrollView>
+    </>
   );
 }
 

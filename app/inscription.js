@@ -7,11 +7,13 @@ import { useRouter } from 'expo-router';
 import { supabase } from '../lib/supabase';
 import { choisirPhoto, televerserPhoto } from '../lib/profil';
 import { useTheme } from '../lib/ThemeContext';
+import { useLangue } from '../lib/LangueContext';
 import { POLICE_TITRE, POLICE_TEXTE, POLICE_TEXTE_SEMIBOLD } from '../lib/theme';
 
 export default function Inscription() {
   const router = useRouter();
   const { couleurs } = useTheme();
+  const { t } = useLangue();
   const styles = useMemo(() => creerStyles(couleurs), [couleurs]);
   const [nom, setNom] = useState('');
   const [prenom, setPrenom] = useState('');
@@ -28,7 +30,7 @@ export default function Inscription() {
 
   async function creerCompte() {
     if (!nom || !prenom || !email || !motDePasse) {
-      Alert.alert('Champs manquants', 'Merci de renseigner au minimum le nom, le prénom, l\'email et le mot de passe.');
+      Alert.alert(t('inscription.champsManquantsTitre'), t('inscription.champsManquantsMessage'));
       return;
     }
     setEnCours(true);
@@ -40,7 +42,7 @@ export default function Inscription() {
 
     if (error) {
       setEnCours(false);
-      Alert.alert('Erreur', error.message);
+      Alert.alert(t('commun.erreur'), error.message);
       return;
     }
 
@@ -57,14 +59,12 @@ export default function Inscription() {
     setEnCours(false);
 
     if (data.session) {
-      router.replace('/creer-tournoi');
+      router.replace('/choisir-sport');
     } else {
       Alert.alert(
-        'Compte créé',
-        photoUri
-          ? "Vérifie ta boîte mail pour confirmer ton adresse, puis connecte-toi. Tu pourras ajouter ta photo depuis ton profil une fois connecté."
-          : 'Vérifie ta boîte mail pour confirmer ton adresse, puis connecte-toi.',
-        [{ text: 'OK', onPress: () => router.replace('/connexion') }]
+        t('inscription.compteCreeTitre'),
+        photoUri ? t('inscription.verifieTaBoiteMailAvecPhoto') : t('inscription.verifieTaBoiteMail'),
+        [{ text: t('commun.ok'), onPress: () => router.replace('/connexion') }]
       );
     }
   }
@@ -76,19 +76,19 @@ export default function Inscription() {
       keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
     >
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-      <Text style={styles.titre}>Créer mon compte</Text>
-      <Text style={styles.soustitre}>Nécessaire pour créer et gérer tes tournois</Text>
+      <Text style={styles.titre}>{t('inscription.titre')}</Text>
+      <Text style={styles.soustitre}>{t('inscription.sousTitre')}</Text>
 
-      <Text style={styles.label}>Nom</Text>
+      <Text style={styles.label}>{t('inscription.nom')}</Text>
       <TextInput style={styles.input} value={nom} onChangeText={setNom} returnKeyType="next" placeholderTextColor={couleurs.texteAttenue} />
 
-      <Text style={styles.label}>Prénom</Text>
+      <Text style={styles.label}>{t('inscription.prenom')}</Text>
       <TextInput style={styles.input} value={prenom} onChangeText={setPrenom} returnKeyType="next" />
 
-      <Text style={styles.label}>Club (optionnel)</Text>
+      <Text style={styles.label}>{t('inscription.club')}</Text>
       <TextInput style={styles.input} value={club} onChangeText={setClub} returnKeyType="next" />
 
-      <Text style={styles.label}>Adresse e-mail</Text>
+      <Text style={styles.label}>{t('inscription.email')}</Text>
       <TextInput
         style={styles.input}
         value={email}
@@ -98,7 +98,7 @@ export default function Inscription() {
         returnKeyType="next"
       />
 
-      <Text style={styles.label}>Mot de passe</Text>
+      <Text style={styles.label}>{t('inscription.motDePasse')}</Text>
       <TextInput
         style={styles.input}
         value={motDePasse}
@@ -112,16 +112,16 @@ export default function Inscription() {
         {photoUri ? (
           <Image source={{ uri: photoUri }} style={styles.apercuPhoto} />
         ) : (
-          <Text style={styles.textePhoto}>Ajouter une photo</Text>
+          <Text style={styles.textePhoto}>{t('inscription.ajouterUnePhoto')}</Text>
         )}
       </Pressable>
 
       <Pressable style={styles.bouton} onPress={creerCompte} disabled={enCours}>
-        <Text style={styles.texteBouton}>{enCours ? 'Création…' : 'Créer mon compte'}</Text>
+        <Text style={styles.texteBouton}>{enCours ? t('inscription.creationEnCours') : t('inscription.creerMonCompte')}</Text>
       </Pressable>
 
       <Pressable onPress={() => router.replace('/connexion')}>
-        <Text style={styles.lien}>Déjà inscrit ? Se connecter</Text>
+        <Text style={styles.lien}>{t('inscription.dejaInscrit')}</Text>
       </Pressable>
       </ScrollView>
     </KeyboardAvoidingView>

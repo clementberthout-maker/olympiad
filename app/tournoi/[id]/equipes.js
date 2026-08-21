@@ -3,10 +3,11 @@ import {
   ScrollView, KeyboardAvoidingView, Platform, Keyboard,
 } from 'react-native';
 import { useState, useCallback, useMemo } from 'react';
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../../../lib/supabase';
+import { genererCodeAcces } from '../../../lib/codeAcces';
 import {
   repartirEnPoules,
   genererCalendrierPoules,
@@ -17,6 +18,7 @@ import CarteSelectionnable from '../../../components/CarteSelectionnable';
 import RouePicker from '../../../components/RouePicker';
 import SelecteurDate from '../../../components/SelecteurDate';
 import { useTheme } from '../../../lib/ThemeContext';
+import { useLangue } from '../../../lib/LangueContext';
 import { POLICE_TITRE, POLICE_TEXTE, POLICE_TEXTE_SEMIBOLD } from '../../../lib/theme';
 
 function pad(n) {
@@ -48,18 +50,28 @@ function Stepper({ valeur, onChange, min = 0, pas = 1, styles }) {
 }
 
 export default function GestionEquipes() {
-  const { id, modifier } = useLocalSearchParams(); // id du tournoi
+  const {
+    id, modifier,
+    sport: sportParam, nom: nomParam, date: dateParam, format: formatParam,
+    departagePoule: departagePouleParam, departageElimination: departageEliminationParam,
+  } = useLocalSearchParams(); // id du tournoi ("nouveau" tant qu'il n'est pas encore créé)
   const router = useRouter();
   const { couleurs } = useTheme();
+  const { t, langue } = useLangue();
   const styles = useMemo(() => creerStyles(couleurs), [couleurs]);
   const vientDuCalendrier = modifier === '1';
+  // Le tournoi n'existe pas encore en base : "id" n'est alors qu'un
+  // marqueur ("nouveau") posé par creer-tournoi.js, le temps de terminer
+  // les réglages ci-dessous. Rien n'est créé tant que "Créer le tournoi"
+  // n'a pas été validé (voir creerTournoiEtEquipes).
+  const estBrouillon = id === 'nouveau';
   const [tournoi, setTournoi] = useState(null);
   const [equipes, setEquipes] = useState([]);
   const [nomEquipe, setNomEquipe] = useState('');
 
   const [modifierInfos, setModifierInfos] = useState(false);
-  const [nomEdit, setNomEdit] = useState('');
-  const [dateEdit, setDateEdit] = useState('');
+  const [nomEdit, setNomEdit] = useState(estBrouillon ? (nomParam || '') : '');
+  const [dateEdit, setDateEdit] = useState(estBrouillon ? (dateParam || '') : '');
 
   const [modifierTitreDate, setModifierTitreDate] = useState(false);
   const [nomEdite, setNomEdite] = useState('');
@@ -80,11 +92,21 @@ export default function GestionEquipes() {
   const [pauseFinM, setPauseFinM] = useState(30);
   const [nombreQualifies, setNombreQualifies] = useState(2);
   const [matchTroisiemePlace, setMatchTroisiemePlace] = useState(false);
+  const [pointsBonus, setPointsBonus] = useState(false);
   const [calendrierGenere, setCalendrierGenere] = useState(false);
+  const [reglagesAvancesOuverts, setReglagesAvancesOuverts] = useState(false);
 
   const [enCours, setEnCours] = useState(false);
 
+  // Format choisi à l'étape précédente (brouillon) ou déjà enregistré en
+  // base (tournoi existant) : détermine quelles cartes de réglages afficher.
+  const formatTournoi = estBrouillon ? (formatParam || 'mixte') : tournoi?.format;
+  // Sport choisi à l'étape précédente ou déjà enregistré en base — fixé à
+  // la création, non modifiable ici (comme le format).
+  const sportTournoi = estBrouillon ? (sportParam || 'football') : (tournoi?.sport || 'football');
+
   const charger = useCallback(async () => {
+    if (estBrouillon) return;
     const { data: t } = await supabase.from('tournois').select('*').eq('id', id).single();
     setTournoi(t);
     if (t) {
@@ -113,6 +135,7 @@ export default function GestionEquipes() {
       }
       if (t.nombre_qualifies_par_poule) setNombreQualifies(t.nombre_qualifies_par_poule);
       if (typeof t.match_troisieme_place === 'boolean') setMatchTroisiemePlace(t.match_troisieme_place);
+      if (typeof t.points_bonus === 'boolean') setPointsBonus(t.points_bonus);
     }
     const { data: eq } = await supabase
       .from('equipes')
@@ -126,7 +149,7 @@ export default function GestionEquipes() {
       .select('id', { count: 'exact', head: true })
       .eq('tournoi_id', id);
     setCalendrierGenere(Boolean(count));
-  }, [id]);
+  }, [id, estBrouillon]);
 
   useFocusEffect(
     useCallback(() => {
@@ -136,9 +159,18 @@ export default function GestionEquipes() {
 
   async function ajouterEquipe() {
     if (!nomEquipe.trim()) return;
+    if (estBrouillon) {
+      setEquipes((liste) => [
+        ...liste,
+        { id: `brouillon-${Date.now()}-${Math.random().toString(36).slice(2)}`, nom: nomEquipe.trim() },
+      ]);
+      setNomEquipe('');
+      Keyboard.dismiss();
+      return;
+    }
     const { error } = await supabase.from('equipes').insert({ tournoi_id: id, nom: nomEquipe.trim() });
     if (error) {
-      Alert.alert('Erreur', error.message);
+      Alert.alert(t('commun.erreur'), error.message);
       return;
     }
     setNomEquipe('');
@@ -147,9 +179,13 @@ export default function GestionEquipes() {
   }
 
   async function supprimerEquipe(equipeId) {
+    if (estBrouillon) {
+      setEquipes((liste) => liste.filter((e) => e.id !== equipeId));
+      return;
+    }
     const { error } = await supabase.from('equipes').delete().eq('id', equipeId);
     if (error) {
-      Alert.alert('Erreur', error.message);
+      Alert.alert(t('commun.erreur'), error.message);
       return;
     }
     charger();
@@ -161,11 +197,11 @@ export default function GestionEquipes() {
       return;
     }
     Alert.alert(
-      'Retirer cette équipe ?',
-      `"${equipe.nom}" a déjà des matchs dans le calendrier : ils seront supprimés, avec leurs résultats éventuels.`,
+      t('equipes.retirerEquipeTitre'),
+      t('equipes.retirerEquipeMessage', { nom: equipe.nom }),
       [
-        { text: 'Annuler', style: 'cancel' },
-        { text: 'Retirer', style: 'destructive', onPress: () => supprimerEquipe(equipe.id) },
+        { text: t('commun.annuler'), style: 'cancel' },
+        { text: t('equipes.retirer'), style: 'destructive', onPress: () => supprimerEquipe(equipe.id) },
       ]
     );
   }
@@ -185,6 +221,7 @@ export default function GestionEquipes() {
       heure_fin_pause: pauseDejeuner ? `${pad(pauseFinH)}:${pad(pauseFinM)}` : null,
       nombre_qualifies_par_poule: nombreQualifies,
       match_troisieme_place: matchTroisiemePlace,
+      points_bonus: pointsBonus,
     };
   }
 
@@ -197,6 +234,10 @@ export default function GestionEquipes() {
   }
 
   async function sauvegarderReglages() {
+    if (estBrouillon) {
+      await creerTournoiEtEquipes();
+      return;
+    }
     setEnCours(true);
     try {
       const { error } = await supabase.from('tournois').update(reglagesActuels()).eq('id', id);
@@ -211,12 +252,74 @@ export default function GestionEquipes() {
         .eq('tournoi_id', id);
 
       if (!count && equipes.length >= 2) {
-        await genererLesMatchs();
+        await genererLesMatchs(id, formatTournoi, equipes);
       }
 
       allerAuCalendrier();
     } catch (e) {
-      Alert.alert('Erreur', e.message);
+      Alert.alert(t('commun.erreur'), e.message);
+    } finally {
+      setEnCours(false);
+    }
+  }
+
+  // Crée réellement le tournoi (et ses équipes) en base, une fois tous les
+  // réglages remplis — rien n'a été écrit avant cet instant.
+  async function creerTournoiEtEquipes() {
+    if (!nomEdit || !dateEdit) {
+      Alert.alert(t('equipes.champsManquantsTitre'), t('equipes.champsManquantsMessage'));
+      return;
+    }
+    if (equipes.length === 0) {
+      Alert.alert(t('equipes.aucuneEquipeTitre'), t('equipes.aucuneEquipeMessage'));
+      return;
+    }
+
+    setEnCours(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        router.replace('/inscription');
+        return;
+      }
+
+      let tournoiCree, erreurCreation;
+      for (let tentative = 0; tentative < 5; tentative++) {
+        ({ data: tournoiCree, error: erreurCreation } = await supabase
+          .from('tournois')
+          .insert({
+            ...reglagesActuels(),
+            format: formatTournoi,
+            sport: sportTournoi,
+            critere_departage_poule: departagePouleParam || 'diff_buts',
+            mode_departage: departageEliminationParam || 'prolongations_tab',
+            code_acces: genererCodeAcces(),
+            organisateur_id: session.user.id,
+          })
+          .select()
+          .single());
+
+        if (!erreurCreation) break;
+        if (erreurCreation.code === '23505') continue; // code déjà pris : on retente avec un nouveau
+        break;
+      }
+      if (erreurCreation) throw erreurCreation;
+
+      const nouvelId = tournoiCree.id;
+
+      const { data: equipesInserees, error: erreurEquipes } = await supabase
+        .from('equipes')
+        .insert(equipes.map((e) => ({ tournoi_id: nouvelId, nom: e.nom })))
+        .select();
+      if (erreurEquipes) throw erreurEquipes;
+
+      if ((equipesInserees || []).length >= 2) {
+        await genererLesMatchs(nouvelId, formatTournoi, equipesInserees);
+      }
+
+      router.replace(`/tournoi/${nouvelId}/calendrier?cree=1`);
+    } catch (e) {
+      Alert.alert(t('commun.erreur'), e.message);
     } finally {
       setEnCours(false);
     }
@@ -224,23 +327,26 @@ export default function GestionEquipes() {
 
   function confirmerRegeneration() {
     if (equipes.length < 2) {
-      Alert.alert("Pas assez d'équipes", 'Ajoute au moins 2 équipes avant de régénérer le calendrier.');
+      Alert.alert(t('equipes.pasAssezEquipesTitre'), t('equipes.pasAssezEquipesMessage'));
       return;
     }
     Alert.alert(
-      'Régénérer le calendrier ?',
-      'Les matchs et résultats déjà saisis seront supprimés et remplacés par un nouveau calendrier.',
+      t('equipes.regenererTitre'),
+      t('equipes.regenererMessage'),
       [
-        { text: 'Annuler', style: 'cancel' },
-        { text: 'Régénérer', style: 'destructive', onPress: regenererCalendrier },
+        { text: t('commun.annuler'), style: 'cancel' },
+        { text: t('equipes.regenerer'), style: 'destructive', onPress: regenererCalendrier },
       ]
     );
   }
 
   // Génère les poules (le cas échéant) et le calendrier des matchs à partir
-  // des réglages et équipes actuels. Suppose qu'il n'y a rien à supprimer au
-  // préalable (voir sauvegarderReglages / regenererCalendrier).
-  async function genererLesMatchs() {
+  // des réglages actuels, pour un tournoi et une liste d'équipes donnés
+  // (passés explicitement : au moment de la création, le tournoi vient
+  // tout juste d'être inséré et n'est pas encore dans l'état "tournoi").
+  // Suppose qu'il n'y a rien à supprimer au préalable (voir
+  // creerTournoiEtEquipes / sauvegarderReglages / regenererCalendrier).
+  async function genererLesMatchs(tournoiId, formatDuTournoi, equipesPourGeneration) {
     const reglagesTournoi = reglagesActuels();
     const reglages = {
       dateDebut: dateEdit,
@@ -253,8 +359,8 @@ export default function GestionEquipes() {
       heureFinPause: reglagesTournoi.heure_fin_pause,
     };
 
-    if (tournoi.format === 'elimination_directe') {
-      const matchs = genererPremierTourEliminationDirecte(equipes, id, reglages);
+    if (formatDuTournoi === 'elimination_directe') {
+      const matchs = genererPremierTourEliminationDirecte(equipesPourGeneration, tournoiId, reglages);
       const { data: matchsInseres, error } = await supabase.from('matchs').insert(matchs).select();
       if (error) throw error;
       const resultatsExempts = resultatsAutoPourExempts(matchsInseres);
@@ -263,13 +369,13 @@ export default function GestionEquipes() {
         if (erreurExempts) throw erreurExempts;
       }
     } else {
-      const groupes = repartirEnPoules(equipes, nombrePoules);
+      const groupes = repartirEnPoules(equipesPourGeneration, nombrePoules);
       const poulesAvecEquipes = [];
       for (let i = 0; i < groupes.length; i++) {
         const nomPoule = `Poule ${String.fromCharCode(65 + i)}`;
         const { data: poule, error: erreurPoule } = await supabase
           .from('poules')
-          .insert({ tournoi_id: id, nom: nomPoule })
+          .insert({ tournoi_id: tournoiId, nom: nomPoule })
           .select()
           .single();
         if (erreurPoule) throw erreurPoule;
@@ -282,7 +388,7 @@ export default function GestionEquipes() {
         poulesAvecEquipes.push({ id: poule.id, nom: nomPoule, equipes: groupes[i] });
       }
 
-      const matchs = genererCalendrierPoules(poulesAvecEquipes, id, reglages);
+      const matchs = genererCalendrierPoules(poulesAvecEquipes, tournoiId, reglages);
       const { error: erreurMatchs } = await supabase.from('matchs').insert(matchs);
       if (erreurMatchs) throw erreurMatchs;
     }
@@ -294,10 +400,10 @@ export default function GestionEquipes() {
       await supabase.from('tournois').update(reglagesActuels()).eq('id', id);
       await supabase.from('matchs').delete().eq('tournoi_id', id);
       await supabase.from('poules').delete().eq('tournoi_id', id);
-      await genererLesMatchs();
+      await genererLesMatchs(id, formatTournoi, equipes);
       allerAuCalendrier();
     } catch (e) {
-      Alert.alert('Erreur', e.message);
+      Alert.alert(t('commun.erreur'), e.message);
     } finally {
       setEnCours(false);
     }
@@ -305,11 +411,11 @@ export default function GestionEquipes() {
 
   function confirmerSuppressionTournoi() {
     Alert.alert(
-      'Supprimer ce tournoi ?',
-      'Cette action est définitive : équipes, matchs et résultats seront supprimés.',
+      t('equipes.supprimerTournoiTitre'),
+      t('equipes.supprimerTournoiMessage'),
       [
-        { text: 'Annuler', style: 'cancel' },
-        { text: 'Supprimer', style: 'destructive', onPress: supprimerTournoi },
+        { text: t('commun.annuler'), style: 'cancel' },
+        { text: t('commun.supprimer'), style: 'destructive', onPress: supprimerTournoi },
       ]
     );
   }
@@ -319,23 +425,16 @@ export default function GestionEquipes() {
     const { error } = await supabase.from('tournois').delete().eq('id', id);
     setEnCours(false);
     if (error) {
-      Alert.alert('Erreur', error.message);
+      Alert.alert(t('commun.erreur'), error.message);
       return;
     }
     router.replace('/');
   }
 
-  if (!tournoi) return null;
+  if (!estBrouillon && !tournoi) return null;
 
   return (
     <>
-      {/* Venant de "Modifier mon tournoi" (calendrier déjà généré) : la
-          flèche de retour par défaut suffit (voir _layout.js). Lors de la
-          création initiale (juste après creer-tournoi.js), il n'y a rien
-          de cohérent vers quoi revenir : on la masque explicitement. */}
-      {!vientDuCalendrier && (
-        <Stack.Screen options={{ headerLeft: () => null, headerBackVisible: false, gestureEnabled: false }} />
-      )}
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -343,42 +442,44 @@ export default function GestionEquipes() {
       >
         <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
         <View style={styles.entete}>
-          <Text style={styles.titre}>{tournoi.nom}</Text>
-          <Pressable
-            style={styles.badgeQrCode}
-            onPress={() => router.push(`/tournoi/${id}/qrcode`)}
-            hitSlop={8}
-          >
-            <Ionicons name="qr-code-outline" size={28} color={couleurs.texte} />
-          </Pressable>
+          <Text style={styles.titre}>{nomEdit}</Text>
+          {!estBrouillon && (
+            <Pressable
+              style={styles.badgeQrCode}
+              onPress={() => router.push(`/tournoi/${id}/qrcode`)}
+              hitSlop={8}
+            >
+              <Ionicons name="qr-code-outline" size={28} color={couleurs.texte} />
+            </Pressable>
+          )}
         </View>
         <Text style={styles.soustitre}>
-          {new Date(`${tournoi.date_debut}T00:00:00`).toLocaleDateString('fr-FR', {
+          {t(`sports.${sportTournoi}.label`)} · {new Date(`${dateEdit}T00:00:00`).toLocaleDateString(langue === 'en' ? 'en-US' : 'fr-FR', {
             day: 'numeric', month: 'long', year: 'numeric',
           })}
         </Text>
 
         <Pressable onPress={() => setModifierInfos(!modifierInfos)} hitSlop={8}>
           <Text style={styles.lienModifierInfos}>
-            {modifierInfos ? 'Fermer' : 'Modifier le nom et la date'}
+            {modifierInfos ? t('equipes.fermer') : t('equipes.modifierNomEtDate')}
           </Text>
         </Pressable>
 
         {modifierInfos && (
           <View style={styles.carte}>
-            <Text style={styles.carteLabel}>Nom du tournoi</Text>
+            <Text style={styles.carteLabel}>{t('equipes.nomDuTournoi')}</Text>
             <TextInput style={styles.input} value={nomEdit} onChangeText={setNomEdit} returnKeyType="done" />
-            <Text style={[styles.carteLabel, { marginTop: 14 }]}>Date</Text>
+            <Text style={[styles.carteLabel, { marginTop: 14 }]}>{t('equipes.date')}</Text>
             <SelecteurDate value={dateEdit} onChange={setDateEdit} />
           </View>
         )}
 
         <View style={styles.carte}>
-          <Text style={styles.carteLabel}>Équipes · {equipes.length}</Text>
+          <Text style={styles.carteLabel}>{t('equipes.equipesCompteur', { n: equipes.length })}</Text>
           <View style={styles.ligneAjout}>
             <TextInput
               style={styles.input}
-              placeholder="Nom de l'équipe"
+              placeholder={t('equipes.placeholderNomEquipe')}
               value={nomEquipe}
               onChangeText={setNomEquipe}
               onSubmitEditing={ajouterEquipe}
@@ -398,54 +499,50 @@ export default function GestionEquipes() {
               <View style={styles.ligneEquipe}>
                 <Text style={styles.nomEquipe}>{item.nom}</Text>
                 <Pressable onPress={() => confirmerSuppressionEquipe(item)} hitSlop={8} style={styles.boutonSupprimer}>
-                  <Text style={styles.supprimer}>Retirer</Text>
+                  <Text style={styles.supprimer}>{t('equipes.retirer')}</Text>
                 </Pressable>
               </View>
             )}
-            ListEmptyComponent={<Text style={styles.vide}>Aucune équipe ajoutée pour l'instant.</Text>}
+            ListEmptyComponent={<Text style={styles.vide}>{t('equipes.aucuneEquipeAjoutee')}</Text>}
           />
         </View>
 
         <View style={styles.carte}>
-          <Text style={styles.carteLabel}>Terrains disponibles</Text>
-          <Text style={styles.carteAide}>Plusieurs matchs pourront se jouer en même temps.</Text>
+          <Text style={styles.carteLabel}>{t('equipes.terrainsDisponibles')}</Text>
+          <Text style={styles.carteAide}>{t('equipes.terrainsAide')}</Text>
           <Stepper valeur={nombreTerrains} onChange={setNombreTerrains} min={1} styles={styles} />
         </View>
 
-        {tournoi.format !== 'elimination_directe' && (
+        {formatTournoi !== 'elimination_directe' && (
           <View style={styles.carte}>
-            <Text style={styles.carteLabel}>Nombre de poules</Text>
+            <Text style={styles.carteLabel}>{t('equipes.nombreDePoules')}</Text>
             <Stepper valeur={nombrePoules} onChange={setNombrePoules} min={1} styles={styles} />
           </View>
         )}
 
-        {tournoi.format === 'mixte' && (
+        {formatTournoi === 'mixte' && (
           <View style={styles.carte}>
-            <Text style={styles.carteLabel}>Qualifiés par poule pour la phase finale</Text>
-            <Text style={styles.carteAide}>
-              Nombre d'équipes de chaque poule qui accèdent à la phase à élimination directe.
-            </Text>
+            <Text style={styles.carteLabel}>{t('equipes.qualifiesParPoule')}</Text>
+            <Text style={styles.carteAide}>{t('equipes.qualifiesParPouleAide')}</Text>
             <Stepper valeur={nombreQualifies} onChange={setNombreQualifies} min={1} styles={styles} />
           </View>
         )}
 
-        {tournoi.format !== 'poules' && (
+        {formatTournoi !== 'poules' && (
           <View style={styles.carte}>
-            <Text style={styles.carteLabel}>Match pour la 3e place</Text>
-            <Text style={styles.carteAide}>
-              Ajoute un match de classement entre les deux équipes battues en demi-finale.
-            </Text>
+            <Text style={styles.carteLabel}>{t('equipes.matchTroisiemePlace')}</Text>
+            <Text style={styles.carteAide}>{t('equipes.matchTroisiemePlaceAide')}</Text>
             <View style={styles.ligneChoix}>
               <View style={{ flex: 1 }}>
                 <CarteSelectionnable
-                  label="Oui"
+                  label={t('commun.oui')}
                   selectionnee={matchTroisiemePlace}
                   onPress={() => setMatchTroisiemePlace(true)}
                 />
               </View>
               <View style={{ flex: 1 }}>
                 <CarteSelectionnable
-                  label="Non"
+                  label={t('commun.non')}
                   selectionnee={!matchTroisiemePlace}
                   onPress={() => setMatchTroisiemePlace(false)}
                 />
@@ -454,89 +551,133 @@ export default function GestionEquipes() {
           </View>
         )}
 
-        <View style={styles.carte}>
-          <Text style={styles.carteLabel}>Heure du premier match</Text>
-          <View style={styles.ligneRoues}>
-            <RouePicker valeurs={HEURES} valeur={heureH} onChange={setHeureH} formatValeur={(v) => pad(v)} />
-            <Text style={styles.deuxPoints}>:</Text>
-            <RouePicker valeurs={MINUTES} valeur={heureM} onChange={setHeureM} formatValeur={(v) => pad(v)} />
-          </View>
-        </View>
-
-        <View style={styles.carte}>
-          <Text style={styles.carteLabel}>Durée d'un match (minutes)</Text>
-          <RouePicker valeurs={DUREES_MATCH} valeur={dureeMatch} onChange={setDureeMatch} />
-        </View>
-
-        <View style={styles.carte}>
-          <Text style={styles.carteLabel}>Mi-temps</Text>
-          <View style={styles.ligneChoix}>
-            <View style={{ flex: 1 }}>
-              <CarteSelectionnable label="Oui" selectionnee={miTemps} onPress={() => setMiTemps(true)} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <CarteSelectionnable label="Non" selectionnee={!miTemps} onPress={() => setMiTemps(false)} />
-            </View>
-          </View>
-          {miTemps && (
-            <>
-              <Text style={[styles.carteLabel, { marginTop: 10 }]}>Durée de la mi-temps (minutes)</Text>
-              <RouePicker valeurs={DUREES_MI_TEMPS} valeur={dureeMiTemps} onChange={setDureeMiTemps} />
-            </>
-          )}
-        </View>
-
-        <View style={styles.carte}>
-          <Text style={styles.carteLabel}>Pause entre chaque match (minutes)</Text>
-          <RouePicker valeurs={DUREES_PAUSE} valeur={tempsPause} onChange={setTempsPause} />
-        </View>
-
-        <View style={styles.carte}>
-          <Text style={styles.carteLabel}>Pause déjeuner</Text>
-          <View style={styles.ligneChoix}>
-            <View style={{ flex: 1 }}>
-              <CarteSelectionnable label="Oui" selectionnee={pauseDejeuner} onPress={() => setPauseDejeuner(true)} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <CarteSelectionnable label="Non" selectionnee={!pauseDejeuner} onPress={() => setPauseDejeuner(false)} />
-            </View>
-          </View>
-          {pauseDejeuner && (
-            <View style={styles.ligneDoublePause}>
-              <View>
-                <Text style={styles.sousLabel}>De</Text>
-                <View style={styles.ligneRoues}>
-                  <RouePicker valeurs={HEURES} valeur={pauseDebutH} onChange={setPauseDebutH} formatValeur={(v) => pad(v)} />
-                  <Text style={styles.deuxPoints}>:</Text>
-                  <RouePicker valeurs={MINUTES} valeur={pauseDebutM} onChange={setPauseDebutM} formatValeur={(v) => pad(v)} />
-                </View>
+        {sportTournoi === 'rugby' && (
+          <View style={styles.carte}>
+            <Text style={styles.carteLabel}>{t('equipes.pointsBonus')}</Text>
+            <Text style={styles.carteAide}>{t('equipes.pointsBonusAide')}</Text>
+            <View style={styles.ligneChoix}>
+              <View style={{ flex: 1 }}>
+                <CarteSelectionnable
+                  label={t('commun.oui')}
+                  selectionnee={pointsBonus}
+                  onPress={() => setPointsBonus(true)}
+                />
               </View>
-              <View>
-                <Text style={styles.sousLabel}>À</Text>
-                <View style={styles.ligneRoues}>
-                  <RouePicker valeurs={HEURES} valeur={pauseFinH} onChange={setPauseFinH} formatValeur={(v) => pad(v)} />
-                  <Text style={styles.deuxPoints}>:</Text>
-                  <RouePicker valeurs={MINUTES} valeur={pauseFinM} onChange={setPauseFinM} formatValeur={(v) => pad(v)} />
-                </View>
+              <View style={{ flex: 1 }}>
+                <CarteSelectionnable
+                  label={t('commun.non')}
+                  selectionnee={!pointsBonus}
+                  onPress={() => setPointsBonus(false)}
+                />
               </View>
             </View>
-          )}
-        </View>
+          </View>
+        )}
+
+        <Pressable
+          style={styles.enteteAvance}
+          onPress={() => setReglagesAvancesOuverts((v) => !v)}
+        >
+          <Text style={styles.labelAvance}>{t('equipes.reglagesAvancesHoraires')}</Text>
+          <Text style={styles.chevronAvance}>{reglagesAvancesOuverts ? '︿' : '﹀'}</Text>
+        </Pressable>
+        {!reglagesAvancesOuverts && (
+          <Text style={styles.aideAvance}>{t('equipes.aideAvanceHoraires')}</Text>
+        )}
+
+        {reglagesAvancesOuverts && (
+          <>
+            <View style={styles.carte}>
+              <Text style={styles.carteLabel}>{t('equipes.heurePremierMatch')}</Text>
+              <View style={styles.ligneRoues}>
+                <RouePicker valeurs={HEURES} valeur={heureH} onChange={setHeureH} formatValeur={(v) => pad(v)} />
+                <Text style={styles.deuxPoints}>:</Text>
+                <RouePicker valeurs={MINUTES} valeur={heureM} onChange={setHeureM} formatValeur={(v) => pad(v)} />
+              </View>
+            </View>
+
+            <View style={styles.carte}>
+              <Text style={styles.carteLabel}>{t('equipes.dureeMatch')}</Text>
+              <RouePicker valeurs={DUREES_MATCH} valeur={dureeMatch} onChange={setDureeMatch} />
+            </View>
+
+            <View style={styles.carte}>
+              <Text style={styles.carteLabel}>{t('equipes.miTemps')}</Text>
+              <View style={styles.ligneChoix}>
+                <View style={{ flex: 1 }}>
+                  <CarteSelectionnable label={t('commun.oui')} selectionnee={miTemps} onPress={() => setMiTemps(true)} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <CarteSelectionnable label={t('commun.non')} selectionnee={!miTemps} onPress={() => setMiTemps(false)} />
+                </View>
+              </View>
+              {miTemps && (
+                <>
+                  <Text style={[styles.carteLabel, { marginTop: 10 }]}>{t('equipes.dureeMiTemps')}</Text>
+                  <RouePicker valeurs={DUREES_MI_TEMPS} valeur={dureeMiTemps} onChange={setDureeMiTemps} />
+                </>
+              )}
+            </View>
+
+            <View style={styles.carte}>
+              <Text style={styles.carteLabel}>{t('equipes.pauseEntreMatchs')}</Text>
+              <RouePicker valeurs={DUREES_PAUSE} valeur={tempsPause} onChange={setTempsPause} />
+            </View>
+
+            <View style={styles.carte}>
+              <Text style={styles.carteLabel}>{t('equipes.pauseDejeuner')}</Text>
+              <View style={styles.ligneChoix}>
+                <View style={{ flex: 1 }}>
+                  <CarteSelectionnable label={t('commun.oui')} selectionnee={pauseDejeuner} onPress={() => setPauseDejeuner(true)} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <CarteSelectionnable label={t('commun.non')} selectionnee={!pauseDejeuner} onPress={() => setPauseDejeuner(false)} />
+                </View>
+              </View>
+              {pauseDejeuner && (
+                <View style={styles.ligneDoublePause}>
+                  <View>
+                    <Text style={styles.sousLabel}>{t('equipes.de')}</Text>
+                    <View style={styles.ligneRoues}>
+                      <RouePicker valeurs={HEURES} valeur={pauseDebutH} onChange={setPauseDebutH} formatValeur={(v) => pad(v)} />
+                      <Text style={styles.deuxPoints}>:</Text>
+                      <RouePicker valeurs={MINUTES} valeur={pauseDebutM} onChange={setPauseDebutM} formatValeur={(v) => pad(v)} />
+                    </View>
+                  </View>
+                  <View>
+                    <Text style={styles.sousLabel}>{t('equipes.a')}</Text>
+                    <View style={styles.ligneRoues}>
+                      <RouePicker valeurs={HEURES} valeur={pauseFinH} onChange={setPauseFinH} formatValeur={(v) => pad(v)} />
+                      <Text style={styles.deuxPoints}>:</Text>
+                      <RouePicker valeurs={MINUTES} valeur={pauseFinM} onChange={setPauseFinM} formatValeur={(v) => pad(v)} />
+                    </View>
+                  </View>
+                </View>
+              )}
+            </View>
+          </>
+        )}
 
         <Pressable style={styles.boutonSauvegarder} onPress={sauvegarderReglages} disabled={enCours}>
-          <Text style={styles.texteBoutonSauvegarder}>{enCours ? 'Sauvegarde…' : 'Sauvegarder'}</Text>
+          <Text style={styles.texteBoutonSauvegarder}>
+            {estBrouillon
+              ? (enCours ? t('equipes.creationEnCours') : t('equipes.creerLeTournoi'))
+              : (enCours ? t('equipes.sauvegardeEnCours') : t('equipes.sauvegarder'))}
+          </Text>
         </Pressable>
 
-        <Pressable style={styles.boutonRegenerer} onPress={confirmerRegeneration} disabled={enCours}>
-          <Text style={styles.texteBoutonRegenerer}>Régénérer le calendrier</Text>
-        </Pressable>
-        <Text style={styles.avertissement}>
-          Supprime et recrée les matchs à partir des réglages actuels — les résultats déjà saisis seront perdus.
-        </Text>
+        {!estBrouillon && (
+          <>
+            <Pressable style={styles.boutonRegenerer} onPress={confirmerRegeneration} disabled={enCours}>
+              <Text style={styles.texteBoutonRegenerer}>{t('equipes.regenererLeCalendrier')}</Text>
+            </Pressable>
+            <Text style={styles.avertissement}>{t('equipes.avertissementRegenerer')}</Text>
 
-        <Pressable style={styles.boutonSupprimerTournoi} onPress={confirmerSuppressionTournoi} disabled={enCours}>
-          <Text style={styles.texteBoutonSupprimerTournoi}>Supprimer ce tournoi</Text>
-        </Pressable>
+            <Pressable style={styles.boutonSupprimerTournoi} onPress={confirmerSuppressionTournoi} disabled={enCours}>
+              <Text style={styles.texteBoutonSupprimerTournoi}>{t('equipes.supprimerCeTournoi')}</Text>
+            </Pressable>
+          </>
+        )}
       </ScrollView>
       </KeyboardAvoidingView>
     </>
@@ -561,6 +702,19 @@ function creerStyles(c) {
     soustitre: { fontFamily: POLICE_TEXTE, fontSize: 13, color: c.texteAttenue, marginBottom: 10 },
     lienModifierInfos: { fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 12.5, color: c.lien, marginBottom: 18 },
     ligneDoublePause: { flexDirection: 'row', gap: 24, marginTop: 8 },
+    enteteAvance: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginTop: 10,
+      marginBottom: 4,
+      paddingVertical: 10,
+      borderTopWidth: 1,
+      borderColor: c.bordure,
+    },
+    labelAvance: { fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 14, color: c.texte },
+    chevronAvance: { fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 13, color: c.texteAttenue },
+    aideAvance: { fontFamily: POLICE_TEXTE, fontSize: 12, color: c.texteAttenue, marginBottom: 14 },
     carte: {
       backgroundColor: c.surface,
       borderWidth: 1,
