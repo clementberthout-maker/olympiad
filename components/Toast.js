@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { Animated, StyleSheet, Text } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../lib/ThemeContext';
 import { POLICE_TEXTE_SEMIBOLD } from '../lib/theme';
 
@@ -11,6 +12,7 @@ const DUREE_AFFICHAGE = 1600;
 // onHide pour que l'appelant remette `toast` à null.
 export default function Toast({ toast, onHide }) {
   const { couleurs } = useTheme();
+  const insets = useSafeAreaInsets();
   const styles = useMemo(() => creerStyles(couleurs), [couleurs]);
   const anim = useRef(new Animated.Value(0)).current;
 
@@ -37,6 +39,7 @@ export default function Toast({ toast, onHide }) {
         styles.conteneur,
         estErreur && styles.conteneurErreur,
         {
+          bottom: 28 + insets.bottom,
           opacity: anim,
           transform: [{ translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [16, 0] }) }],
         },

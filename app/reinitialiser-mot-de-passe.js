@@ -8,6 +8,7 @@ import { supabase } from '../lib/supabase';
 import { useTheme } from '../lib/ThemeContext';
 import { useLangue } from '../lib/LangueContext';
 import { POLICE_TITRE, POLICE_TEXTE, POLICE_TEXTE_SEMIBOLD } from '../lib/theme';
+import { messageErreur } from '../lib/erreurs';
 
 export default function ReinitialiserMotDePasse() {
   const router = useRouter();
@@ -57,7 +58,7 @@ export default function ReinitialiserMotDePasse() {
     const { error } = await supabase.auth.updateUser({ password: motDePasse });
     setEnCours(false);
     if (error) {
-      Alert.alert(t('commun.erreur'), error.message);
+      Alert.alert(t('commun.erreur'), messageErreur(error, t));
       return;
     }
     Alert.alert(t('reinitialiserMotDePasse.motDePasseModifieTitre'), t('reinitialiserMotDePasse.motDePasseModifieMessage'), [

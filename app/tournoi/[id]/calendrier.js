@@ -1,7 +1,9 @@
-import { View, Text, StyleSheet, Pressable, ScrollView, Alert } from 'react-native';
+import { View, Text, StyleSheet, Pressable, ScrollView, Alert, Modal } from 'react-native';
 import { useState, useCallback, useMemo } from 'react';
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { useFocusEffect } from '@react-navigation/native';
+import { Stack, useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import * as Print from 'expo-print';
+import * as Sharing from 'expo-sharing';
 import { supabase } from '../../../lib/supabase';
 import { calculerClassement } from '../../../lib/classement';
 import {
@@ -14,11 +16,14 @@ import {
   idEquipeGagnante,
   grouperParTerrain,
 } from '../../../lib/generation';
+import { genererHtmlProgramme } from '../../../lib/exportProgramme';
+import { messageErreur } from '../../../lib/erreurs';
 import ClassementPoule from '../../../components/ClassementPoule';
 import BasculeVue from '../../../components/BasculeVue';
 import BoutonRetour from '../../../components/BoutonRetour';
 import { useTheme } from '../../../lib/ThemeContext';
 import { useLangue } from '../../../lib/LangueContext';
+import { useAchats, tournoiEstDebloque } from '../../../lib/achats';
 import { POLICE_TITRE, POLICE_TEXTE, POLICE_TEXTE_SEMIBOLD } from '../../../lib/theme';
 
 function reglagesDepuisTournoi(tournoi, matchsExistants) {
@@ -55,6 +60,7 @@ export default function Calendrier() {
   const vientDEtreCree = cree === '1';
   const { couleurs } = useTheme();
   const { t, langue } = useLangue();
+  const { estPro } = useAchats();
   const styles = useMemo(() => creerStyles(couleurs), [couleurs]);
   const [tournoi, setTournoi] = useState(null);
   const [poules, setPoules] = useState([]);
@@ -64,6 +70,8 @@ export default function Calendrier() {
   const [phases, setPhases] = useState([]); // [{ nom, matchs: [...] }]
   const [enCours, setEnCours] = useState(false);
   const [parTerrain, setParTerrain] = useState(false);
+  const [partageVisible, setPartageVisible] = useState(false);
+  const [exportEnCours, setExportEnCours] = useState(false);
 
   const charger = useCallback(async () => {
     const { data: t } = await supabase.from('tournois').select('*').eq('id', id).single();
@@ -103,6 +111,57 @@ export default function Calendrier() {
     }, [charger])
   );
 
+  function ouvrirVueGrandEcran() {
+    setPartageVisible(false);
+    router.push(`/tournoi/${id}/affichage`);
+  }
+
+  function ouvrirCoOrganisateurs() {
+    setPartageVisible(false);
+    if (!tournoiEstDebloque(tournoi, estPro)) {
+      router.push({ pathname: '/paywall', params: { tournoiId: id, raison: 'co_organisateurs' } });
+      return;
+    }
+    router.push(`/tournoi/${id}/co-organisateurs`);
+  }
+
+  // Génère un PDF du programme (matchs + classements) et ouvre le
+  // sélecteur de partage natif pour l'envoyer, l'enregistrer ou l'imprimer —
+  // voir lib/exportProgramme.js pour la mise en page.
+  async function exporterPdf() {
+    if (!tournoiEstDebloque(tournoi, estPro)) {
+      setPartageVisible(false);
+      router.push({ pathname: '/paywall', params: { tournoiId: id, raison: 'export' } });
+      return;
+    }
+    setExportEnCours(true);
+    try {
+      const dateFormatee = new Date(`${tournoi.date_debut}T00:00:00`).toLocaleDateString(
+        langue === 'en' ? 'en-US' : 'fr-FR',
+        { day: 'numeric', month: 'long', year: 'numeric' }
+      );
+      const html = genererHtmlProgramme({
+        tournoi,
+        poules,
+        equipes,
+        matchs: phases.flatMap(({ matchs }) => matchs),
+        resultats,
+        dateFormatee,
+        locale: langue === 'en' ? 'en-US' : 'fr-FR',
+        t,
+      });
+      const { uri } = await Print.printToFileAsync({ html });
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(uri, { mimeType: 'application/pdf', dialogTitle: tournoi.nom });
+      }
+    } catch (e) {
+      Alert.alert(t('commun.erreur'), messageErreur(e, t));
+    } finally {
+      setExportEnCours(false);
+      setPartageVisible(false);
+    }
+  }
+
   async function insererMatchs(matchs) {
     const { data: matchsInseres, error } = await supabase.from('matchs').insert(matchs).select();
     if (error) throw error;
@@ -115,7 +174,10 @@ export default function Calendrier() {
 
   async function genererPhaseFinale() {
     if (equipesQualifiees < 2) {
-      Alert.alert(t('calendrier.pasAssezQualifiesTitre'), t('calendrier.pasAssezQualifiesMessage'));
+      Alert.alert(
+        t('calendrier.pasAssezQualifiesTitre'),
+        t(tournoi.sport === 'tennis' ? 'calendrier.pasAssezQualifiesMessageJoueur' : 'calendrier.pasAssezQualifiesMessage')
+      );
       return;
     }
     setEnCours(true);
@@ -132,7 +194,7 @@ export default function Calendrier() {
       await insererMatchs(matchs);
       charger();
     } catch (e) {
-      Alert.alert(t('commun.erreur'), e.message);
+      Alert.alert(t('commun.erreur'), messageErreur(e, t));
     } finally {
       setEnCours(false);
     }
@@ -151,7 +213,7 @@ export default function Calendrier() {
       await insererMatchs(matchs);
       charger();
     } catch (e) {
-      Alert.alert(t('commun.erreur'), e.message);
+      Alert.alert(t('commun.erreur'), messageErreur(e, t));
     } finally {
       setEnCours(false);
     }
@@ -235,7 +297,12 @@ export default function Calendrier() {
         />
       )}
       <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.titre}>{tournoi.nom}</Text>
+      <View style={styles.entete}>
+        <Text style={styles.titre}>{tournoi.nom}</Text>
+        <Pressable style={styles.boutonPartager} onPress={() => setPartageVisible(true)} hitSlop={8}>
+          <Ionicons name="share-outline" size={22} color={couleurs.texte} />
+        </Pressable>
+      </View>
       <Text style={styles.soustitre}>{t('calendrier.toucheUnMatch')}</Text>
 
       {tournoi.nombre_terrains > 1 && phases.length > 0 && (
@@ -363,6 +430,28 @@ export default function Calendrier() {
         <Text style={styles.lienModifier}>{t('calendrier.modifierMonTournoi')}</Text>
       </Pressable>
       </ScrollView>
+
+      <Modal visible={partageVisible} transparent animationType="fade" onRequestClose={() => setPartageVisible(false)}>
+        <Pressable style={styles.fondModal} onPress={() => setPartageVisible(false)}>
+          <Pressable style={styles.cartePartage} onPress={() => {}}>
+            <Text style={styles.titrePartage}>{t('calendrier.partagerLeProgramme')}</Text>
+            <Pressable style={styles.optionPartage} onPress={ouvrirVueGrandEcran}>
+              <Ionicons name="tv-outline" size={20} color={couleurs.accent} />
+              <Text style={styles.texteOptionPartage}>{t('calendrier.vueGrandEcran')}</Text>
+            </Pressable>
+            <Pressable style={styles.optionPartage} onPress={exporterPdf} disabled={exportEnCours}>
+              <Ionicons name="document-text-outline" size={20} color={couleurs.accent} />
+              <Text style={styles.texteOptionPartage}>
+                {exportEnCours ? t('calendrier.exportEnCours') : t('calendrier.exporterPdf')}
+              </Text>
+            </Pressable>
+            <Pressable style={styles.optionPartage} onPress={ouvrirCoOrganisateurs}>
+              <Ionicons name="people-outline" size={20} color={couleurs.accent} />
+              <Text style={styles.texteOptionPartage}>{t('calendrier.inviterCoOrganisateur')}</Text>
+            </Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </>
   );
 }
@@ -370,7 +459,44 @@ export default function Calendrier() {
 function creerStyles(c) {
   return StyleSheet.create({
     container: { padding: 20, paddingTop: 24, paddingBottom: 60, backgroundColor: c.fond },
-    titre: { fontFamily: POLICE_TITRE, fontSize: 24, letterSpacing: 0.3, color: c.texte },
+    entete: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+    titre: { fontFamily: POLICE_TITRE, fontSize: 24, letterSpacing: 0.3, color: c.texte, flexShrink: 1 },
+    boutonPartager: {
+      width: 44,
+      height: 44,
+      borderRadius: 10,
+      backgroundColor: c.surface,
+      borderWidth: 1,
+      borderColor: c.bordure,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    fondModal: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.5)',
+      justifyContent: 'flex-end',
+    },
+    cartePartage: {
+      backgroundColor: c.surface,
+      borderTopLeftRadius: 18,
+      borderTopRightRadius: 18,
+      borderWidth: 1,
+      borderColor: c.bordure,
+      padding: 20,
+      paddingBottom: 32,
+    },
+    titrePartage: {
+      fontFamily: POLICE_TITRE, fontSize: 17, letterSpacing: 0.3, color: c.texte, marginBottom: 14,
+    },
+    optionPartage: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      paddingVertical: 14,
+      borderTopWidth: 1,
+      borderColor: c.bordure,
+    },
+    texteOptionPartage: { fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 15, color: c.texte },
     boutonModifier: { alignItems: 'center', marginTop: 28 },
     lienModifier: { fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 13, color: c.lien },
     soustitre: { fontFamily: POLICE_TEXTE, fontSize: 12.5, color: c.texteAttenue, marginBottom: 20 },

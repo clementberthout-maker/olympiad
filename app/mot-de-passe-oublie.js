@@ -9,6 +9,7 @@ import { supabase } from '../lib/supabase';
 import { useTheme } from '../lib/ThemeContext';
 import { useLangue } from '../lib/LangueContext';
 import { POLICE_TITRE, POLICE_TEXTE, POLICE_TEXTE_SEMIBOLD } from '../lib/theme';
+import { messageErreur } from '../lib/erreurs';
 
 export default function MotDePasseOublie() {
   const router = useRouter();
@@ -29,7 +30,7 @@ export default function MotDePasseOublie() {
     });
     setEnCours(false);
     if (error) {
-      Alert.alert(t('commun.erreur'), error.message);
+      Alert.alert(t('commun.erreur'), messageErreur(error, t));
       return;
     }
     Alert.alert(

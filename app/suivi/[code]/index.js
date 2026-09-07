@@ -170,7 +170,9 @@ export default function Suivi() {
             day: 'numeric', month: 'long', year: 'numeric',
           })}
         </Text>
-        <Text style={styles.section}>{t('suivi.quelleEquipe')}</Text>
+        <Text style={styles.section}>
+          {t(tournoi.sport === 'tennis' ? 'suivi.quelJoueur' : 'suivi.quelleEquipe')}
+        </Text>
 
         {poules.length > 0
           ? poules.map((poule) => {
@@ -319,7 +321,9 @@ export default function Suivi() {
       {equipes.length > 0 && (
         <Pressable onPress={changerEquipe}>
           <Text style={styles.lienChanger}>
-            {monEquipeId ? t('suivi.monEquipe', { nom: nomEquipe(monEquipeId) }) : t('suivi.vueSpectateur')} · {t('suivi.changer')}
+            {monEquipeId
+              ? t(tournoi.sport === 'tennis' ? 'suivi.monJoueur' : 'suivi.monEquipe', { nom: nomEquipe(monEquipeId) })
+              : t('suivi.vueSpectateur')} · {t('suivi.changer')}
           </Text>
         </Pressable>
       )}
@@ -334,7 +338,9 @@ export default function Suivi() {
         <>
           {dernierResultatEquipe && (
             <View style={styles.bandeau}>
-              <Text style={styles.bandeauLabel}>{t('suivi.dernierResultat')}</Text>
+              <Text style={styles.bandeauLabel}>
+                {t(tournoi.sport === 'tennis' ? 'suivi.dernierResultatJoueur' : 'suivi.dernierResultat')}
+              </Text>
               <View style={styles.ligneBandeau}>
                 <Text style={styles.bandeauEquipes}>
                   {nomEquipe(dernierResultatEquipe.equipe_a_id)} · {nomEquipe(dernierResultatEquipe.equipe_b_id)}
@@ -368,7 +374,9 @@ export default function Suivi() {
 
           {monEquipeId && (
             <View style={styles.carte}>
-              <Text style={styles.section}>{t('suivi.resultatsMonEquipe')}</Text>
+              <Text style={styles.section}>
+                {t(tournoi.sport === 'tennis' ? 'suivi.resultatsMonJoueur' : 'suivi.resultatsMonEquipe')}
+              </Text>
               {mesResultats.length === 0 && (
                 <Text style={styles.vide}>{t('suivi.aucunResultat')}</Text>
               )}
@@ -387,7 +395,9 @@ export default function Suivi() {
 
           {monEquipeId && (
             <View style={styles.carte}>
-              <Text style={styles.section}>{t('suivi.matchsAVenirMonEquipe')}</Text>
+              <Text style={styles.section}>
+                {t(tournoi.sport === 'tennis' ? 'suivi.matchsAVenirMonJoueur' : 'suivi.matchsAVenirMonEquipe')}
+              </Text>
               {mesMatchsAVenir.length === 0 && (
                 <Text style={styles.vide}>{t('suivi.aucunMatchAVenir')}</Text>
               )}

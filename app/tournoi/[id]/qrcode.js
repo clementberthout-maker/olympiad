@@ -1,7 +1,6 @@
 import { View, Text, StyleSheet, Pressable, Share } from 'react-native';
 import { useState, useCallback, useMemo } from 'react';
-import { useLocalSearchParams } from 'expo-router';
-import { useFocusEffect } from '@react-navigation/native';
+import { useLocalSearchParams, useFocusEffect } from 'expo-router';
 import * as Linking from 'expo-linking';
 import * as Clipboard from 'expo-clipboard';
 import QRCode from 'react-native-qrcode-svg';

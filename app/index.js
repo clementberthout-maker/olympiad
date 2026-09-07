@@ -1,7 +1,7 @@
 import { View, Text, StyleSheet, Pressable, FlatList, Image, Alert, ScrollView } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import { useFocusEffect } from '@react-navigation/native';
+import { useRouter, useFocusEffect } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useState, useCallback, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 import { useTheme } from '../lib/ThemeContext';
@@ -32,7 +32,17 @@ export default function Accueil() {
   const { couleurs } = useTheme();
   const { t, langue } = useLangue();
   const locale = langue === 'en' ? 'en-US' : 'fr-FR';
+  const insets = useSafeAreaInsets();
   const styles = useMemo(() => creerStyles(couleurs), [couleurs]);
+  // Cet écran masque le header par défaut (voir _layout.js), donc rien
+  // d'autre ne tient compte de la barre de statut : sans cet ajout, le logo
+  // se retrouve collé sous la barre de statut sur Android (edge-to-edge).
+  const paddingHaut = { paddingTop: insets.top + 24 };
+  // Le bloc "Connecté comme…" / Mon profil / Se déconnecter est poussé en
+  // bas de l'écran (marginTop: 'auto') : sans cette marge il se retrouve
+  // sous la barre système Android (geste ou boutons), ce qui rend les liens
+  // difficilement cliquables.
+  const paddingBas = { paddingBottom: insets.bottom + 24 };
   const [chargement, setChargement] = useState(true);
   const [session, setSession] = useState(null);
   const [profil, setProfil] = useState(null);
@@ -108,7 +118,7 @@ export default function Accueil() {
 
   if (chargement) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, paddingHaut]}>
         <View style={styles.logo}>
           <Squelette width={38} height={38} radius={19} />
           <Squelette width={140} height={30} />
@@ -180,7 +190,7 @@ export default function Accueil() {
 
   if (!session) {
     return (
-      <ScrollView contentContainerStyle={styles.container}>
+      <ScrollView contentContainerStyle={[styles.container, paddingHaut, paddingBas]}>
         <View style={styles.enteteAccueil}>
           <BoutonLangue />
         </View>
@@ -210,7 +220,7 @@ export default function Accueil() {
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView contentContainerStyle={[styles.container, paddingHaut, paddingBas]}>
       <View style={styles.enteteAccueil}>
         <BoutonLangue />
       </View>
@@ -222,10 +232,14 @@ export default function Accueil() {
 
       <View style={styles.rangeeActions}>
         <Pressable style={styles.boutonActionPrincipale} onPress={() => router.push('/choisir-sport')}>
-          <Text style={styles.texteActionPrincipale}>{t('accueil.creerUnTournoi')}</Text>
+          <Text style={styles.texteActionPrincipale} numberOfLines={1} adjustsFontSizeToFit>
+            {t('accueil.creerUnTournoi')}
+          </Text>
         </Pressable>
         <Pressable style={styles.boutonActionSecondaire} onPress={() => router.push('/rejoindre')}>
-          <Text style={styles.texteActionSecondaire}>{t('accueil.rejoindre')}</Text>
+          <Text style={styles.texteActionSecondaire} numberOfLines={1} adjustsFontSizeToFit>
+            {t('accueil.rejoindre')}
+          </Text>
         </Pressable>
       </View>
 
@@ -311,18 +325,24 @@ export default function Accueil() {
 
 function creerStyles(c) {
   return StyleSheet.create({
-    container: { flexGrow: 1, padding: 24, paddingTop: 64, paddingBottom: 24, backgroundColor: c.fond },
+    container: { flexGrow: 1, padding: 24, backgroundColor: c.fond },
     enteteAccueil: { alignItems: 'flex-end', marginBottom: 4 },
     rangeeActions: { flexDirection: 'row', gap: 10, marginTop: 8 },
     boutonActionPrincipale: {
       flex: 1, backgroundColor: c.accent, borderRadius: 10, paddingVertical: 13, alignItems: 'center',
     },
-    texteActionPrincipale: { color: c.accentEncre, fontFamily: POLICE_TITRE, fontSize: 15.5, letterSpacing: 0.3 },
+    texteActionPrincipale: {
+      color: c.accentEncre, fontFamily: POLICE_TITRE, fontSize: 15.5, letterSpacing: 0.3,
+      textTransform: 'uppercase',
+    },
     boutonActionSecondaire: {
       flex: 1, borderWidth: 1, borderColor: c.bordure, backgroundColor: c.surface2,
       borderRadius: 10, paddingVertical: 13, alignItems: 'center',
     },
-    texteActionSecondaire: { fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 14, color: c.texte },
+    texteActionSecondaire: {
+      color: c.texte, fontFamily: POLICE_TITRE, fontSize: 15.5, letterSpacing: 0.3,
+      textTransform: 'uppercase',
+    },
     logo: {
       flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 10,
     },
@@ -350,7 +370,7 @@ function creerStyles(c) {
       paddingVertical: 15,
       alignItems: 'center',
     },
-    texteBoutonSecondaire: { fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 15, color: c.texte },
+    texteBoutonSecondaire: { color: c.texte, fontFamily: POLICE_TITRE, fontSize: 19, letterSpacing: 0.5 },
     ligneSectionTitre: {
       flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
       marginTop: 28, marginBottom: 10,

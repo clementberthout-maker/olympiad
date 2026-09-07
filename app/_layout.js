@@ -1,11 +1,13 @@
 import { View, Text } from 'react-native';
 import { Stack } from 'expo-router';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useFonts, BebasNeue_400Regular } from '@expo-google-fonts/bebas-neue';
 import {
   WorkSans_400Regular, WorkSans_500Medium, WorkSans_600SemiBold, WorkSans_700Bold,
 } from '@expo-google-fonts/work-sans';
 import { ThemeProvider, useTheme } from '../lib/ThemeContext';
 import { LangueProvider } from '../lib/LangueContext';
+import { AchatsProvider } from '../lib/achats';
 import { POLICE_TITRE } from '../lib/theme';
 import LogoMarque from '../components/LogoMarque';
 import BoutonRetour from '../components/BoutonRetour';
@@ -42,14 +44,18 @@ function NavigationThemee() {
         options={{ headerLeft: () => null, headerBackVisible: false, gestureEnabled: false }}
       />
       <Stack.Screen name="rejoindre" />
+      <Stack.Screen name="rejoindre-comme-organisateur" />
       <Stack.Screen name="choisir-sport" />
       <Stack.Screen name="creer-tournoi" />
       <Stack.Screen name="tournoi/[id]/equipes" />
       <Stack.Screen name="tournoi/[id]/calendrier" />
       <Stack.Screen name="tournoi/[id]/saisie" />
       <Stack.Screen name="tournoi/[id]/qrcode" />
+      <Stack.Screen name="tournoi/[id]/affichage" />
+      <Stack.Screen name="tournoi/[id]/co-organisateurs" />
       <Stack.Screen name="suivi/[code]/index" />
       <Stack.Screen name="profil" />
+      <Stack.Screen name="paywall" options={{ presentation: 'modal' }} />
     </Stack>
   );
 }
@@ -66,10 +72,14 @@ export default function Layout() {
   if (!policesChargees) return <View style={{ flex: 1, backgroundColor: '#0b0f18' }} />;
 
   return (
-    <ThemeProvider>
-      <LangueProvider>
-        <NavigationThemee />
-      </LangueProvider>
-    </ThemeProvider>
+    <SafeAreaProvider>
+      <ThemeProvider>
+        <LangueProvider>
+          <AchatsProvider>
+            <NavigationThemee />
+          </AchatsProvider>
+        </LangueProvider>
+      </ThemeProvider>
+    </SafeAreaProvider>
   );
 }

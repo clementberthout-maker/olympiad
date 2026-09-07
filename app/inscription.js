@@ -9,6 +9,8 @@ import { choisirPhoto, televerserPhoto } from '../lib/profil';
 import { useTheme } from '../lib/ThemeContext';
 import { useLangue } from '../lib/LangueContext';
 import { POLICE_TITRE, POLICE_TEXTE, POLICE_TEXTE_SEMIBOLD } from '../lib/theme';
+import { messageErreur } from '../lib/erreurs';
+import ChampMotDePasse from '../components/ChampMotDePasse';
 
 export default function Inscription() {
   const router = useRouter();
@@ -42,7 +44,7 @@ export default function Inscription() {
 
     if (error) {
       setEnCours(false);
-      Alert.alert(t('commun.erreur'), error.message);
+      Alert.alert(t('commun.erreur'), messageErreur(error, t));
       return;
     }
 
@@ -99,11 +101,9 @@ export default function Inscription() {
       />
 
       <Text style={styles.label}>{t('inscription.motDePasse')}</Text>
-      <TextInput
-        style={styles.input}
+      <ChampMotDePasse
         value={motDePasse}
         onChangeText={setMotDePasse}
-        secureTextEntry
         returnKeyType="done"
         onSubmitEditing={creerCompte}
       />

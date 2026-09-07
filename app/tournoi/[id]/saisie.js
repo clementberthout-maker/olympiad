@@ -7,6 +7,7 @@ import { useTheme } from '../../../lib/ThemeContext';
 import { useLangue } from '../../../lib/LangueContext';
 import { POLICE_TITRE, POLICE_TEXTE, POLICE_TEXTE_SEMIBOLD } from '../../../lib/theme';
 import { vibrerSucces, vibrerAttention } from '../../../lib/haptique';
+import { messageErreur } from '../../../lib/erreurs';
 import CompteurScore from '../../../components/CompteurScore';
 import Toast from '../../../components/Toast';
 
@@ -109,7 +110,7 @@ export default function SaisieResultat() {
     setEnCours(false);
 
     if (error) {
-      Alert.alert(t('commun.erreur'), error.message);
+      Alert.alert(t('commun.erreur'), messageErreur(error, t));
       return;
     }
     vibrerSucces();
@@ -131,7 +132,7 @@ export default function SaisieResultat() {
             const { error } = await supabase.from('resultats').delete().eq('match_id', matchId);
             setEnCours(false);
             if (error) {
-              Alert.alert(t('commun.erreur'), error.message);
+              Alert.alert(t('commun.erreur'), messageErreur(error, t));
               return;
             }
             vibrerAttention();

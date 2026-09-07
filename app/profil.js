@@ -3,21 +3,24 @@ import {
   KeyboardAvoidingView, Platform, Image,
 } from 'react-native';
 import { useState, useCallback, useMemo } from 'react';
-import { useRouter } from 'expo-router';
-import { useFocusEffect } from '@react-navigation/native';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { supabase } from '../lib/supabase';
 import { choisirPhoto, televerserPhoto } from '../lib/profil';
 import { useTheme } from '../lib/ThemeContext';
 import { useLangue } from '../lib/LangueContext';
+import { useAchats } from '../lib/achats';
 import { POLICE_TITRE, POLICE_TEXTE, POLICE_TEXTE_SEMIBOLD } from '../lib/theme';
 import BasculeTheme from '../components/BasculeTheme';
 import { recupererIdentifiants, oublierIdentifiants, enregistrerIdentifiants } from '../lib/identifiantsEnregistres';
+import { messageErreur } from '../lib/erreurs';
 
 export default function Profil() {
   const router = useRouter();
   const { couleurs } = useTheme();
   const { t } = useLangue();
+  const { estPro, restaurerAchats } = useAchats();
   const styles = useMemo(() => creerStyles(couleurs), [couleurs]);
+  const [restaurationEnCours, setRestaurationEnCours] = useState(false);
   const [userId, setUserId] = useState(null);
   const [nom, setNom] = useState('');
   const [prenom, setPrenom] = useState('');
@@ -90,6 +93,18 @@ export default function Profil() {
     );
   }
 
+  async function restaurer() {
+    setRestaurationEnCours(true);
+    try {
+      await restaurerAchats();
+      Alert.alert(t('paywall.achatsRestaures'));
+    } catch (e) {
+      Alert.alert(t('commun.erreur'), messageErreur(e, t));
+    } finally {
+      setRestaurationEnCours(false);
+    }
+  }
+
   async function selectionnerPhoto() {
     const uri = await choisirPhoto();
     if (uri) setNouvellePhotoUri(uri);
@@ -119,7 +134,7 @@ export default function Profil() {
       }
       router.replace('/');
     } catch (e) {
-      Alert.alert(t('commun.erreur'), e.message);
+      Alert.alert(t('commun.erreur'), messageErreur(e, t));
     } finally {
       setEnCours(false);
     }
@@ -134,7 +149,7 @@ export default function Profil() {
     const { error } = await supabase.auth.updateUser({ email: nouvelEmail.trim() });
     setEnCoursEmail(false);
     if (error) {
-      Alert.alert(t('commun.erreur'), error.message);
+      Alert.alert(t('commun.erreur'), messageErreur(error, t));
       return;
     }
     Alert.alert(
@@ -174,7 +189,7 @@ export default function Profil() {
     const { error } = await supabase.auth.updateUser({ password: motDePasse });
     setEnCoursMotDePasse(false);
     if (error) {
-      Alert.alert(t('commun.erreur'), error.message);
+      Alert.alert(t('commun.erreur'), messageErreur(error, t));
       return;
     }
     if (identifiantsEnregistres) {
@@ -218,6 +233,23 @@ export default function Profil() {
         <Pressable style={styles.bouton} onPress={enregistrer} disabled={enCours}>
           <Text style={styles.texteBouton}>
             {enCours ? t('profil.enregistrementEnCours') : t('profil.enregistrer')}
+          </Text>
+        </Pressable>
+
+        <View style={styles.separateur} />
+
+        <Text style={styles.titreSection}>{t('profil.abonnement')}</Text>
+        <Text style={styles.aideSection}>
+          {estPro ? t('profil.abonnementProActif') : t('profil.abonnementGratuitAide')}
+        </Text>
+        {!estPro && (
+          <Pressable style={styles.boutonSecondaire} onPress={() => router.push({ pathname: '/paywall', params: { raison: 'defaut' } })}>
+            <Text style={styles.texteBoutonSecondaire}>{t('profil.passerPro')}</Text>
+          </Pressable>
+        )}
+        <Pressable style={styles.boutonSecondaire} onPress={restaurer} disabled={restaurationEnCours}>
+          <Text style={styles.texteBoutonSecondaire}>
+            {restaurationEnCours ? t('paywall.restaurationEnCours') : t('paywall.restaurerMesAchats')}
           </Text>
         </Pressable>
 

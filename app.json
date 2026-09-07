@@ -12,10 +12,14 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.clementberthout.olympiad",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0b0f18"
-      }
+      },
+      "permissions": [
+        "android.permission.CAMERA"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -35,7 +39,17 @@
         }
       ],
       "expo-font",
-      "expo-secure-store"
-    ]
+      "expo-secure-store",
+      "expo-localization",
+      "expo-sharing",
+      "expo-status-bar"
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "2cf14eed-20b4-416d-9c2d-bbee3bbad042"
+      }
+    },
+    "owner": "clementberth"
   }
 }

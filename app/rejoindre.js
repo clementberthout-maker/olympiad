@@ -2,8 +2,7 @@ import {
   View, Text, TextInput, StyleSheet, Pressable, KeyboardAvoidingView, ScrollView, Platform, Alert,
 } from 'react-native';
 import { useState, useRef, useCallback, useMemo } from 'react';
-import { useRouter } from 'expo-router';
-import { useFocusEffect } from '@react-navigation/native';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as Linking from 'expo-linking';
 import { useTheme } from '../lib/ThemeContext';
@@ -126,6 +125,10 @@ export default function RejoindreTournoi() {
         <Pressable style={styles.bouton} onPress={() => accederAuTournoi()}>
           <Text style={styles.texteBouton}>{t('rejoindre.accederAuTournoi')}</Text>
         </Pressable>
+
+        <Pressable style={styles.lienCoOrganisateur} onPress={() => router.push('/rejoindre-comme-organisateur')}>
+          <Text style={styles.texteLienCoOrganisateur}>{t('rejoindre.coOrganisateurLien')}</Text>
+        </Pressable>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -182,5 +185,7 @@ function creerStyles(c) {
       alignItems: 'center',
     },
     texteBouton: { color: c.accentEncre, fontFamily: POLICE_TITRE, fontSize: 17, letterSpacing: 0.4 },
+    lienCoOrganisateur: { marginTop: 20, alignItems: 'center' },
+    texteLienCoOrganisateur: { fontFamily: POLICE_TEXTE_MEDIUM, fontSize: 13, color: c.lien },
   });
 }

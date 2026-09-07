@@ -3,6 +3,7 @@ import { useState, useMemo } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import CarteSelectionnable from '../components/CarteSelectionnable';
 import SelecteurDate from '../components/SelecteurDate';
+import IndicateurEtapes from '../components/IndicateurEtapes';
 import { useTheme } from '../lib/ThemeContext';
 import { useLangue } from '../lib/LangueContext';
 import { POLICE_TITRE, POLICE_TEXTE, POLICE_TEXTE_SEMIBOLD } from '../lib/theme';
@@ -17,11 +18,15 @@ export default function CreerTournoi() {
   const [nom, setNom] = useState('');
   const [date, setDate] = useState('');
   const [format, setFormat] = useState('mixte');
+  const [tennisDouble, setTennisDouble] = useState(false);
   const [departagePoule, setDepartagePoule] = useState('diff_buts');
-  // Le rugby n'a pas de tirs au but : valeur par défaut différente selon le
-  // sport (voir departagesElimination ci-dessous pour les options proposées).
+  // Le rugby n'a pas de tirs au but et le basket a ses propres options
+  // (tirs au panier) : valeur par défaut différente selon le sport (voir
+  // departagesElimination ci-dessous pour les options proposées).
   const [departageElimination, setDepartageElimination] = useState(
-    sport === 'rugby' ? 'prolongation' : 'prolongations_tab'
+    sport === 'rugby' ? 'prolongation'
+      : sport === 'basketball' ? 'prolongation_tirs_panier'
+        : 'prolongations_tab'
   );
   const [reglagesAvancesOuverts, setReglagesAvancesOuverts] = useState(false);
 
@@ -36,18 +41,26 @@ export default function CreerTournoi() {
     { valeur: 'confrontation_directe', label: t('creerTournoi.confrontationDirecte') },
   ]), [sport, t]);
 
-  const departagesElimination = useMemo(() => (
-    sport === 'rugby'
-      ? [
+  const departagesElimination = useMemo(() => {
+    if (sport === 'rugby') {
+      return [
         { valeur: 'prolongation', label: t('creerTournoi.prolongation') },
         { valeur: 'mort_subite', label: t('creerTournoi.mortSubite') },
         { valeur: 'drop_goal', label: t('creerTournoi.dropGoal') },
-      ]
-      : [
-        { valeur: 'prolongations_tab', label: t('creerTournoi.prolongationsTab') },
-        { valeur: 'tab_direct', label: t('creerTournoi.tabDirect') },
-      ]
-  ), [sport, t]);
+      ];
+    }
+    if (sport === 'basketball') {
+      return [
+        { valeur: 'prolongation_tirs_panier', label: t('creerTournoi.prolongationTirsPanier') },
+        { valeur: 'prolongation_vainqueur', label: t('creerTournoi.prolongationVainqueur') },
+        { valeur: 'tirs_panier_direct', label: t('creerTournoi.tirsPanierDirect') },
+      ];
+    }
+    return [
+      { valeur: 'prolongations_tab', label: t('creerTournoi.prolongationsTab') },
+      { valeur: 'tab_direct', label: t('creerTournoi.tabDirect') },
+    ];
+  }, [sport, t]);
 
   // Le tournoi n'est créé en base qu'une fois tous les réglages (équipes,
   // horaires...) renseignés à l'étape suivante — voir tournoi/[id]/equipes.js.
@@ -59,7 +72,10 @@ export default function CreerTournoi() {
     }
     router.push({
       pathname: '/tournoi/[id]/equipes',
-      params: { id: 'nouveau', sport, nom, date, format, departagePoule, departageElimination },
+      params: {
+        id: 'nouveau', sport, nom, date, format, departagePoule, departageElimination,
+        tennisDouble: tennisDouble ? '1' : '0',
+      },
     });
   }
 
@@ -70,6 +86,7 @@ export default function CreerTournoi() {
       keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
     >
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+      <IndicateurEtapes etape={2} total={3} label={t('commun.etape', { n: 2, total: 3, label: t('creerTournoi.etapeLabel') })} />
       <Text style={styles.eyebrow}>{t(`sports.${sport}.label`)}</Text>
 
       <Text style={styles.label}>{t('creerTournoi.nomDuTournoi')}</Text>
@@ -107,6 +124,22 @@ export default function CreerTournoi() {
 
       {reglagesAvancesOuverts && (
         <>
+          {sport === 'tennis' && (
+            <>
+              <Text style={styles.label}>{t('creerTournoi.simpleOuDouble')}</Text>
+              <CarteSelectionnable
+                label={t('creerTournoi.simple')}
+                selectionnee={!tennisDouble}
+                onPress={() => setTennisDouble(false)}
+              />
+              <CarteSelectionnable
+                label={t('creerTournoi.double')}
+                selectionnee={tennisDouble}
+                onPress={() => setTennisDouble(true)}
+              />
+            </>
+          )}
+
           <Text style={styles.label}>{t('creerTournoi.departagePoule')}</Text>
           {departagesPoule.map((d) => (
             <CarteSelectionnable
@@ -117,15 +150,19 @@ export default function CreerTournoi() {
             />
           ))}
 
-          <Text style={styles.label}>{t('creerTournoi.departageElimination')}</Text>
-          {departagesElimination.map((d) => (
-            <CarteSelectionnable
-              key={d.valeur}
-              label={d.label}
-              selectionnee={departageElimination === d.valeur}
-              onPress={() => setDepartageElimination(d.valeur)}
-            />
-          ))}
+          {sport !== 'tennis' && (
+            <>
+              <Text style={styles.label}>{t('creerTournoi.departageElimination')}</Text>
+              {departagesElimination.map((d) => (
+                <CarteSelectionnable
+                  key={d.valeur}
+                  label={d.label}
+                  selectionnee={departageElimination === d.valeur}
+                  onPress={() => setDepartageElimination(d.valeur)}
+                />
+              ))}
+            </>
+          )}
         </>
       )}
 

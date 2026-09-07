@@ -62,13 +62,15 @@ export default function ClassementPoule({ nom, classement, equipeMiseEnAvantId, 
     <View style={styles.carte}>
       <Text style={styles.titre}>{nom}</Text>
       {classement.length === 0 ? (
-        <Text style={styles.vide}>{t('classementPoule.aucuneEquipe')}</Text>
+        <Text style={styles.vide}>
+          {t(sport === 'tennis' ? 'classementPoule.aucunJoueur' : 'classementPoule.aucuneEquipe')}
+        </Text>
       ) : (
         <>
           <View style={styles.tableWrapper}>
             <View style={[styles.colFixe, { width: largeurColEquipe }]}>
               <Text style={[styles.entete, styles.enteteEquipe, styles.enteteLigne]} numberOfLines={1}>
-                {t('classementPoule.equipe')}
+                {t(sport === 'tennis' ? 'classementPoule.joueur' : 'classementPoule.equipe')}
               </Text>
               {classement.map((item, index) => {
                 const misEnAvant = item.equipe.id === equipeMiseEnAvantId;

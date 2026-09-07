@@ -240,3 +240,217 @@ alter table tournois add constraint tournois_mode_departage_check
 alter table tournois add column if not exists points_bonus boolean not null default false;
 alter table resultats add column if not exists bonus_a int not null default 0;
 alter table resultats add column if not exists bonus_b int not null default 0;
+
+-- ============================================================
+-- MIGRATION — Ajout du handball comme sport disponible
+-- ============================================================
+-- Mêmes réglages que le football (buts, barème 3/1/0, pas de points bonus) —
+-- voir lib/sports.js.
+alter table tournois drop constraint if exists tournois_sport_check;
+alter table tournois add constraint tournois_sport_check
+  check (sport in ('football', 'rugby', 'handball'));
+
+-- ============================================================
+-- MIGRATION — Ajout du basket-ball et du tennis comme sports disponibles
+-- ============================================================
+-- Mêmes réglages que le football (barème 3/1/0, pas de points bonus), seul
+-- le vocabulaire du score change (points pour le basket, sets pour le
+-- tennis) — voir lib/sports.js.
+alter table tournois drop constraint if exists tournois_sport_check;
+alter table tournois add constraint tournois_sport_check
+  check (sport in ('football', 'rugby', 'handball', 'basketball', 'tennis'));
+
+-- ============================================================
+-- MIGRATION — Départage basket (élimination directe)
+-- ============================================================
+-- Le basket a ses propres options de départage en cas d'égalité en
+-- élimination directe (tirs au panier plutôt qu'au but) — voir
+-- creer-tournoi.js.
+alter table tournois drop constraint if exists tournois_mode_departage_check;
+alter table tournois add constraint tournois_mode_departage_check
+  check (mode_departage in (
+    'prolongations_tab', 'tab_direct', -- football / handball / tennis
+    'prolongation', 'mort_subite', 'drop_goal', -- rugby
+    'prolongation_tirs_panier', 'prolongation_vainqueur', 'tirs_panier_direct', -- basket
+    'autre'
+  ));
+
+-- ============================================================
+-- MIGRATION — Sets gagnants (tennis)
+-- ============================================================
+-- Nombre de sets à remporter pour gagner un match : 1 (set unique), 2
+-- (meilleur des 3, par défaut) ou 3 (meilleur des 5) — réglage saisi par
+-- l'organisateur à la création du tournoi, voir tournoi/[id]/equipes.js.
+alter table tournois add column if not exists sets_gagnants int not null default 2
+  check (sets_gagnants in (2, 3));
+
+-- Ajout de l'option "1 set gagnant" (set unique) à la liste ci-dessus.
+alter table tournois drop constraint if exists tournois_sets_gagnants_check;
+alter table tournois add constraint tournois_sets_gagnants_check
+  check (sets_gagnants in (1, 2, 3));
+
+-- ============================================================
+-- MIGRATION — Simple ou double (tennis)
+-- ============================================================
+-- Format du tournoi de tennis, choisi à la création (voir creer-tournoi.js,
+-- réglages avancés) : simple, un·e joueur·se par équipe (par défaut), ou
+-- double, une paire. Ne change que la question posée à la création — les
+-- équipes/joueurs restent stockés de la même façon (equipes.nom).
+alter table tournois add column if not exists tennis_double boolean not null default false;
+
+-- ============================================================
+-- MIGRATION — Co-organisateurs (saisie de scores en direct par d'autres personnes)
+-- ============================================================
+-- Un co-organisateur est un utilisateur invité par l'organisateur principal,
+-- via un code d'invitation dédié (distinct de tournois.code_acces, qui est
+-- public — voir qrcode.js/suivi/[code]/index.js), qui obtient un
+-- sous-ensemble des droits de l'organisateur sur CE tournoi : l'organisateur
+-- principal choisit, pour chaque co-organisateur, s'il peut saisir les
+-- scores, gérer le tournoi (équipes, réglages, phases suivantes) et/ou le
+-- supprimer (voir tournoi/[id]/co-organisateurs.js).
+create table if not exists tournoi_organisateurs (
+  tournoi_id uuid references tournois(id) on delete cascade not null,
+  user_id uuid references auth.users(id) not null,
+  peut_saisir_scores boolean not null default true,
+  peut_gerer_le_tournoi boolean not null default false,
+  peut_supprimer_le_tournoi boolean not null default false,
+  created_at timestamptz default now(),
+  primary key (tournoi_id, user_id)
+);
+
+alter table tournoi_organisateurs enable row level security;
+
+drop policy if exists "Organisateur principal gere ses co-organisateurs" on tournoi_organisateurs;
+create policy "Organisateur principal gere ses co-organisateurs" on tournoi_organisateurs for all
+  using (auth.uid() = (select organisateur_id from tournois where id = tournoi_id));
+
+drop policy if exists "Co-organisateur voit sa propre ligne" on tournoi_organisateurs;
+create policy "Co-organisateur voit sa propre ligne" on tournoi_organisateurs for select
+  using (auth.uid() = user_id);
+
+-- Code d'invitation co-organisateur : table séparée de "tournois" pour ne
+-- jamais l'exposer via les lectures publiques (select * sur tournois,
+-- utilisées par ex. par suivi/[code]/index.js pour le suivi spectateur).
+create table if not exists invitations_organisateur (
+  tournoi_id uuid primary key references tournois(id) on delete cascade,
+  code text not null unique default substr(md5(random()::text), 1, 8),
+  created_at timestamptz default now()
+);
+
+alter table invitations_organisateur enable row level security;
+
+drop policy if exists "Organisateur principal gere son code d'invitation" on invitations_organisateur;
+create policy "Organisateur principal gere son code d'invitation" on invitations_organisateur for all
+  using (auth.uid() = (select organisateur_id from tournois where id = tournoi_id));
+
+-- Fonction sécurisée pour rejoindre un tournoi comme co-organisateur à
+-- partir d'un code d'invitation : "security definer" pour pouvoir vérifier
+-- le code sans donner à tout le monde le droit de lire
+-- invitations_organisateur (sans quoi les codes seraient énumérables).
+-- Retourne l'id du tournoi si le code est valide, null sinon.
+create or replace function rejoindre_comme_co_organisateur(p_code text)
+returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_tournoi_id uuid;
+begin
+  select tournoi_id into v_tournoi_id from invitations_organisateur where code = p_code;
+  if v_tournoi_id is null then
+    return null;
+  end if;
+
+  insert into tournoi_organisateurs (tournoi_id, user_id)
+  values (v_tournoi_id, auth.uid())
+  on conflict (tournoi_id, user_id) do nothing;
+
+  return v_tournoi_id;
+end;
+$$;
+
+grant execute on function rejoindre_comme_co_organisateur(text) to authenticated;
+
+-- Permet à l'organisateur principal de voir le profil (nom/prénom) de ses
+-- co-organisateurs, pour les identifier dans l'écran de gestion.
+drop policy if exists "Organisateur principal voit le profil de ses co-organisateurs" on profils;
+create policy "Organisateur principal voit le profil de ses co-organisateurs" on profils for select
+  using (
+    exists (
+      select 1 from tournoi_organisateurs co
+      join tournois t on t.id = co.tournoi_id
+      where co.user_id = profils.id and t.organisateur_id = auth.uid()
+    )
+  );
+
+-- Fonction utilitaire de policy : l'utilisateur courant a-t-il le droit
+-- demandé sur ce tournoi (organisateur principal, ou co-organisateur avec ce
+-- droit précis) ? Centralise la logique pour les policies ci-dessous.
+create or replace function a_le_droit(p_tournoi_id uuid, p_droit text)
+returns boolean
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  select exists (
+    select 1 from tournois where id = p_tournoi_id and organisateur_id = auth.uid()
+  ) or exists (
+    select 1 from tournoi_organisateurs
+    where tournoi_id = p_tournoi_id
+      and user_id = auth.uid()
+      and case p_droit
+        when 'saisir_scores' then peut_saisir_scores
+        when 'gerer_le_tournoi' then peut_gerer_le_tournoi
+        when 'supprimer_le_tournoi' then peut_supprimer_le_tournoi
+        else false
+      end
+  );
+$$;
+
+grant execute on function a_le_droit(uuid, text) to authenticated;
+
+-- Les policies suivantes remplacent les précédentes pour prendre en compte
+-- les co-organisateurs (auparavant limitées à auth.uid() = organisateur_id).
+drop policy if exists "Organisateur modifie son tournoi" on tournois;
+create policy "Organisateur modifie son tournoi" on tournois for update
+  using (a_le_droit(id, 'gerer_le_tournoi'));
+
+-- La suppression du tournoi (voir tournoi/[id]/equipes.js, supprimerTournoi)
+-- n'avait jusqu'ici aucune policy dédiée : sans policy explicite pour la
+-- commande DELETE, RLS la refuse silencieusement (0 ligne supprimée, pas
+-- d'erreur) même pour l'organisateur principal. On l'ajoute ici avec son
+-- propre droit ("peut_supprimer_le_tournoi"), plus restrictif par défaut que
+-- "gerer_le_tournoi" pour un co-organisateur.
+drop policy if exists "Organisateur supprime son tournoi" on tournois;
+create policy "Organisateur supprime son tournoi" on tournois for delete
+  using (a_le_droit(id, 'supprimer_le_tournoi'));
+
+drop policy if exists "Organisateur gere les poules" on poules;
+create policy "Organisateur gere les poules" on poules for all
+  using (a_le_droit(tournoi_id, 'gerer_le_tournoi'));
+
+drop policy if exists "Organisateur gere les equipes" on equipes;
+create policy "Organisateur gere les equipes" on equipes for all
+  using (a_le_droit(tournoi_id, 'gerer_le_tournoi'));
+
+drop policy if exists "Organisateur gere les matchs" on matchs;
+create policy "Organisateur gere les matchs" on matchs for all
+  using (a_le_droit(tournoi_id, 'gerer_le_tournoi'));
+
+drop policy if exists "Organisateur saisit les resultats" on resultats;
+create policy "Organisateur saisit les resultats" on resultats for all
+  using (a_le_droit((select tournoi_id from matchs where id = match_id), 'saisir_scores'));
+
+-- ============================================================
+-- MIGRATION — Déblocage premium par tournoi (Pass Tournoi / Pro)
+-- ============================================================
+-- "debloque" = true si le tournoi a été débloqué via un achat "Pass
+-- Tournoi" pour CE tournoi précis. Un utilisateur Pro n'a pas besoin que
+-- ce flag soit vrai : son statut Pro (vérifié côté client via le SDK
+-- RevenueCat) débloque tous ses tournois — voir lib/achats.js,
+-- tournoiEstDebloque(). Passe déjà par la policy UPDATE existante
+-- ("Organisateur modifie son tournoi", a_le_droit(id, 'gerer_le_tournoi')),
+-- aucune nouvelle policy nécessaire.
+alter table tournois add column if not exists debloque boolean not null default false;

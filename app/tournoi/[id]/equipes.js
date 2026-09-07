@@ -2,12 +2,12 @@ import {
   View, Text, TextInput, StyleSheet, Pressable, FlatList, Alert,
   ScrollView, KeyboardAvoidingView, Platform, Keyboard,
 } from 'react-native';
-import { useState, useCallback, useMemo } from 'react';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useFocusEffect } from '@react-navigation/native';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
+import { useLocalSearchParams, useRouter, useFocusEffect, useNavigation } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../../../lib/supabase';
 import { genererCodeAcces } from '../../../lib/codeAcces';
+import { messageErreur } from '../../../lib/erreurs';
 import {
   repartirEnPoules,
   genererCalendrierPoules,
@@ -17,9 +17,15 @@ import {
 import CarteSelectionnable from '../../../components/CarteSelectionnable';
 import RouePicker from '../../../components/RouePicker';
 import SelecteurDate from '../../../components/SelecteurDate';
+import IndicateurEtapes from '../../../components/IndicateurEtapes';
 import { useTheme } from '../../../lib/ThemeContext';
 import { useLangue } from '../../../lib/LangueContext';
+import { useAchats, tournoiEstDebloque } from '../../../lib/achats';
 import { POLICE_TITRE, POLICE_TEXTE, POLICE_TEXTE_SEMIBOLD } from '../../../lib/theme';
+
+// Limite d'équipes/joueurs par tournoi en version gratuite — voir
+// lib/achats.js (Pass Tournoi / Pro) pour le déblocage.
+const LIMITE_EQUIPES_GRATUIT = 12;
 
 function pad(n) {
   return String(n).padStart(2, '0');
@@ -54,10 +60,12 @@ export default function GestionEquipes() {
     id, modifier,
     sport: sportParam, nom: nomParam, date: dateParam, format: formatParam,
     departagePoule: departagePouleParam, departageElimination: departageEliminationParam,
+    tennisDouble: tennisDoubleParam,
   } = useLocalSearchParams(); // id du tournoi ("nouveau" tant qu'il n'est pas encore créé)
   const router = useRouter();
   const { couleurs } = useTheme();
   const { t, langue } = useLangue();
+  const { estPro, passDraftDebloque, setPassDraftDebloque } = useAchats();
   const styles = useMemo(() => creerStyles(couleurs), [couleurs]);
   const vientDuCalendrier = modifier === '1';
   // Le tournoi n'existe pas encore en base : "id" n'est alors qu'un
@@ -66,6 +74,11 @@ export default function GestionEquipes() {
   // n'a pas été validé (voir creerTournoiEtEquipes).
   const estBrouillon = id === 'nouveau';
   const [tournoi, setTournoi] = useState(null);
+  // Débloqué (équipes illimitées) si Pro, si ce tournoi a un Pass Tournoi
+  // en base, ou — en brouillon, avant que le tournoi existe en base — si
+  // un Pass Tournoi vient d'être acheté pendant la saisie (voir
+  // creerTournoiEtEquipes, qui l'applique à la création).
+  const debloque = estBrouillon ? (estPro || passDraftDebloque) : tournoiEstDebloque(tournoi, estPro);
   const [equipes, setEquipes] = useState([]);
   const [nomEquipe, setNomEquipe] = useState('');
 
@@ -93,8 +106,9 @@ export default function GestionEquipes() {
   const [nombreQualifies, setNombreQualifies] = useState(2);
   const [matchTroisiemePlace, setMatchTroisiemePlace] = useState(false);
   const [pointsBonus, setPointsBonus] = useState(false);
+  const [setsGagnants, setSetsGagnants] = useState(2);
   const [calendrierGenere, setCalendrierGenere] = useState(false);
-  const [reglagesAvancesOuverts, setReglagesAvancesOuverts] = useState(false);
+  const [reglagesHorairesActifs, setReglagesHorairesActifs] = useState(false);
 
   const [enCours, setEnCours] = useState(false);
 
@@ -104,6 +118,43 @@ export default function GestionEquipes() {
   // Sport choisi à l'étape précédente ou déjà enregistré en base — fixé à
   // la création, non modifiable ici (comme le format).
   const sportTournoi = estBrouillon ? (sportParam || 'football') : (tournoi?.sport || 'football');
+  // Simple ou double (tennis) : choisi à la création (voir creer-tournoi.js),
+  // non modifiable ici, comme le sport et le format.
+  const tennisDoubleActif = estBrouillon ? tennisDoubleParam === '1' : Boolean(tournoi?.tennis_double);
+
+  // Tant que le tournoi n'a pas été créé, la liste d'équipes ne vit qu'en
+  // mémoire : un retour arrière (geste, bouton système ou bouton "Retour")
+  // l'effacerait sans prévenir. On intercepte donc la sortie de l'écran
+  // pour demander confirmation — sauf juste après une création réussie
+  // (voir ignorerConfirmationRef dans creerTournoiEtEquipes ci-dessous).
+  const navigation = useNavigation();
+  const equipesRef = useRef(equipes);
+  equipesRef.current = equipes;
+  const ignorerConfirmationRef = useRef(false);
+
+  useEffect(() => {
+    return navigation.addListener('beforeRemove', (e) => {
+      if (!estBrouillon || ignorerConfirmationRef.current || equipesRef.current.length === 0) return;
+      e.preventDefault();
+      Alert.alert(
+        t('equipes.quitterSansEnregistrerTitre'),
+        t(
+          sportTournoi === 'tennis'
+            ? 'equipes.quitterSansEnregistrerMessageJoueur'
+            : 'equipes.quitterSansEnregistrerMessage',
+          { n: equipesRef.current.length }
+        ),
+        [
+          { text: t('equipes.continuerLaSaisie'), style: 'cancel' },
+          {
+            text: t('equipes.quitter'),
+            style: 'destructive',
+            onPress: () => navigation.dispatch(e.data.action),
+          },
+        ]
+      );
+    });
+  }, [navigation, estBrouillon, sportTournoi, t]);
 
   const charger = useCallback(async () => {
     if (estBrouillon) return;
@@ -136,6 +187,7 @@ export default function GestionEquipes() {
       if (t.nombre_qualifies_par_poule) setNombreQualifies(t.nombre_qualifies_par_poule);
       if (typeof t.match_troisieme_place === 'boolean') setMatchTroisiemePlace(t.match_troisieme_place);
       if (typeof t.points_bonus === 'boolean') setPointsBonus(t.points_bonus);
+      if (t.sets_gagnants) setSetsGagnants(t.sets_gagnants);
     }
     const { data: eq } = await supabase
       .from('equipes')
@@ -159,6 +211,13 @@ export default function GestionEquipes() {
 
   async function ajouterEquipe() {
     if (!nomEquipe.trim()) return;
+    if (equipes.length >= LIMITE_EQUIPES_GRATUIT && !debloque) {
+      router.push({
+        pathname: '/paywall',
+        params: { ...(estBrouillon ? {} : { tournoiId: id }), raison: 'equipes' },
+      });
+      return;
+    }
     if (estBrouillon) {
       setEquipes((liste) => [
         ...liste,
@@ -170,7 +229,7 @@ export default function GestionEquipes() {
     }
     const { error } = await supabase.from('equipes').insert({ tournoi_id: id, nom: nomEquipe.trim() });
     if (error) {
-      Alert.alert(t('commun.erreur'), error.message);
+      Alert.alert(t('commun.erreur'), messageErreur(error, t));
       return;
     }
     setNomEquipe('');
@@ -185,7 +244,7 @@ export default function GestionEquipes() {
     }
     const { error } = await supabase.from('equipes').delete().eq('id', equipeId);
     if (error) {
-      Alert.alert(t('commun.erreur'), error.message);
+      Alert.alert(t('commun.erreur'), messageErreur(error, t));
       return;
     }
     charger();
@@ -197,7 +256,7 @@ export default function GestionEquipes() {
       return;
     }
     Alert.alert(
-      t('equipes.retirerEquipeTitre'),
+      t(sportTournoi === 'tennis' ? 'equipes.retirerJoueurTitre' : 'equipes.retirerEquipeTitre'),
       t('equipes.retirerEquipeMessage', { nom: equipe.nom }),
       [
         { text: t('commun.annuler'), style: 'cancel' },
@@ -222,6 +281,7 @@ export default function GestionEquipes() {
       nombre_qualifies_par_poule: nombreQualifies,
       match_troisieme_place: matchTroisiemePlace,
       points_bonus: pointsBonus,
+      sets_gagnants: setsGagnants,
     };
   }
 
@@ -257,7 +317,7 @@ export default function GestionEquipes() {
 
       allerAuCalendrier();
     } catch (e) {
-      Alert.alert(t('commun.erreur'), e.message);
+      Alert.alert(t('commun.erreur'), messageErreur(e, t));
     } finally {
       setEnCours(false);
     }
@@ -271,7 +331,10 @@ export default function GestionEquipes() {
       return;
     }
     if (equipes.length === 0) {
-      Alert.alert(t('equipes.aucuneEquipeTitre'), t('equipes.aucuneEquipeMessage'));
+      Alert.alert(
+        t(sportTournoi === 'tennis' ? 'equipes.aucunJoueurTitre' : 'equipes.aucuneEquipeTitre'),
+        t(sportTournoi === 'tennis' ? 'equipes.aucunJoueurMessage' : 'equipes.aucuneEquipeMessage')
+      );
       return;
     }
 
@@ -279,6 +342,7 @@ export default function GestionEquipes() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
+        ignorerConfirmationRef.current = true;
         router.replace('/inscription');
         return;
       }
@@ -291,10 +355,12 @@ export default function GestionEquipes() {
             ...reglagesActuels(),
             format: formatTournoi,
             sport: sportTournoi,
+            tennis_double: tennisDoubleActif,
             critere_departage_poule: departagePouleParam || 'diff_buts',
             mode_departage: departageEliminationParam || 'prolongations_tab',
             code_acces: genererCodeAcces(),
             organisateur_id: session.user.id,
+            debloque: passDraftDebloque,
           })
           .select()
           .single());
@@ -317,9 +383,11 @@ export default function GestionEquipes() {
         await genererLesMatchs(nouvelId, formatTournoi, equipesInserees);
       }
 
+      ignorerConfirmationRef.current = true;
+      setPassDraftDebloque(false);
       router.replace(`/tournoi/${nouvelId}/calendrier?cree=1`);
     } catch (e) {
-      Alert.alert(t('commun.erreur'), e.message);
+      Alert.alert(t('commun.erreur'), messageErreur(e, t));
     } finally {
       setEnCours(false);
     }
@@ -327,7 +395,10 @@ export default function GestionEquipes() {
 
   function confirmerRegeneration() {
     if (equipes.length < 2) {
-      Alert.alert(t('equipes.pasAssezEquipesTitre'), t('equipes.pasAssezEquipesMessage'));
+      Alert.alert(
+        t(sportTournoi === 'tennis' ? 'equipes.pasAssezJoueursTitre' : 'equipes.pasAssezEquipesTitre'),
+        t(sportTournoi === 'tennis' ? 'equipes.pasAssezJoueursMessage' : 'equipes.pasAssezEquipesMessage')
+      );
       return;
     }
     Alert.alert(
@@ -403,7 +474,7 @@ export default function GestionEquipes() {
       await genererLesMatchs(id, formatTournoi, equipes);
       allerAuCalendrier();
     } catch (e) {
-      Alert.alert(t('commun.erreur'), e.message);
+      Alert.alert(t('commun.erreur'), messageErreur(e, t));
     } finally {
       setEnCours(false);
     }
@@ -412,7 +483,7 @@ export default function GestionEquipes() {
   function confirmerSuppressionTournoi() {
     Alert.alert(
       t('equipes.supprimerTournoiTitre'),
-      t('equipes.supprimerTournoiMessage'),
+      t(sportTournoi === 'tennis' ? 'equipes.supprimerTournoiMessageJoueur' : 'equipes.supprimerTournoiMessage'),
       [
         { text: t('commun.annuler'), style: 'cancel' },
         { text: t('commun.supprimer'), style: 'destructive', onPress: supprimerTournoi },
@@ -425,7 +496,7 @@ export default function GestionEquipes() {
     const { error } = await supabase.from('tournois').delete().eq('id', id);
     setEnCours(false);
     if (error) {
-      Alert.alert(t('commun.erreur'), error.message);
+      Alert.alert(t('commun.erreur'), messageErreur(error, t));
       return;
     }
     router.replace('/');
@@ -441,6 +512,17 @@ export default function GestionEquipes() {
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
         <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+        {estBrouillon && (
+          <IndicateurEtapes
+            etape={3}
+            total={3}
+            label={t('commun.etape', {
+              n: 3,
+              total: 3,
+              label: t(sportTournoi === 'tennis' ? 'equipes.etapeLabelJoueur' : 'equipes.etapeLabel'),
+            })}
+          />
+        )}
         <View style={styles.entete}>
           <Text style={styles.titre}>{nomEdit}</Text>
           {!estBrouillon && (
@@ -454,7 +536,8 @@ export default function GestionEquipes() {
           )}
         </View>
         <Text style={styles.soustitre}>
-          {t(`sports.${sportTournoi}.label`)} · {new Date(`${dateEdit}T00:00:00`).toLocaleDateString(langue === 'en' ? 'en-US' : 'fr-FR', {
+          {t(`sports.${sportTournoi}.label`)}
+          {sportTournoi === 'tennis' && tennisDoubleActif ? ` · ${t('creerTournoi.double')}` : ''} · {new Date(`${dateEdit}T00:00:00`).toLocaleDateString(langue === 'en' ? 'en-US' : 'fr-FR', {
             day: 'numeric', month: 'long', year: 'numeric',
           })}
         </Text>
@@ -475,11 +558,13 @@ export default function GestionEquipes() {
         )}
 
         <View style={styles.carte}>
-          <Text style={styles.carteLabel}>{t('equipes.equipesCompteur', { n: equipes.length })}</Text>
+          <Text style={styles.carteLabel}>
+            {t(sportTournoi === 'tennis' ? 'equipes.joueursCompteur' : 'equipes.equipesCompteur', { n: equipes.length })}
+          </Text>
           <View style={styles.ligneAjout}>
             <TextInput
               style={styles.input}
-              placeholder={t('equipes.placeholderNomEquipe')}
+              placeholder={t(sportTournoi === 'tennis' ? 'equipes.placeholderNomJoueur' : 'equipes.placeholderNomEquipe')}
               value={nomEquipe}
               onChangeText={setNomEquipe}
               onSubmitEditing={ajouterEquipe}
@@ -503,7 +588,11 @@ export default function GestionEquipes() {
                 </Pressable>
               </View>
             )}
-            ListEmptyComponent={<Text style={styles.vide}>{t('equipes.aucuneEquipeAjoutee')}</Text>}
+            ListEmptyComponent={(
+              <Text style={styles.vide}>
+                {t(sportTournoi === 'tennis' ? 'equipes.aucunJoueurAjoute' : 'equipes.aucuneEquipeAjoutee')}
+              </Text>
+            )}
           />
         </View>
 
@@ -523,7 +612,9 @@ export default function GestionEquipes() {
         {formatTournoi === 'mixte' && (
           <View style={styles.carte}>
             <Text style={styles.carteLabel}>{t('equipes.qualifiesParPoule')}</Text>
-            <Text style={styles.carteAide}>{t('equipes.qualifiesParPouleAide')}</Text>
+            <Text style={styles.carteAide}>
+              {t(sportTournoi === 'tennis' ? 'equipes.qualifiesParPouleAideJoueur' : 'equipes.qualifiesParPouleAide')}
+            </Text>
             <Stepper valeur={nombreQualifies} onChange={setNombreQualifies} min={1} styles={styles} />
           </View>
         )}
@@ -531,7 +622,9 @@ export default function GestionEquipes() {
         {formatTournoi !== 'poules' && (
           <View style={styles.carte}>
             <Text style={styles.carteLabel}>{t('equipes.matchTroisiemePlace')}</Text>
-            <Text style={styles.carteAide}>{t('equipes.matchTroisiemePlaceAide')}</Text>
+            <Text style={styles.carteAide}>
+              {t(sportTournoi === 'tennis' ? 'equipes.matchTroisiemePlaceAideJoueur' : 'equipes.matchTroisiemePlaceAide')}
+            </Text>
             <View style={styles.ligneChoix}>
               <View style={{ flex: 1 }}>
                 <CarteSelectionnable
@@ -574,86 +667,131 @@ export default function GestionEquipes() {
           </View>
         )}
 
-        <Pressable
-          style={styles.enteteAvance}
-          onPress={() => setReglagesAvancesOuverts((v) => !v)}
-        >
-          <Text style={styles.labelAvance}>{t('equipes.reglagesAvancesHoraires')}</Text>
-          <Text style={styles.chevronAvance}>{reglagesAvancesOuverts ? '︿' : '﹀'}</Text>
-        </Pressable>
-        {!reglagesAvancesOuverts && (
-          <Text style={styles.aideAvance}>{t('equipes.aideAvanceHoraires')}</Text>
+        {sportTournoi === 'tennis' && (
+          <View style={styles.carte}>
+            <Text style={styles.carteLabel}>{t('equipes.setsGagnants')}</Text>
+            <Text style={styles.carteAide}>{t('equipes.setsGagnantsAide')}</Text>
+            <View style={styles.ligneChoix}>
+              <View style={{ flex: 1 }}>
+                <CarteSelectionnable
+                  label={t('equipes.unSetGagnant')}
+                  selectionnee={setsGagnants === 1}
+                  onPress={() => setSetsGagnants(1)}
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <CarteSelectionnable
+                  label={t('equipes.deuxSetsGagnants')}
+                  selectionnee={setsGagnants === 2}
+                  onPress={() => setSetsGagnants(2)}
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <CarteSelectionnable
+                  label={t('equipes.troisSetsGagnants')}
+                  selectionnee={setsGagnants === 3}
+                  onPress={() => setSetsGagnants(3)}
+                />
+              </View>
+            </View>
+          </View>
         )}
 
-        {reglagesAvancesOuverts && (
+        {sportTournoi !== 'tennis' && (
           <>
-            <View style={styles.carte}>
-              <Text style={styles.carteLabel}>{t('equipes.heurePremierMatch')}</Text>
-              <View style={styles.ligneRoues}>
-                <RouePicker valeurs={HEURES} valeur={heureH} onChange={setHeureH} formatValeur={(v) => pad(v)} />
-                <Text style={styles.deuxPoints}>:</Text>
-                <RouePicker valeurs={MINUTES} valeur={heureM} onChange={setHeureM} formatValeur={(v) => pad(v)} />
+            <View style={styles.enteteAvance}>
+              <Text style={styles.labelAvance}>{t('equipes.reglagesAvancesHoraires')}</Text>
+            </View>
+            <Text style={styles.aideAvance}>{t('equipes.aideAvanceHoraires')}</Text>
+            <View style={styles.ligneChoix}>
+              <View style={{ flex: 1 }}>
+                <CarteSelectionnable
+                  label={t('commun.oui')}
+                  selectionnee={reglagesHorairesActifs}
+                  onPress={() => setReglagesHorairesActifs(true)}
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <CarteSelectionnable
+                  label={t('commun.non')}
+                  selectionnee={!reglagesHorairesActifs}
+                  onPress={() => setReglagesHorairesActifs(false)}
+                />
               </View>
             </View>
 
-            <View style={styles.carte}>
-              <Text style={styles.carteLabel}>{t('equipes.dureeMatch')}</Text>
-              <RouePicker valeurs={DUREES_MATCH} valeur={dureeMatch} onChange={setDureeMatch} />
-            </View>
-
-            <View style={styles.carte}>
-              <Text style={styles.carteLabel}>{t('equipes.miTemps')}</Text>
-              <View style={styles.ligneChoix}>
-                <View style={{ flex: 1 }}>
-                  <CarteSelectionnable label={t('commun.oui')} selectionnee={miTemps} onPress={() => setMiTemps(true)} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <CarteSelectionnable label={t('commun.non')} selectionnee={!miTemps} onPress={() => setMiTemps(false)} />
+            <View
+              style={!reglagesHorairesActifs && styles.champsDesactives}
+              pointerEvents={reglagesHorairesActifs ? 'auto' : 'none'}
+            >
+              <View style={styles.carte}>
+                <Text style={styles.carteLabel}>{t('equipes.heurePremierMatch')}</Text>
+                <View style={styles.ligneRoues}>
+                  <RouePicker valeurs={HEURES} valeur={heureH} onChange={setHeureH} formatValeur={(v) => pad(v)} />
+                  <Text style={styles.deuxPoints}>:</Text>
+                  <RouePicker valeurs={MINUTES} valeur={heureM} onChange={setHeureM} formatValeur={(v) => pad(v)} />
                 </View>
               </View>
-              {miTemps && (
-                <>
-                  <Text style={[styles.carteLabel, { marginTop: 10 }]}>{t('equipes.dureeMiTemps')}</Text>
-                  <RouePicker valeurs={DUREES_MI_TEMPS} valeur={dureeMiTemps} onChange={setDureeMiTemps} />
-                </>
-              )}
-            </View>
 
-            <View style={styles.carte}>
-              <Text style={styles.carteLabel}>{t('equipes.pauseEntreMatchs')}</Text>
-              <RouePicker valeurs={DUREES_PAUSE} valeur={tempsPause} onChange={setTempsPause} />
-            </View>
-
-            <View style={styles.carte}>
-              <Text style={styles.carteLabel}>{t('equipes.pauseDejeuner')}</Text>
-              <View style={styles.ligneChoix}>
-                <View style={{ flex: 1 }}>
-                  <CarteSelectionnable label={t('commun.oui')} selectionnee={pauseDejeuner} onPress={() => setPauseDejeuner(true)} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <CarteSelectionnable label={t('commun.non')} selectionnee={!pauseDejeuner} onPress={() => setPauseDejeuner(false)} />
-                </View>
+              <View style={styles.carte}>
+                <Text style={styles.carteLabel}>{t('equipes.dureeMatch')}</Text>
+                <RouePicker valeurs={DUREES_MATCH} valeur={dureeMatch} onChange={setDureeMatch} />
               </View>
-              {pauseDejeuner && (
-                <View style={styles.ligneDoublePause}>
-                  <View>
-                    <Text style={styles.sousLabel}>{t('equipes.de')}</Text>
-                    <View style={styles.ligneRoues}>
-                      <RouePicker valeurs={HEURES} valeur={pauseDebutH} onChange={setPauseDebutH} formatValeur={(v) => pad(v)} />
-                      <Text style={styles.deuxPoints}>:</Text>
-                      <RouePicker valeurs={MINUTES} valeur={pauseDebutM} onChange={setPauseDebutM} formatValeur={(v) => pad(v)} />
-                    </View>
+
+              <View style={styles.carte}>
+                <Text style={styles.carteLabel}>{t('equipes.miTemps')}</Text>
+                <View style={styles.ligneChoix}>
+                  <View style={{ flex: 1 }}>
+                    <CarteSelectionnable label={t('commun.oui')} selectionnee={miTemps} onPress={() => setMiTemps(true)} />
                   </View>
-                  <View>
-                    <Text style={styles.sousLabel}>{t('equipes.a')}</Text>
-                    <View style={styles.ligneRoues}>
-                      <RouePicker valeurs={HEURES} valeur={pauseFinH} onChange={setPauseFinH} formatValeur={(v) => pad(v)} />
-                      <Text style={styles.deuxPoints}>:</Text>
-                      <RouePicker valeurs={MINUTES} valeur={pauseFinM} onChange={setPauseFinM} formatValeur={(v) => pad(v)} />
-                    </View>
+                  <View style={{ flex: 1 }}>
+                    <CarteSelectionnable label={t('commun.non')} selectionnee={!miTemps} onPress={() => setMiTemps(false)} />
                   </View>
                 </View>
-              )}
+                {miTemps && (
+                  <>
+                    <Text style={[styles.carteLabel, { marginTop: 10 }]}>{t('equipes.dureeMiTemps')}</Text>
+                    <RouePicker valeurs={DUREES_MI_TEMPS} valeur={dureeMiTemps} onChange={setDureeMiTemps} />
+                  </>
+                )}
+              </View>
+
+              <View style={styles.carte}>
+                <Text style={styles.carteLabel}>{t('equipes.pauseEntreMatchs')}</Text>
+                <RouePicker valeurs={DUREES_PAUSE} valeur={tempsPause} onChange={setTempsPause} />
+              </View>
+
+              <View style={styles.carte}>
+                <Text style={styles.carteLabel}>{t('equipes.pauseDejeuner')}</Text>
+                <View style={styles.ligneChoix}>
+                  <View style={{ flex: 1 }}>
+                    <CarteSelectionnable label={t('commun.oui')} selectionnee={pauseDejeuner} onPress={() => setPauseDejeuner(true)} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <CarteSelectionnable label={t('commun.non')} selectionnee={!pauseDejeuner} onPress={() => setPauseDejeuner(false)} />
+                  </View>
+                </View>
+                {pauseDejeuner && (
+                  <View style={styles.ligneDoublePause}>
+                    <View>
+                      <Text style={styles.sousLabel}>{t('equipes.de')}</Text>
+                      <View style={styles.ligneRoues}>
+                        <RouePicker valeurs={HEURES} valeur={pauseDebutH} onChange={setPauseDebutH} formatValeur={(v) => pad(v)} />
+                        <Text style={styles.deuxPoints}>:</Text>
+                        <RouePicker valeurs={MINUTES} valeur={pauseDebutM} onChange={setPauseDebutM} formatValeur={(v) => pad(v)} />
+                      </View>
+                    </View>
+                    <View>
+                      <Text style={styles.sousLabel}>{t('equipes.a')}</Text>
+                      <View style={styles.ligneRoues}>
+                        <RouePicker valeurs={HEURES} valeur={pauseFinH} onChange={setPauseFinH} formatValeur={(v) => pad(v)} />
+                        <Text style={styles.deuxPoints}>:</Text>
+                        <RouePicker valeurs={MINUTES} valeur={pauseFinM} onChange={setPauseFinM} formatValeur={(v) => pad(v)} />
+                      </View>
+                    </View>
+                  </View>
+                )}
+              </View>
             </View>
           </>
         )}
@@ -713,8 +851,8 @@ function creerStyles(c) {
       borderColor: c.bordure,
     },
     labelAvance: { fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 14, color: c.texte },
-    chevronAvance: { fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 13, color: c.texteAttenue },
     aideAvance: { fontFamily: POLICE_TEXTE, fontSize: 12, color: c.texteAttenue, marginBottom: 14 },
+    champsDesactives: { opacity: 0.4 },
     carte: {
       backgroundColor: c.surface,
       borderWidth: 1,

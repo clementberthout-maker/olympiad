@@ -6,6 +6,8 @@ import { useTheme } from '../lib/ThemeContext';
 import { useLangue } from '../lib/LangueContext';
 import { POLICE_TITRE, POLICE_TEXTE, POLICE_TEXTE_SEMIBOLD } from '../lib/theme';
 import { enregistrerIdentifiants, recupererIdentifiants } from '../lib/identifiantsEnregistres';
+import { messageErreur } from '../lib/erreurs';
+import ChampMotDePasse from '../components/ChampMotDePasse';
 
 export default function Connexion() {
   const router = useRouter();
@@ -53,7 +55,7 @@ export default function Connexion() {
     const { error } = await supabase.auth.signInWithPassword({ email, password: motDePasse });
     setEnCours(false);
     if (error) {
-      Alert.alert(t('connexion.connexionImpossible'), error.message);
+      Alert.alert(t('connexion.connexionImpossible'), messageErreur(error, t));
       return;
     }
     const dejaEnregistres = identifiantsSauvegardes?.email === email
@@ -86,11 +88,9 @@ export default function Connexion() {
         />
 
         <Text style={styles.label}>{t('connexion.motDePasse')}</Text>
-        <TextInput
-          style={styles.input}
+        <ChampMotDePasse
           value={motDePasse}
           onChangeText={setMotDePasse}
-          secureTextEntry
           returnKeyType="done"
           onSubmitEditing={seConnecter}
         />

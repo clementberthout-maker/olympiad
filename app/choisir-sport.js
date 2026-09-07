@@ -7,6 +7,7 @@ import { useTheme } from '../lib/ThemeContext';
 import { useLangue } from '../lib/LangueContext';
 import { POLICE_TITRE, POLICE_TEXTE } from '../lib/theme';
 import { SPORTS } from '../lib/sports';
+import IndicateurEtapes from '../components/IndicateurEtapes';
 
 // Premier écran du parcours de création d'un tournoi : le sport choisi ici
 // détermine le vocabulaire (buts/points...) utilisé sur les écrans suivants
@@ -29,6 +30,7 @@ export default function ChoisirSport() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
+      <IndicateurEtapes etape={1} total={3} label={t('commun.etape', { n: 1, total: 3, label: t('choisirSport.etapeLabel') })} />
       <Text style={styles.eyebrow}>{t('choisirSport.eyebrow')}</Text>
       <Text style={styles.titre}>{t('choisirSport.titre')}</Text>
 
