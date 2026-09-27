@@ -7,6 +7,7 @@ import { messageErreur } from '../lib/erreurs';
 import { useTheme } from '../lib/ThemeContext';
 import { useLangue } from '../lib/LangueContext';
 import { POLICE_TITRE, POLICE_TEXTE, POLICE_TEXTE_SEMIBOLD } from '../lib/theme';
+import LiensLegaux from '../components/LiensLegaux';
 
 // Écran modal affiché chaque fois qu'une fonctionnalité premium est
 // bloquée (équipes au-delà de la limite gratuite, export PDF,
@@ -79,7 +80,11 @@ export default function Paywall() {
             <Text style={styles.descriptionOffre}>
               {estPass ? t('paywall.passTournoiDescription') : t('paywall.proDescription')}
             </Text>
-            <Text style={styles.prixOffre}>{pkg.product.priceString}</Text>
+            <Text style={styles.prixOffre}>
+              {estPass
+                ? t('paywall.prixAchatUnique', { prix: pkg.product.priceString })
+                : t(estAnnuel ? 'paywall.prixParAn' : 'paywall.prixParMois', { prix: pkg.product.priceString })}
+            </Text>
             <Pressable style={styles.bouton} onPress={() => acheter(pkg)} disabled={enCoursId !== null}>
               <Text style={styles.texteBouton}>
                 {enCoursId === pkg.identifier ? t('paywall.achatEnCours') : t('paywall.acheter')}
@@ -94,6 +99,11 @@ export default function Paywall() {
           {restaurationEnCours ? t('paywall.restaurationEnCours') : t('paywall.restaurerMesAchats')}
         </Text>
       </Pressable>
+
+      {/* Mentions exigées par Apple (guideline 3.1.2) et Google Play pour un
+          abonnement à renouvellement automatique. */}
+      <Text style={styles.mentions}>{t('paywall.mentionsAbonnement')}</Text>
+      <LiensLegaux />
     </ScrollView>
   );
 }
@@ -124,5 +134,6 @@ function creerStyles(c) {
     texteBouton: { color: c.accentEncre, fontFamily: POLICE_TITRE, fontSize: 15, letterSpacing: 0.3 },
     lienRestaurer: { alignItems: 'center', marginTop: 10 },
     texteLienRestaurer: { fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 13, color: c.lien },
+    mentions: { fontFamily: POLICE_TEXTE, fontSize: 11, lineHeight: 16, color: c.texteAttenue, marginTop: 24 },
   });
 }

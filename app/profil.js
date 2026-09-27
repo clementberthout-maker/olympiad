@@ -11,6 +11,7 @@ import { useLangue } from '../lib/LangueContext';
 import { useAchats } from '../lib/achats';
 import { POLICE_TITRE, POLICE_TEXTE, POLICE_TEXTE_SEMIBOLD } from '../lib/theme';
 import BasculeTheme from '../components/BasculeTheme';
+import LiensLegaux from '../components/LiensLegaux';
 import { recupererIdentifiants, oublierIdentifiants, enregistrerIdentifiants } from '../lib/identifiantsEnregistres';
 import { messageErreur } from '../lib/erreurs';
 
@@ -361,6 +362,11 @@ export default function Profil() {
             {enCoursMotDePasse ? t('profil.modificationEnCours') : t('profil.changerLeMotDePasse')}
           </Text>
         </Pressable>
+
+        <View style={styles.separateur} />
+
+        <Text style={styles.titreSection}>{t('profil.informationsLegales')}</Text>
+        <LiensLegaux />
 
         <View style={styles.separateur} />
 
