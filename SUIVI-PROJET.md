@@ -182,6 +182,7 @@ Une ligne par modification, la plus récente en haut.
 
 | Date | Modification |
 |------|--------------|
+| 2026-09-27 | Cache du CLI Supabase (`supabase/.temp/`) retiré du dépôt et ignoré |
 | 2026-09-27 | Migration B6 exécutée et Edge Function `valider-pass-tournoi` déployée sur Supabase |
 | 2026-09-27 | Déblocage des tournois vérifié côté serveur : Edge Function `valider-pass-tournoi`, déclencheur SQL, lien « Pass non utilisé » (B6) |
 | 2026-09-27 | Âge minimum de 15 ans : politique, conditions d'utilisation et écran d'inscription (A5) |
