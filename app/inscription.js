@@ -11,6 +11,7 @@ import { useLangue } from '../lib/LangueContext';
 import { POLICE_TITRE, POLICE_TEXTE, POLICE_TEXTE_SEMIBOLD } from '../lib/theme';
 import { messageErreur } from '../lib/erreurs';
 import ChampMotDePasse from '../components/ChampMotDePasse';
+import LiensLegaux from '../components/LiensLegaux';
 
 export default function Inscription() {
   const router = useRouter();
@@ -120,6 +121,12 @@ export default function Inscription() {
         <Text style={styles.texteBouton}>{enCours ? t('inscription.creationEnCours') : t('inscription.creerMonCompte')}</Text>
       </Pressable>
 
+      {/* Âge minimum (15 ans, voir la politique de confidentialité) et
+          acceptation des conditions d'utilisation. */}
+      <Text style={styles.mentions}>{t('inscription.mentionsAgeEtConditions')}</Text>
+      <LiensLegaux />
+      <View style={{ height: 20 }} />
+
       <Pressable onPress={() => router.replace('/connexion')}>
         <Text style={styles.lien}>{t('inscription.dejaInscrit')}</Text>
       </Pressable>
@@ -168,5 +175,6 @@ function creerStyles(c) {
     },
     texteBouton: { color: c.accentEncre, fontFamily: POLICE_TITRE, fontSize: 17, letterSpacing: 0.4 },
     lien: { fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 13, color: c.lien, textAlign: 'center' },
+    mentions: { fontFamily: POLICE_TEXTE, fontSize: 11.5, lineHeight: 16, color: c.texteAttenue, textAlign: 'center' },
   });
 }

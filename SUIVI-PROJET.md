@@ -99,6 +99,11 @@ OLYMPIAD sert à organiser des tournois sportifs amateurs. L'organisateur crée 
 - `ITSAppUsesNonExemptEncryption: false` : l'app n'utilise que le chiffrement standard (HTTPS), ce qui évite la question sur le chiffrement à chaque envoi à Apple.
 - `supportsTablet: false` : l'app n'est pas pensée pour l'iPad pour l'instant, donc pas de captures iPad à fournir ni de test iPad par Apple.
 
+### Âge minimum : 15 ans (27 septembre)
+- Création d'un compte réservée aux 15 ans et plus (âge de la majorité numérique en France). Suivre un tournoi reste ouvert à tous, sans compte.
+- Politique de confidentialité (section « Mineurs ») et conditions d'utilisation mises à jour.
+- Écran d'inscription : mention « En créant un compte, tu confirmes avoir au moins 15 ans et accepter… », avec les liens légaux.
+
 ---
 
 ## 3. Ce qu'il reste à faire
@@ -110,7 +115,7 @@ Légende : `[ ]` à faire · `[x]` fait
 - [x] **A2. Liens légaux sur l'écran d'achat et dans le profil.** Apple exige, pour tout abonnement, un lien vers la politique de confidentialité et un vers les conditions d'utilisation. L'écran doit aussi indiquer le prix, la durée et le renouvellement automatique. *Fait le 27/09.*
 - [x] **A3. Conditions d'utilisation.** *Rédigées et validées le 27/09 (`docs/conditions-utilisation.html`), liées dans l'app. À compléter avec l'éditeur si tu passes sous statut d'entreprise.*
 - [x] **A4. `ios.bundleIdentifier` dans `app.json`.** Il manque (par exemple `com.clementberthout.olympiad`), et le build iOS ne peut pas se faire sans. *Fait le 27/09 : `com.clementberthout.olympiad`.*
-- [ ] **A5. Section « Mineurs » de la politique.** Il faudrait l'aligner avec la classification d'âge que tu déclareras sur les stores.
+- [x] **A5. Section « Mineurs » de la politique.** Il faudrait l'aligner avec la classification d'âge que tu déclareras sur les stores. *Fait le 27/09 : comptes réservés aux 15 ans et plus.*
 
 ### B. Code : fortement recommandé
 - [ ] **B6. Sécuriser le déblocage des tournois.** Aujourd'hui, l'application écrit elle-même `debloque = true`. Les règles d'accès permettent à un organisateur de modifier son tournoi, donc un utilisateur un peu technique pourrait se débloquer gratuitement en appelant la base directement. La solution : un webhook RevenueCat qui appelle une Edge Function Supabase, et interdire la modification de `debloque` par le client.
@@ -148,7 +153,8 @@ Légende : `[ ]` à faire · `[x]` fait
 - [ ] **E18. Textes en français et en anglais :** nom, sous-titre, description et mots-clés.
 - [ ] **E19. Formulaires :**
   - App Privacy (Apple) et Data Safety (Google) : email, nom, photo et achats collectés ; pas de pistage ni de publicité.
-  - Classification d'âge.
+  - Classification d'âge : répondre au questionnaire d'Apple et à celui de Google (IARC) selon le contenu réel (pas de violence, pas de contenu choquant ; noms d'équipes saisis par les utilisateurs et visibles avec le code du tournoi).
+  - Public cible sur Google Play : 13-15 ans, 16-17 ans et 18 ans et plus (comptes dès 15 ans). Ne pas cocher de tranche de moins de 13 ans, pour ne pas relever du programme « Familles ».
   - Adresse de la politique de confidentialité et adresse de support.
 - [ ] **E20. Compte de démonstration** pour les équipes de validation Apple et Google, avec un tournoi déjà rempli.
 
@@ -167,6 +173,7 @@ Une ligne par modification, la plus récente en haut.
 
 | Date | Modification |
 |------|--------------|
+| 2026-09-27 | Âge minimum de 15 ans : politique, conditions d'utilisation et écran d'inscription (A5) |
 | 2026-09-27 | Identifiant iOS `com.clementberthout.olympiad` (A4), iPad désactivé ; conditions d'utilisation validées (A3) |
 | 2026-09-27 | Liens légaux et mentions d'abonnement sur l'écran d'achat et le profil (A2), première version des conditions d'utilisation |
 | 2026-09-27 | Suppression du compte depuis « Mon profil » (A1), page web de suppression, politique mise à jour |

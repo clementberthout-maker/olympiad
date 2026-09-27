@@ -61,7 +61,11 @@ Si tu résides dans l'Union européenne, tu disposes des droits suivants sur tes
 
 ## 6. Mineurs
 
-OLYMPIAD n'est pas destinée à la création de compte par des enfants. Les noms de joueurs ou d'équipes saisis dans un tournoi (qui peuvent inclure des mineurs) sont sous la responsabilité de l'organisateur adulte qui les saisit.
+La création d'un compte organisateur est réservée aux personnes âgées d'au moins 15 ans (âge de la majorité numérique en France). Suivre un tournoi ne nécessite pas de compte : aucune donnée personnelle du spectateur n'est alors collectée sur nos serveurs.
+
+Si nous apprenons qu'un compte a été créé par une personne de moins de 15 ans, nous le supprimons avec les données associées. Un parent ou un responsable légal peut nous le signaler à l'adresse indiquée en Contact.
+
+Les noms de joueurs ou d'équipes saisis dans un tournoi (qui peuvent être ceux de mineurs) sont sous la responsabilité de l'organisateur qui les saisit. Nous recommandons de s'en tenir au prénom ou au nom de l'équipe, sans autre information personnelle.
 
 ## 7. Sécurité
 
