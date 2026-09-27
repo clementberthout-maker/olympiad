@@ -5,7 +5,7 @@ import {
 import { useState, useCallback, useMemo } from 'react';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { supabase } from '../lib/supabase';
-import { choisirPhoto, televerserPhoto } from '../lib/profil';
+import { choisirPhoto, televerserPhoto, supprimerMonCompte } from '../lib/profil';
 import { useTheme } from '../lib/ThemeContext';
 import { useLangue } from '../lib/LangueContext';
 import { useAchats } from '../lib/achats';
@@ -39,6 +39,7 @@ export default function Profil() {
   const [enCoursMotDePasse, setEnCoursMotDePasse] = useState(false);
 
   const [identifiantsEnregistres, setIdentifiantsEnregistres] = useState(false);
+  const [suppressionEnCours, setSuppressionEnCours] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -201,6 +202,43 @@ export default function Profil() {
     Alert.alert(t('profil.motDePasseModifie'));
   }
 
+  // Double confirmation : l'action est irréversible (tournois, résultats et
+  // compte supprimés définitivement).
+  function confirmerSuppressionCompte() {
+    Alert.alert(
+      t('profil.supprimerCompteTitre'),
+      t('profil.supprimerCompteMessage'),
+      [
+        { text: t('commun.annuler'), style: 'cancel' },
+        {
+          text: t('commun.supprimer'),
+          style: 'destructive',
+          onPress: () => Alert.alert(
+            t('profil.supprimerCompteConfirmationTitre'),
+            t('profil.supprimerCompteConfirmationMessage'),
+            [
+              { text: t('commun.annuler'), style: 'cancel' },
+              { text: t('profil.supprimerDefinitivement'), style: 'destructive', onPress: supprimerCompte },
+            ]
+          ),
+        },
+      ]
+    );
+  }
+
+  async function supprimerCompte() {
+    setSuppressionEnCours(true);
+    try {
+      await supprimerMonCompte(userId);
+      Alert.alert(t('profil.compteSupprimeTitre'), t('profil.compteSupprimeMessage'));
+      router.replace('/');
+    } catch (e) {
+      Alert.alert(t('commun.erreur'), messageErreur(e, t));
+    } finally {
+      setSuppressionEnCours(false);
+    }
+  }
+
   const apercu = nouvellePhotoUri || photoUrl;
 
   return (
@@ -323,6 +361,16 @@ export default function Profil() {
             {enCoursMotDePasse ? t('profil.modificationEnCours') : t('profil.changerLeMotDePasse')}
           </Text>
         </Pressable>
+
+        <View style={styles.separateur} />
+
+        <Text style={styles.titreSection}>{t('profil.supprimerCompte')}</Text>
+        <Text style={styles.aideSection}>{t('profil.supprimerCompteAide')}</Text>
+        <Pressable style={styles.boutonDanger} onPress={confirmerSuppressionCompte} disabled={suppressionEnCours}>
+          <Text style={styles.texteBoutonDanger}>
+            {suppressionEnCours ? t('profil.suppressionEnCours') : t('profil.supprimerMonCompte')}
+          </Text>
+        </Pressable>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -387,5 +435,14 @@ function creerStyles(c) {
       marginTop: 10,
     },
     texteBoutonSecondaire: { fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 14, color: c.texte },
+    boutonDanger: {
+      borderWidth: 1,
+      borderColor: c.danger,
+      borderRadius: 10,
+      paddingVertical: 13,
+      alignItems: 'center',
+      marginTop: 10,
+    },
+    texteBoutonDanger: { fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 14, color: c.danger },
   });
 }

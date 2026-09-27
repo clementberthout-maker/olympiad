@@ -454,3 +454,43 @@ create policy "Organisateur saisit les resultats" on resultats for all
 -- ("Organisateur modifie son tournoi", a_le_droit(id, 'gerer_le_tournoi')),
 -- aucune nouvelle policy nécessaire.
 alter table tournois add column if not exists debloque boolean not null default false;
+
+-- ============================================================
+-- MIGRATION — Suppression du compte par l'utilisateur
+-- ============================================================
+-- Exigée par Apple (guideline 5.1.1(v)) et Google Play : un utilisateur
+-- doit pouvoir supprimer son compte depuis l'app (voir profil.js,
+-- supprimerMonCompte dans lib/profil.js). "security definer" car un
+-- utilisateur ne peut pas supprimer lui-même sa ligne dans auth.users.
+--
+-- Supprime, pour l'utilisateur connecté uniquement (auth.uid()) :
+--   - ses accès de co-organisateur sur les tournois des autres ;
+--   - les tournois dont il est l'organisateur principal, et en cascade leurs
+--     poules, équipes, matchs, résultats, co-organisateurs et code
+--     d'invitation ;
+--   - son profil, puis son compte d'authentification.
+-- La photo de profil (bucket "avatars") est supprimée juste avant par
+-- l'app via l'API Storage : Supabase interdit de supprimer directement
+-- des lignes de storage.objects en SQL.
+create or replace function supprimer_mon_compte()
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_uid uuid := auth.uid();
+begin
+  if v_uid is null then
+    raise exception 'Non authentifié' using errcode = '42501';
+  end if;
+
+  delete from tournoi_organisateurs where user_id = v_uid;
+  delete from tournois where organisateur_id = v_uid;
+  delete from profils where id = v_uid;
+  delete from auth.users where id = v_uid;
+end;
+$$;
+
+revoke execute on function supprimer_mon_compte() from public, anon;
+grant execute on function supprimer_mon_compte() to authenticated;

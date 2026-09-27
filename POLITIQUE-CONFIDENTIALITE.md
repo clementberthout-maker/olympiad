@@ -53,7 +53,7 @@ Ces prestataires n'ont accès qu'aux données nécessaires à leur fonction et s
 
 ## 4. Durée de conservation
 
-Tes données sont conservées tant que ton compte existe. Tu peux demander la suppression de ton compte et de l'ensemble des données associées à tout moment (voir Contact ci-dessous) ; la suppression est effective sous 30 jours.
+Tes données sont conservées tant que ton compte existe. Tu peux supprimer ton compte à tout moment directement dans l'application (**Mon profil > Supprimer mon compte**) : ton compte, ton profil, ta photo et tous les tournois que tu as créés sont alors supprimés immédiatement et définitivement. Tu peux aussi en faire la demande par e-mail (voir Contact ci-dessous) ; la suppression est alors effective sous 30 jours. Un abonnement Pro n'est pas résilié par la suppression du compte : il doit être annulé depuis les réglages de l'App Store ou du Google Play Store.
 
 ## 5. Tes droits (RGPD)
 
