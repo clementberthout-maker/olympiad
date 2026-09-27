@@ -23,25 +23,52 @@ export default function Paywall() {
   const { offres, acheterPackage, restaurerAchats, debloquerTournoi, setPassDraftDebloque } = useAchats();
   const [enCoursId, setEnCoursId] = useState(null);
   const [restaurationEnCours, setRestaurationEnCours] = useState(false);
+  const [utilisationPassEnCours, setUtilisationPassEnCours] = useState(false);
 
   async function acheter(pkg) {
     setEnCoursId(pkg.identifier);
+    let estPassTournoi;
     try {
-      const estPassTournoi = await acheterPackage(pkg);
-      if (estPassTournoi) {
-        if (tournoiId) {
-          await debloquerTournoi(tournoiId);
-        } else {
-          setPassDraftDebloque(true);
-        }
-      }
-      router.back();
+      estPassTournoi = await acheterPackage(pkg);
     } catch (e) {
       if (!e.userCancelled) {
         Alert.alert(t('commun.erreur'), messageErreur(e, t));
       }
+      setEnCoursId(null);
+      return;
+    }
+    try {
+      if (estPassTournoi) {
+        if (tournoiId) {
+          await debloquerTournoi(tournoiId);
+        } else {
+          // Tournoi encore en brouillon : le Pass sera appliqué à sa
+          // création (voir tournoi/[id]/equipes.js).
+          setPassDraftDebloque(true);
+        }
+      }
+      router.back();
+    } catch {
+      // L'achat a réussi mais le déblocage non (réseau, serveur) : le
+      // Pass reste disponible, à appliquer avec le lien ci-dessous.
+      Alert.alert(t('paywall.deblocageEchoueTitre'), t('paywall.deblocageEchoueMessage'));
     } finally {
       setEnCoursId(null);
+    }
+  }
+
+  // Applique un Pass Tournoi déjà acheté mais pas encore utilisé (achat
+  // dont le déblocage a échoué, ou fait sur un autre appareil).
+  async function utiliserPassExistant() {
+    setUtilisationPassEnCours(true);
+    try {
+      await debloquerTournoi(tournoiId);
+      Alert.alert(t('paywall.tournoiDebloque'));
+      router.back();
+    } catch (e) {
+      Alert.alert(t('commun.erreur'), messageErreur(e, t));
+    } finally {
+      setUtilisationPassEnCours(false);
     }
   }
 
@@ -99,6 +126,14 @@ export default function Paywall() {
           {restaurationEnCours ? t('paywall.restaurationEnCours') : t('paywall.restaurerMesAchats')}
         </Text>
       </Pressable>
+
+      {tournoiId && (
+        <Pressable style={styles.lienRestaurer} onPress={utiliserPassExistant} disabled={utilisationPassEnCours} hitSlop={8}>
+          <Text style={styles.texteLienRestaurer}>
+            {utilisationPassEnCours ? t('paywall.utilisationPassEnCours') : t('paywall.utiliserPassExistant')}
+          </Text>
+        </Pressable>
+      )}
 
       {/* Mentions exigées par Apple (guideline 3.1.2) et Google Play pour un
           abonnement à renouvellement automatique. */}

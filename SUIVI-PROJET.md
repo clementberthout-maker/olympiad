@@ -104,6 +104,14 @@ OLYMPIAD sert à organiser des tournois sportifs amateurs. L'organisateur crée 
 - Politique de confidentialité (section « Mineurs ») et conditions d'utilisation mises à jour.
 - Écran d'inscription : mention « En créant un compte, tu confirmes avoir au moins 15 ans et accepter… », avec les liens légaux.
 
+### Déblocage des tournois vérifié côté serveur (27 septembre)
+- L'app ne peut plus marquer elle-même un tournoi comme payé : un déclencheur SQL (`proteger_debloque`) refuse toute modification de `debloque` venant de l'app.
+- Nouvelle Edge Function `supabase/functions/valider-pass-tournoi` : vérifie l'achat du Pass Tournoi auprès de RevenueCat, puis débloque le tournoi. Chaque achat ne débloque qu'un seul tournoi (table `passes_tournoi_utilises`).
+- Choix d'une vérification à la demande plutôt qu'un webhook : RevenueCat ne sait pas à quel tournoi un Pass est destiné.
+- Écran d'achat : si l'achat réussit mais que le déblocage échoue, le Pass reste disponible, avec un nouveau lien « J'ai déjà un Pass Tournoi non utilisé ».
+- Pass acheté pendant un brouillon : appliqué par le serveur juste après la création du tournoi.
+- `typescript` et `tsconfig.json` ajoutés automatiquement par Expo (déclenché par le fichier `.ts` de l'Edge Function). L'app reste en JavaScript ; `supabase/functions` est exclu de `tsconfig.json`.
+
 ---
 
 ## 3. Ce qu'il reste à faire
@@ -118,7 +126,7 @@ Légende : `[ ]` à faire · `[x]` fait
 - [x] **A5. Section « Mineurs » de la politique.** Il faudrait l'aligner avec la classification d'âge que tu déclareras sur les stores. *Fait le 27/09 : comptes réservés aux 15 ans et plus.*
 
 ### B. Code : fortement recommandé
-- [ ] **B6. Sécuriser le déblocage des tournois.** Aujourd'hui, l'application écrit elle-même `debloque = true`. Les règles d'accès permettent à un organisateur de modifier son tournoi, donc un utilisateur un peu technique pourrait se débloquer gratuitement en appelant la base directement. La solution : un webhook RevenueCat qui appelle une Edge Function Supabase, et interdire la modification de `debloque` par le client.
+- [x] **B6. Sécuriser le déblocage des tournois.** *Code fait le 27/09 (vérification à la demande par Edge Function plutôt que webhook). Migration SQL exécutée et Edge Function déployée le 27/09 (version 1, active). Reste à définir le secret `REVENUECAT_SECRET_KEY` (après C11), puis tester avec D15.* Aujourd'hui, l'application écrit elle-même `debloque = true`. Les règles d'accès permettent à un organisateur de modifier son tournoi, donc un utilisateur un peu technique pourrait se débloquer gratuitement en appelant la base directement. La solution : un webhook RevenueCat qui appelle une Edge Function Supabase, et interdire la modification de `debloque` par le client.
 - [ ] **B7. Faire respecter la limite de 12 équipes par la base de données.** Elle n'est vérifiée que dans l'application (`equipes.js`).
 - [ ] **B8. Faire le ménage.**
   - Déplacer `@expo/ngrok` dans les dépendances de développement.
@@ -134,6 +142,7 @@ Légende : `[ ]` à faire · `[x]` fait
   - Relier les deux stores (clé API App Store Connect, compte de service Google).
   - Créer l'entitlement `pro` et une offre « current » avec trois packages : Lifetime, Monthly et Annual.
   - Mettre les clés dans `.env` et dans les variables d'environnement EAS (`EXPO_PUBLIC_REVENUECAT_IOS_KEY` et `EXPO_PUBLIC_REVENUECAT_ANDROID_KEY`).
+  - Créer une clé secrète RevenueCat (API v1, `sk_...`) et l'enregistrer dans Supabase comme secret `REVENUECAT_SECRET_KEY` de l'Edge Function (voir B6).
 - [ ] **C12. Supabase :**
   - Vérifier que toutes les migrations de `schema.sql` sont bien passées en production, jusqu'à `debloque`.
   - Configurer les URL de redirection pour l'app (`olympiad://`).
@@ -173,6 +182,8 @@ Une ligne par modification, la plus récente en haut.
 
 | Date | Modification |
 |------|--------------|
+| 2026-09-27 | Migration B6 exécutée et Edge Function `valider-pass-tournoi` déployée sur Supabase |
+| 2026-09-27 | Déblocage des tournois vérifié côté serveur : Edge Function `valider-pass-tournoi`, déclencheur SQL, lien « Pass non utilisé » (B6) |
 | 2026-09-27 | Âge minimum de 15 ans : politique, conditions d'utilisation et écran d'inscription (A5) |
 | 2026-09-27 | Identifiant iOS `com.clementberthout.olympiad` (A4), iPad désactivé ; conditions d'utilisation validées (A3) |
 | 2026-09-27 | Liens légaux et mentions d'abonnement sur l'écran d'achat et le profil (A2), première version des conditions d'utilisation |

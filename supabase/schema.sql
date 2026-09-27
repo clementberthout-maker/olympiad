@@ -494,3 +494,58 @@ $$;
 
 revoke execute on function supprimer_mon_compte() from public, anon;
 grant execute on function supprimer_mon_compte() to authenticated;
+
+-- ============================================================
+-- MIGRATION — Déblocage d'un tournoi vérifié côté serveur (Pass Tournoi)
+-- ============================================================
+-- Avant : l'app écrivait elle-même tournois.debloque = true après un achat
+-- (voir lib/achats.js), ce que la policy UPDATE permettait à n'importe quel
+-- organisateur, même sans avoir payé. Désormais, seule l'Edge Function
+-- "valider-pass-tournoi" (supabase/functions/) peut débloquer un tournoi :
+-- elle vérifie l'achat auprès de RevenueCat, puis écrit avec la clé
+-- service_role.
+
+-- Pass Tournoi déjà utilisés : un achat (identifiant de transaction
+-- RevenueCat) ne débloque qu'un seul tournoi. La ligne est conservée si le
+-- tournoi est supprimé (le Pass reste consommé), et supprimée avec le
+-- compte.
+create table if not exists passes_tournoi_utilises (
+  transaction_id text primary key,
+  user_id uuid references auth.users(id) on delete cascade not null,
+  tournoi_id uuid references tournois(id) on delete set null,
+  created_at timestamptz default now()
+);
+
+alter table passes_tournoi_utilises enable row level security;
+
+-- Lecture seule pour l'utilisateur ; aucune policy d'écriture : seule
+-- l'Edge Function (service_role, qui ignore RLS) y écrit.
+drop policy if exists "Utilisateur voit ses passes utilises" on passes_tournoi_utilises;
+create policy "Utilisateur voit ses passes utilises" on passes_tournoi_utilises for select
+  using (auth.uid() = user_id);
+
+-- Empêche l'app (rôles anon / authenticated) de modifier "debloque",
+-- à la création comme à la modification d'un tournoi. La clé service_role
+-- (Edge Function) et l'éditeur SQL du tableau de bord ne sont pas concernés.
+create or replace function proteger_debloque()
+returns trigger
+language plpgsql
+as $$
+begin
+  if coalesce(auth.role(), '') in ('anon', 'authenticated') then
+    if tg_op = 'INSERT' and new.debloque then
+      raise exception 'Le déblocage d''un tournoi passe par la vérification de l''achat'
+        using errcode = '42501';
+    elsif tg_op = 'UPDATE' and new.debloque is distinct from old.debloque then
+      raise exception 'Le déblocage d''un tournoi passe par la vérification de l''achat'
+        using errcode = '42501';
+    end if;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists proteger_debloque on tournois;
+create trigger proteger_debloque
+  before insert or update on tournois
+  for each row execute function proteger_debloque();

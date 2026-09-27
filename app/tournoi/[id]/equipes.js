@@ -65,7 +65,7 @@ export default function GestionEquipes() {
   const router = useRouter();
   const { couleurs } = useTheme();
   const { t, langue } = useLangue();
-  const { estPro, passDraftDebloque, setPassDraftDebloque } = useAchats();
+  const { estPro, passDraftDebloque, setPassDraftDebloque, debloquerTournoi } = useAchats();
   const styles = useMemo(() => creerStyles(couleurs), [couleurs]);
   const vientDuCalendrier = modifier === '1';
   // Le tournoi n'existe pas encore en base : "id" n'est alors qu'un
@@ -360,7 +360,6 @@ export default function GestionEquipes() {
             mode_departage: departageEliminationParam || 'prolongations_tab',
             code_acces: genererCodeAcces(),
             organisateur_id: session.user.id,
-            debloque: passDraftDebloque,
           })
           .select()
           .single());
@@ -372,6 +371,19 @@ export default function GestionEquipes() {
       if (erreurCreation) throw erreurCreation;
 
       const nouvelId = tournoiCree.id;
+
+      // Pass Tournoi acheté pendant le brouillon : appliqué maintenant que
+      // le tournoi existe, via la vérification serveur (voir lib/achats.js).
+      // Un échec ne bloque pas la création : le Pass reste disponible et
+      // pourra être appliqué depuis l'écran d'achat.
+      let deblocageEchoue = false;
+      if (passDraftDebloque) {
+        try {
+          await debloquerTournoi(nouvelId);
+        } catch {
+          deblocageEchoue = true;
+        }
+      }
 
       const { data: equipesInserees, error: erreurEquipes } = await supabase
         .from('equipes')
@@ -385,6 +397,9 @@ export default function GestionEquipes() {
 
       ignorerConfirmationRef.current = true;
       setPassDraftDebloque(false);
+      if (deblocageEchoue) {
+        Alert.alert(t('paywall.deblocageEchoueTitre'), t('paywall.deblocageEchoueMessage'));
+      }
       router.replace(`/tournoi/${nouvelId}/calendrier?cree=1`);
     } catch (e) {
       Alert.alert(t('commun.erreur'), messageErreur(e, t));
