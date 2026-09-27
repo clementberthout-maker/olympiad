@@ -149,6 +149,7 @@ Une ligne par modification, la plus récente en haut.
 
 | Date | Modification |
 |------|--------------|
+| 2026-09-27 | `.gitattributes` : scripts `.sh` toujours en fins de ligne Unix (LF) |
 | 2026-09-27 | Création de `SUIVI-PROJET.md`, de `CLAUDE.md` et du hook de mise à jour automatique |
 | 2026-09-27 | Détection Pass Tournoi / Pro par type d'offre (correctif Android) ; politique de confidentialité |
 | 2026-09-07 | Ignore `.idea/` |
