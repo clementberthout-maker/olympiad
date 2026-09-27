@@ -92,7 +92,12 @@ OLYMPIAD sert à organiser des tournois sportifs amateurs. L'organisateur crée 
 - Écran d'achat : prix affiché par période (« / mois », « / an », « achat unique »), texte sur le renouvellement automatique et la résiliation, liens vers les conditions d'utilisation et la politique de confidentialité.
 - « Mon profil » : nouvelle section « Informations légales » avec les deux liens.
 - Adresses des pages légales centralisées dans `lib/liensLegaux.js`, liens dans `components/LiensLegaux.js`.
-- Première version des conditions d'utilisation : `docs/conditions-utilisation.html`.
+- Première version des conditions d'utilisation : `docs/conditions-utilisation.html`, relue et validée.
+
+### Identifiant iOS (27 septembre)
+- `app.json` : `ios.bundleIdentifier` = `com.clementberthout.olympiad` (le même qu'Android). Il ne pourra plus changer après la première publication.
+- `ITSAppUsesNonExemptEncryption: false` : l'app n'utilise que le chiffrement standard (HTTPS), ce qui évite la question sur le chiffrement à chaque envoi à Apple.
+- `supportsTablet: false` : l'app n'est pas pensée pour l'iPad pour l'instant, donc pas de captures iPad à fournir ni de test iPad par Apple.
 
 ---
 
@@ -103,8 +108,8 @@ Légende : `[ ]` à faire · `[x]` fait
 ### A. Code : obligatoire pour être accepté sur les stores
 - [x] **A1. Suppression du compte dans l'application.** *Fait et testé le 27/09.* Apple l'exige, et Google demande aussi un lien web de suppression. Il faut une fonction côté serveur (fonction SQL ou Edge Function) qui supprime les tournois, la photo et le compte, plus un bouton dans « Mon profil ».
 - [x] **A2. Liens légaux sur l'écran d'achat et dans le profil.** Apple exige, pour tout abonnement, un lien vers la politique de confidentialité et un vers les conditions d'utilisation. L'écran doit aussi indiquer le prix, la durée et le renouvellement automatique. *Fait le 27/09.*
-- [ ] **A3. Conditions d'utilisation.** *Première version rédigée le 27/09 (`docs/conditions-utilisation.html`), déjà liée dans l'app. Reste à la relire, et à compléter l'éditeur si tu passes sous statut d'entreprise.*
-- [ ] **A4. `ios.bundleIdentifier` dans `app.json`.** Il manque (par exemple `com.clementberthout.olympiad`), et le build iOS ne peut pas se faire sans.
+- [x] **A3. Conditions d'utilisation.** *Rédigées et validées le 27/09 (`docs/conditions-utilisation.html`), liées dans l'app. À compléter avec l'éditeur si tu passes sous statut d'entreprise.*
+- [x] **A4. `ios.bundleIdentifier` dans `app.json`.** Il manque (par exemple `com.clementberthout.olympiad`), et le build iOS ne peut pas se faire sans. *Fait le 27/09 : `com.clementberthout.olympiad`.*
 - [ ] **A5. Section « Mineurs » de la politique.** Il faudrait l'aligner avec la classification d'âge que tu déclareras sur les stores.
 
 ### B. Code : fortement recommandé
@@ -139,7 +144,7 @@ Légende : `[ ]` à faire · `[x]` fait
 - [ ] **D16. Tester l'application entière :** chaque sport, la phase finale, les co-organisateurs, l'export PDF, le QR code, la réinitialisation du mot de passe, les deux thèmes et les deux langues, sur iPhone et sur Android.
 
 ### E. Fiches des stores
-- [ ] **E17. Visuels :** captures d'écran (iPhone 6,7", iPad si `supportsTablet` reste à `true`, téléphone Android) et bannière Google de 1024×500.
+- [ ] **E17. Visuels :** captures d'écran (iPhone 6,7" et téléphone Android ; pas d'iPad, `supportsTablet` étant à `false`) et bannière Google de 1024×500.
 - [ ] **E18. Textes en français et en anglais :** nom, sous-titre, description et mots-clés.
 - [ ] **E19. Formulaires :**
   - App Privacy (Apple) et Data Safety (Google) : email, nom, photo et achats collectés ; pas de pistage ni de publicité.
@@ -162,6 +167,7 @@ Une ligne par modification, la plus récente en haut.
 
 | Date | Modification |
 |------|--------------|
+| 2026-09-27 | Identifiant iOS `com.clementberthout.olympiad` (A4), iPad désactivé ; conditions d'utilisation validées (A3) |
 | 2026-09-27 | Liens légaux et mentions d'abonnement sur l'écran d'achat et le profil (A2), première version des conditions d'utilisation |
 | 2026-09-27 | Suppression du compte depuis « Mon profil » (A1), page web de suppression, politique mise à jour |
 | 2026-09-27 | `.gitattributes` : scripts `.sh` toujours en fins de ligne Unix (LF) |
