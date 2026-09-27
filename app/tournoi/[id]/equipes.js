@@ -65,7 +65,7 @@ export default function GestionEquipes() {
   const router = useRouter();
   const { couleurs } = useTheme();
   const { t, langue } = useLangue();
-  const { estPro, passDraftDebloque, setPassDraftDebloque, debloquerTournoi } = useAchats();
+  const { estPro, passDraftDebloque, setPassDraftDebloque, debloquerTournoi, synchroniserPro } = useAchats();
   const styles = useMemo(() => creerStyles(couleurs), [couleurs]);
   const vientDuCalendrier = modifier === '1';
   // Le tournoi n'existe pas encore en base : "id" n'est alors qu'un
@@ -209,6 +209,23 @@ export default function GestionEquipes() {
     }, [charger])
   );
 
+  // Insère des équipes en base. La base refuse la 13e équipe d'un tournoi
+  // non débloqué (code OLY01, voir supabase/schema.sql) ; si l'utilisateur
+  // est Pro, c'est que le serveur ne connaît pas encore son abonnement (ou
+  // pas son renouvellement) : on le resynchronise et on réessaie une fois.
+  async function insererEquipes(lignes) {
+    let resultat = await supabase.from('equipes').insert(lignes).select();
+    if (resultat.error?.code === 'OLY01' && estPro) {
+      try {
+        await synchroniserPro();
+      } catch {
+        // l'erreur de limite ci-dessous sera alors remontée
+      }
+      resultat = await supabase.from('equipes').insert(lignes).select();
+    }
+    return resultat;
+  }
+
   async function ajouterEquipe() {
     if (!nomEquipe.trim()) return;
     if (equipes.length >= LIMITE_EQUIPES_GRATUIT && !debloque) {
@@ -227,7 +244,13 @@ export default function GestionEquipes() {
       Keyboard.dismiss();
       return;
     }
-    const { error } = await supabase.from('equipes').insert({ tournoi_id: id, nom: nomEquipe.trim() });
+    const { error } = await insererEquipes({ tournoi_id: id, nom: nomEquipe.trim() });
+    if (error?.code === 'OLY01') {
+      // Limite gratuite appliquée par la base (déblocage non connu du
+      // serveur) : même parcours que la limite vérifiée par l'app.
+      router.push({ pathname: '/paywall', params: { tournoiId: id, raison: 'equipes' } });
+      return;
+    }
     if (error) {
       Alert.alert(t('commun.erreur'), messageErreur(error, t));
       return;
@@ -385,10 +408,17 @@ export default function GestionEquipes() {
         }
       }
 
-      const { data: equipesInserees, error: erreurEquipes } = await supabase
-        .from('equipes')
-        .insert(equipes.map((e) => ({ tournoi_id: nouvelId, nom: e.nom })))
-        .select();
+      const { data: equipesInserees, error: erreurEquipes } = await insererEquipes(
+        equipes.map((e) => ({ tournoi_id: nouvelId, nom: e.nom }))
+      );
+      if (erreurEquipes?.code === 'OLY01') {
+        // Plus de 12 équipes mais déblocage non confirmé par le serveur
+        // (Pass pas encore appliqué, abonnement Pro non synchronisé) : on
+        // annule la création pour garder le brouillon intact et réessayer.
+        await supabase.from('tournois').delete().eq('id', nouvelId);
+        Alert.alert(t('equipes.creationLimiteTitre'), t('equipes.creationLimiteMessage'));
+        return;
+      }
       if (erreurEquipes) throw erreurEquipes;
 
       if ((equipesInserees || []).length >= 2) {

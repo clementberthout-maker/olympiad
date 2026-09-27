@@ -7,49 +7,24 @@
 // transaction RevenueCat) ne débloque qu'un seul tournoi : les transactions
 // déjà utilisées sont enregistrées dans passes_tournoi_utilises.
 //
-// Secrets à définir (Supabase > Edge Functions > Secrets) :
-//   REVENUECAT_SECRET_KEY        clé secrète RevenueCat (API v1, "sk_...")
-//   REVENUECAT_PASS_PRODUCT_IDS  (optionnel) identifiants produit du Pass
-//                                Tournoi, séparés par des virgules. Vide :
-//                                tout achat unique (non-abonnement) compte,
-//                                le Pass étant le seul de l'app.
-// SUPABASE_URL et SUPABASE_SERVICE_ROLE_KEY sont fournis automatiquement.
+// Secrets (Supabase > Edge Functions > Secrets) : REVENUECAT_SECRET_KEY
+// (voir _shared/commun.ts) et, en option, REVENUECAT_PASS_PRODUCT_IDS :
+// identifiants produit du Pass Tournoi, séparés par des virgules. Vide :
+// tout achat unique (non-abonnement) compte, le Pass étant le seul de l'app.
 
-import { createClient } from 'npm:@supabase/supabase-js@2';
+import { abonneRevenueCat, clientAdmin, reponse, reponsePreflight, utilisateurAppelant } from '../_shared/commun.ts';
 
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
-const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-const REVENUECAT_SECRET_KEY = Deno.env.get('REVENUECAT_SECRET_KEY');
 const PRODUITS_PASS = (Deno.env.get('REVENUECAT_PASS_PRODUCT_IDS') || '')
   .split(',')
   .map((s) => s.trim())
   .filter(Boolean);
 
-const CORS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-
-function reponse(statut: number, corps: Record<string, unknown>) {
-  return new Response(JSON.stringify(corps), {
-    status: statut,
-    headers: { ...CORS, 'Content-Type': 'application/json' },
-  });
-}
-
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
-  if (!REVENUECAT_SECRET_KEY) return reponse(500, { code: 'configuration_manquante' });
+  if (req.method === 'OPTIONS') return reponsePreflight();
 
-  const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
-
-  // Utilisateur appelant, d'après le jeton de session envoyé par l'app.
-  const jeton = (req.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '');
-  const { data: donneesAuth, error: erreurAuth } = await admin.auth.getUser(jeton);
-  const user = donneesAuth?.user;
-  if (erreurAuth || !user) return reponse(401, { code: 'non_authentifie' });
+  const admin = clientAdmin();
+  const user = await utilisateurAppelant(admin, req);
+  if (!user) return reponse(401, { code: 'non_authentifie' });
 
   let tournoiId: string | undefined;
   try {
@@ -69,15 +44,15 @@ Deno.serve(async (req) => {
   if (tournoi.organisateur_id !== user.id) return reponse(403, { code: 'pas_organisateur' });
   if (tournoi.debloque) return reponse(200, { debloque: true });
 
-  // Achats de l'utilisateur chez RevenueCat : l'app l'y identifie par son
-  // id Supabase (Purchases.logIn, voir lib/achats.js).
-  const rc = await fetch(
-    `https://api.revenuecat.com/v1/subscribers/${encodeURIComponent(user.id)}`,
-    { headers: { Authorization: `Bearer ${REVENUECAT_SECRET_KEY}` } },
-  );
-  if (!rc.ok) return reponse(502, { code: 'revenuecat_indisponible' });
-  const { subscriber } = await rc.json();
-  const achats: { id: string }[] = Object.entries(subscriber?.non_subscriptions || {})
+  let subscriber;
+  try {
+    subscriber = await abonneRevenueCat(user.id);
+  } catch {
+    return reponse(500, { code: 'configuration_manquante' });
+  }
+  if (!subscriber) return reponse(502, { code: 'revenuecat_indisponible' });
+
+  const achats: { id: string }[] = Object.entries(subscriber.non_subscriptions || {})
     .filter(([produit]) => PRODUITS_PASS.length === 0 || PRODUITS_PASS.includes(produit))
     .flatMap(([, liste]) => liste as { id: string }[]);
 

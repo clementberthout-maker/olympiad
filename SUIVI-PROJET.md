@@ -112,6 +112,12 @@ OLYMPIAD sert à organiser des tournois sportifs amateurs. L'organisateur crée 
 - Pass acheté pendant un brouillon : appliqué par le serveur juste après la création du tournoi.
 - `typescript` et `tsconfig.json` ajoutés automatiquement par Expo (déclenché par le fichier `.ts` de l'Edge Function). L'app reste en JavaScript ; `supabase/functions` est exclu de `tsconfig.json`.
 
+### Limite de 12 équipes appliquée par la base (27 septembre)
+- Déclencheur SQL `limiter_equipes` : refuse la 13e équipe d'un tournoi (code `OLY01`), sauf s'il est débloqué par un Pass Tournoi ou si son organisateur principal est Pro.
+- Abonnement Pro connu du serveur : table `abonnements_pro` (date de fin), remplie par la nouvelle Edge Function `synchroniser-pro` après vérification auprès de RevenueCat. L'app la déclenche dès que RevenueCat signale un Pro actif.
+- Code commun des Edge Functions regroupé dans `supabase/functions/_shared/commun.ts` (`valider-pass-tournoi` réécrite pour l'utiliser, même comportement).
+- Écran des équipes : si la base refuse, resynchronisation du Pro et nouvel essai, sinon ouverture de l'écran d'achat. Une création de tournoi refusée pour cette raison est annulée, et le brouillon est conservé.
+
 ---
 
 ## 3. Ce qu'il reste à faire
@@ -126,8 +132,8 @@ Légende : `[ ]` à faire · `[x]` fait
 - [x] **A5. Section « Mineurs » de la politique.** Il faudrait l'aligner avec la classification d'âge que tu déclareras sur les stores. *Fait le 27/09 : comptes réservés aux 15 ans et plus.*
 
 ### B. Code : fortement recommandé
-- [x] **B6. Sécuriser le déblocage des tournois.** *Code fait le 27/09 (vérification à la demande par Edge Function plutôt que webhook). Migration SQL exécutée et Edge Function déployée le 27/09 (version 1, active). Reste à définir le secret `REVENUECAT_SECRET_KEY` (après C11), puis tester avec D15.* Aujourd'hui, l'application écrit elle-même `debloque = true`. Les règles d'accès permettent à un organisateur de modifier son tournoi, donc un utilisateur un peu technique pourrait se débloquer gratuitement en appelant la base directement. La solution : un webhook RevenueCat qui appelle une Edge Function Supabase, et interdire la modification de `debloque` par le client.
-- [ ] **B7. Faire respecter la limite de 12 équipes par la base de données.** Elle n'est vérifiée que dans l'application (`equipes.js`).
+- [x] **B6. Sécuriser le déblocage des tournois.** *Code fait le 27/09 (vérification à la demande par Edge Function plutôt que webhook). Migration SQL exécutée (déclencheur `proteger_debloque` vérifié actif) et Edge Function déployée le 27/09 (version 1, active). Reste à définir le secret `REVENUECAT_SECRET_KEY` (après C11), puis tester avec D15.* Aujourd'hui, l'application écrit elle-même `debloque = true`. Les règles d'accès permettent à un organisateur de modifier son tournoi, donc un utilisateur un peu technique pourrait se débloquer gratuitement en appelant la base directement. La solution : un webhook RevenueCat qui appelle une Edge Function Supabase, et interdire la modification de `debloque` par le client.
+- [x] **B7. Faire respecter la limite de 12 équipes par la base de données.** *Fait le 27/09 : migration exécutée, Edge Functions déployées (`valider-pass-tournoi` v2, `synchroniser-pro` v1), limite testée dans l'app. Le Pro ne sera reconnu par le serveur qu'une fois `REVENUECAT_SECRET_KEY` défini (C11).* Elle n'est vérifiée que dans l'application (`equipes.js`).
 - [ ] **B8. Faire le ménage.**
   - Déplacer `@expo/ngrok` dans les dépendances de développement.
   - Mettre le README à jour (sa liste « ce qu'il reste à faire » date du début du projet).
@@ -182,6 +188,7 @@ Une ligne par modification, la plus récente en haut.
 
 | Date | Modification |
 |------|--------------|
+| 2026-09-27 | Limite de 12 équipes appliquée par la base, abonnement Pro synchronisé côté serveur (B7) |
 | 2026-09-27 | Cache du CLI Supabase (`supabase/.temp/`) retiré du dépôt et ignoré |
 | 2026-09-27 | Migration B6 exécutée et Edge Function `valider-pass-tournoi` déployée sur Supabase |
 | 2026-09-27 | Déblocage des tournois vérifié côté serveur : Edge Function `valider-pass-tournoi`, déclencheur SQL, lien « Pass non utilisé » (B6) |

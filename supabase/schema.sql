@@ -549,3 +549,70 @@ drop trigger if exists proteger_debloque on tournois;
 create trigger proteger_debloque
   before insert or update on tournois
   for each row execute function proteger_debloque();
+
+-- ============================================================
+-- MIGRATION — Limite de 12 équipes appliquée par la base
+-- ============================================================
+-- Avant : la limite de la version gratuite (12 équipes par tournoi) n'était
+-- vérifiée que par l'app (tournoi/[id]/equipes.js). Désormais la base
+-- refuse la 13e équipe d'un tournoi, sauf s'il est débloqué par un Pass
+-- Tournoi (tournois.debloque) ou si son organisateur principal a un
+-- abonnement Pro actif.
+
+-- Abonnement Pro connu côté serveur : écrit uniquement par l'Edge Function
+-- "synchroniser-pro", après vérification auprès de RevenueCat (voir
+-- lib/achats.js). expire_le = null pour un droit sans date de fin.
+create table if not exists abonnements_pro (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  expire_le timestamptz,
+  mis_a_jour_le timestamptz not null default now()
+);
+
+alter table abonnements_pro enable row level security;
+
+drop policy if exists "Utilisateur voit son abonnement" on abonnements_pro;
+create policy "Utilisateur voit son abonnement" on abonnements_pro for select
+  using (auth.uid() = user_id);
+
+create or replace function limiter_equipes()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_tournoi tournois%rowtype;
+  v_nombre int;
+begin
+  -- La clé service_role et l'éditeur SQL ne sont pas limités.
+  if coalesce(auth.role(), '') not in ('anon', 'authenticated') then
+    return new;
+  end if;
+
+  -- "for update" : deux ajouts simultanés ne peuvent pas dépasser la limite.
+  select * into v_tournoi from tournois where id = new.tournoi_id for update;
+  if not found or v_tournoi.debloque then
+    return new;
+  end if;
+
+  if exists (
+    select 1 from abonnements_pro
+    where user_id = v_tournoi.organisateur_id
+      and (expire_le is null or expire_le > now())
+  ) then
+    return new;
+  end if;
+
+  select count(*) into v_nombre from equipes where tournoi_id = new.tournoi_id;
+  if v_nombre >= 12 then
+    raise exception 'Limite de 12 équipes atteinte pour ce tournoi (version gratuite)'
+      using errcode = 'OLY01';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists limiter_equipes on equipes;
+create trigger limiter_equipes
+  before insert or update of tournoi_id on equipes
+  for each row execute function limiter_equipes();
