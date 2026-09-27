@@ -1,7 +1,8 @@
 import { View, Text, StyleSheet, Pressable, ScrollView, Alert } from 'react-native';
 import { useState, useMemo } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useAchats, PRODUIT_PASS_TOURNOI, PRODUIT_PRO_MENSUEL } from '../lib/achats';
+import Purchases from 'react-native-purchases';
+import { useAchats } from '../lib/achats';
 import { messageErreur } from '../lib/erreurs';
 import { useTheme } from '../lib/ThemeContext';
 import { useLangue } from '../lib/LangueContext';
@@ -63,15 +64,17 @@ export default function Paywall() {
       {!offres && <Text style={styles.aide}>{t('paywall.offresIndisponibles')}</Text>}
 
       {offres?.availablePackages?.map((pkg) => {
-        const estPass = pkg.product.identifier === PRODUIT_PASS_TOURNOI;
+        // Voir lib/achats.js : on identifie l'offre par packageType
+        // (LIFETIME/ANNUAL/MONTHLY, attribué par RevenueCat), pas par
+        // l'identifiant du produit — indépendant du store (iOS vs Android).
+        const estPass = pkg.packageType === Purchases.PACKAGE_TYPE.LIFETIME;
+        const estAnnuel = pkg.packageType === Purchases.PACKAGE_TYPE.ANNUAL;
         return (
           <View key={pkg.identifier} style={styles.carteOffre}>
             <Text style={styles.nomOffre}>
               {estPass
                 ? t('paywall.passTournoiNom')
-                : t('paywall.proNom', {
-                  duree: pkg.product.identifier === PRODUIT_PRO_MENSUEL ? t('paywall.parMois') : t('paywall.parAn'),
-                })}
+                : t('paywall.proNom', { duree: estAnnuel ? t('paywall.parAn') : t('paywall.parMois') })}
             </Text>
             <Text style={styles.descriptionOffre}>
               {estPass ? t('paywall.passTournoiDescription') : t('paywall.proDescription')}
