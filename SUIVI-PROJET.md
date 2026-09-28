@@ -3,7 +3,7 @@
 > Fichier tenu à jour automatiquement par Claude à chaque modification du projet
 > (voir `CLAUDE.md` et le hook `.claude/hooks/verifier-suivi.sh`).
 
-**Dernière mise à jour :** 27 septembre 2026
+**Dernière mise à jour :** 28 septembre 2026
 
 ---
 
@@ -124,6 +124,12 @@ OLYMPIAD sert à organiser des tournois sportifs amateurs. L'organisateur crée 
 - `npm audit fix` : failles « élevées » de `@xmldom/xmldom` (outil de build) corrigées. Restent 14 alertes « modérées » dans des dépendances internes d'Expo, corrigeables seulement en rétrogradant `expo-router` et `expo-sharing` : ignorées.
 - README réécrit pour décrire l'app actuelle (fonctionnalités, structure, installation, Edge Functions, publication).
 
+### Landing page (28 septembre)
+- `docs/index.html`, publiée sur GitHub Pages : présentation, « Comment ça marche », fonctionnalités, sports, offres, aide (FAQ), contact, liens légaux.
+- Identité de l'app (ambre, bleu nuit, Bebas Neue, Work Sans), thèmes clair et sombre, adaptée au mobile.
+- Sans captures : aperçu de l'écran de suivi dessiné en HTML. Boutons « Bientôt sur l'App Store / Google Play ».
+- Sert d'URL de support pour Apple : https://clementberthout-maker.github.io/olympiad/#aide
+
 ---
 
 ## 3. Ce qu'il reste à faire
@@ -176,13 +182,15 @@ Légende : `[ ]` à faire · `[x]` fait
   - App Privacy (Apple) et Data Safety (Google) : email, nom, photo et achats collectés ; pas de pistage ni de publicité.
   - Classification d'âge : répondre au questionnaire d'Apple et à celui de Google (IARC) selon le contenu réel (pas de violence, pas de contenu choquant ; noms d'équipes saisis par les utilisateurs et visibles avec le code du tournoi).
   - Public cible sur Google Play : 13-15 ans, 16-17 ans et 18 ans et plus (comptes dès 15 ans). Ne pas cocher de tranche de moins de 13 ans, pour ne pas relever du programme « Familles ».
-  - Adresse de la politique de confidentialité et adresse de support.
+  - Adresse de la politique de confidentialité et adresse de support. *Support : https://clementberthout-maker.github.io/olympiad/#aide ; marketing : https://clementberthout-maker.github.io/olympiad/*
 - [ ] **E20. Compte de démonstration** pour les équipes de validation Apple et Google, avec un tournoi déjà rempli.
 
 ### F. Mise en ligne
 - [ ] **F21.** `eas build --profile production --platform all`, puis `eas submit`.
 - [ ] **F22.** Envoyer en validation. Apple répond en 1 à 3 jours en général. Chez Google, prévoir le test fermé de 14 jours si ton compte est concerné.
+- [ ] **F22b. Landing page :** remplacer les boutons « Bientôt sur… » par les vrais liens des fiches App Store et Google Play, et ajouter des captures d'écran.
 - [ ] **F23. Après la sortie :** surveiller les plantages (Sentry ou `expo-insights`, à ajouter si tu veux), les tableaux de bord RevenueCat et Supabase, et prévoir les mises à jour avec `eas update`.
+- [ ] **F24. QR codes lisibles sans l'app (amélioration) :** aujourd'hui le QR code ouvre un lien `olympiad://…` qui ne fonctionne que si l'app est installée. Le faire pointer vers une page web qui ouvre l'app ou redirige vers le bon store (liens universels / App Links).
 
 **Priorité conseillée :** commence par A1 à A4 (du code, sans dépendance extérieure) et, en parallèle, ouvre les comptes développeur (C9). La validation des comptes et le test fermé Google sont ce qui prend le plus de temps.
 
@@ -194,6 +202,7 @@ Une ligne par modification, la plus récente en haut.
 
 | Date | Modification |
 |------|--------------|
+| 2026-09-28 | Landing page `docs/index.html` (présentation, offres, aide, contact) ; URL de support Apple |
 | 2026-09-27 | Ménage (B8) : paquets Expo alignés, `@expo/ngrok` en dev, `npm audit fix`, README réécrit |
 | 2026-09-27 | Limite de 12 équipes appliquée par la base, abonnement Pro synchronisé côté serveur (B7) |
 | 2026-09-27 | Cache du CLI Supabase (`supabase/.temp/`) retiré du dépôt et ignoré |
