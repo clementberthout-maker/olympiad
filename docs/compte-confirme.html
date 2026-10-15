@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Adresse confirmée — OLYMPIAD</title>
+<link rel="icon" href="favicon-32.png">
+<style>
+  :root {
+    --accent: #ebb517;
+    --texte: #11161f;
+    --texte-attenue: #646972;
+    --fond: #f2f5fb;
+    --surface: #ffffff;
+    --bordure: #d3d8e0;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --texte: #f3f2ed;
+      --texte-attenue: #a7acb6;
+      --fond: #0b0f18;
+      --surface: #181d26;
+      --bordure: #2d333d;
+    }
+  }
+  body {
+    margin: 0;
+    background: var(--fond);
+    color: var(--texte);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.6;
+  }
+  main {
+    max-width: 520px;
+    margin: 0 auto;
+    padding: 56px 20px 80px;
+    text-align: center;
+  }
+  img { width: 72px; height: 72px; border-radius: 16px; }
+  h1 { font-size: 1.6rem; margin: 20px 0 8px; }
+  p { color: var(--texte-attenue); margin: 0 0 1rem; }
+  .bouton {
+    display: inline-block;
+    margin-top: 12px;
+    padding: 12px 24px;
+    border-radius: 10px;
+    background: var(--accent);
+    color: #11161f;
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .note {
+    margin-top: 2rem;
+    padding: 14px 16px;
+    background: var(--surface);
+    border: 1px solid var(--bordure);
+    border-radius: 10px;
+    font-size: 0.9rem;
+    text-align: left;
+  }
+  a { color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <img src="icon-512.png" alt="OLYMPIAD">
+  <h1 id="titre">Adresse confirmée</h1>
+  <p id="message">Ton adresse e-mail est confirmée. Retourne dans l'application OLYMPIAD pour te connecter.</p>
+  <a class="bouton" id="bouton" href="olympiad://connexion">Ouvrir OLYMPIAD</a>
+  <div class="note" id="note">Tu as changé l'adresse de ton compte ? Pense à confirmer aussi depuis le lien envoyé à l'autre adresse, si tu l'as reçu.</div>
+</main>
+<script>
+  // Supabase renvoie ici après un clic sur le lien de confirmation
+  // (inscription ou changement d'adresse). En cas de lien expiré ou déjà
+  // utilisé, il ajoute error / error_code dans l'URL (après # ou ?).
+  var params = new URLSearchParams(location.hash.slice(1) + '&' + location.search.slice(1));
+  var erreur = params.get('error') || params.get('error_code');
+  var anglais = !/^fr/i.test(navigator.language || 'fr');
+
+  var textes = {
+    fr: {
+      ok: ['Adresse confirmée', "Ton adresse e-mail est confirmée. Retourne dans l'application OLYMPIAD pour te connecter."],
+      erreur: ['Lien expiré', "Ce lien a expiré ou a déjà été utilisé. Si tu arrives à te connecter dans l'application, ton adresse est déjà confirmée. Sinon, recommence l'inscription ou le changement d'adresse pour recevoir un nouveau lien."],
+      bouton: 'Ouvrir OLYMPIAD',
+      note: "Tu as changé l'adresse de ton compte ? Pense à confirmer aussi depuis le lien envoyé à l'autre adresse, si tu l'as reçu.",
+      titrePage: 'Adresse confirmée — OLYMPIAD'
+    },
+    en: {
+      ok: ['Address confirmed', 'Your email address is confirmed. Go back to the OLYMPIAD app to sign in.'],
+      erreur: ['Link expired', 'This link has expired or has already been used. If you can sign in to the app, your address is already confirmed. Otherwise, sign up or change your address again to get a new link.'],
+      bouton: 'Open OLYMPIAD',
+      note: 'Changed your account address? Also confirm using the link sent to your other address, if you received one.',
+      titrePage: 'Address confirmed — OLYMPIAD'
+    }
+  };
+  var t = anglais ? textes.en : textes.fr;
+  var etat = erreur ? t.erreur : t.ok;
+
+  document.documentElement.lang = anglais ? 'en' : 'fr';
+  document.title = erreur ? etat[0] + ' — OLYMPIAD' : t.titrePage;
+  document.getElementById('titre').textContent = etat[0];
+  document.getElementById('message').textContent = etat[1];
+  document.getElementById('bouton').textContent = t.bouton;
+  document.getElementById('note').textContent = t.note;
+  if (erreur) document.getElementById('note').style.display = 'none';
+
+  // Le code de confirmation ne sert à rien sur cette page : on le retire de l'adresse.
+  history.replaceState(null, '', location.pathname);
+</script>
+</body>
+</html>

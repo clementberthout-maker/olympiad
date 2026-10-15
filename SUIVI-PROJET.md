@@ -187,6 +187,11 @@ OLYMPIAD sert à organiser des tournois sportifs amateurs. L'organisateur crée 
 - Section « Trouver les testeurs » ajoutée au guide : groupe Google, entourage, public cible (clubs), échanges entre développeurs, services payants en dernier recours.
 - Pas de compte de service pour `eas submit` : le `.aab` du build 5 est importé à la main dans la Console.
 
+### E-mails Supabase (15 octobre)
+- Sans nom de domaine : envoi par le SMTP de Gmail (`smtp.gmail.com`, mot de passe d'application), qui passe les contrôles anti-spam contrairement à Brevo avec une adresse Gmail.
+- Page `docs/compte-confirme.html` (FR, EN selon le navigateur) : retour après la confirmation d'inscription ou de changement d'adresse, message « Lien expiré » si Supabase renvoie une erreur, bouton `olympiad://connexion`. Avant, ces liens renvoyaient vers la Site URL par défaut (`localhost:3000`).
+- Modèles d'e-mails bilingues aux couleurs de l'app (`supabase/emails/` : confirmation, mot de passe oublié, changement d'adresse) et guide de configuration (`supabase/emails/README.md` : SMTP, limite d'envoi, Site URL, URL de redirection `olympiad://**`, tests).
+
 ## 3. Ce qu'il reste à faire
 
 Légende : `[ ]` à faire · `[x]` fait
@@ -223,8 +228,8 @@ Légende : `[ ]` à faire · `[x]` fait
   - Créer une clé secrète RevenueCat (API v1, `sk_...`) et l'enregistrer dans Supabase comme secret `REVENUECAT_SECRET_KEY` de l'Edge Function (voir B6).
 - [ ] **C12. Supabase :**
   - Vérifier que toutes les migrations de `schema.sql` sont bien passées en production, jusqu'à `debloque`.
-  - Configurer les URL de redirection pour l'app (`olympiad://`).
-  - Brancher un envoi d'emails SMTP personnalisé : le service d'emails par défaut est très limité en production.
+  - Configurer les URL de redirection pour l'app (`olympiad://`). *Préparé le 15/10 : Site URL `compte-confirme.html` et `olympiad://**`, voir `supabase/emails/README.md`. Reste à publier la page (push) et à saisir dans Supabase.*
+  - Brancher un envoi d'emails SMTP personnalisé : le service d'emails par défaut est très limité en production. *Préparé le 15/10 : SMTP Gmail et modèles FR/EN dans `supabase/emails/`. Reste : mot de passe d'application Gmail, saisie dans Supabase, test des trois e-mails. À faire avant l'arrivée des testeurs.*
 - [x] **C13. Publier la politique de confidentialité :** activer GitHub Pages sur le dossier `/docs` (le dépôt doit être public, ou la page hébergée ailleurs) et noter l'adresse obtenue. *Fait : les pages sont en ligne sur https://clementberthout-maker.github.io/olympiad/ (`politique-confidentialite.html`, `conditions-utilisation.html`, `suppression-compte.html`). Le lien de suppression à déclarer à Google est `suppression-compte.html`.*
 
 ### D. Builds et tests
@@ -270,6 +275,7 @@ Une ligne par modification, la plus récente en haut.
 | Date | Modification |
 |------|--------------|
 | 2026-10-13 | Émulateur Android `Pixel_7` (Play Store) prêt pour les tests, SDK sans accent `C:\Android\Sdk` |
+| 2026-10-15 | E-mails Supabase préparés : page `docs/compte-confirme.html`, modèles FR/EN et guide SMTP Gmail (`supabase/emails/`) |
 | 2026-10-15 | Classification refaite (« Oui » au signalement, résultat inchangé) ; test fermé Alpha (build 5) envoyé en examen |
 | 2026-10-15 | Réponses du questionnaire de classification notées dans `store/test-ferme.md` |
 | 2026-10-15 | Liste de testeurs « TEST FERMÉ » créée dans la Play Console (3 adresses) |
