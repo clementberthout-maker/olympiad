@@ -178,6 +178,14 @@ OLYMPIAD sert à organiser des tournois sportifs amateurs. L'organisateur crée 
 - Noms de phase traduits à l'affichage, sans toucher à la base (`lib/phases.js`, clés `phases.*` dans `lib/traductions.js`) : calendrier, vue grand écran, suivi public, saisie, export PDF.
 - Horaire des matchs à venir sur une seule ligne en anglais ; couleur du badge de langue.
 - Captures FR et EN refaites avec ces corrections (`store/captures/`, `store/captures-en/`).
+- Commits `a7bcab8` et `7478da3` poussés sur GitHub (conditions d'utilisation à jour en ligne). Build Android `versionCode` 5 réussi avec toutes ces corrections (clé `58:99…`, clé RevenueCat et lien « Signaler » vérifiés dans le bundle), pour le test fermé.
+
+### Préparation du test fermé (15 octobre)
+- Guide pas à pas `store/test-ferme.md` : classification à refaire (B8b), testeurs de licence, piste Alpha, release du build 5, lien d'inscription, demande d'accès à la production, messages aux testeurs (FR, EN) et notes de version.
+- Classification du contenu refaite avec « Oui » au signalement : résultat inchangé. Release Alpha du build 5 envoyée en examen avec la liste « TEST FERMÉ ».
+- Réponses complètes au questionnaire de classification notées dans le guide (« Oui » au signalement, le reste inchangé depuis le 14/10).
+- Section « Trouver les testeurs » ajoutée au guide : groupe Google, entourage, public cible (clubs), échanges entre développeurs, services payants en dernier recours.
+- Pas de compte de service pour `eas submit` : le `.aab` du build 5 est importé à la main dans la Console.
 
 ## 3. Ce qu'il reste à faire
 
@@ -226,10 +234,11 @@ Légende : `[ ]` à faire · `[x]` fait
   - Android : piste de test interne avec des testeurs de licence. *Fait le 14/10 (version 4, testeur de licence) : les parcours d'achat fonctionnent, à recontrôler une fois. Reste iOS (TestFlight).*
   - Parcours à couvrir : Pass acheté sur un tournoi encore en brouillon, Pass sur un tournoi existant, Pro, restauration, et changement de téléphone.
 - [ ] **D16. Tester l'application entière :** chaque sport, la phase finale, les co-organisateurs, l'export PDF, le QR code, la réinitialisation du mot de passe, les deux thèmes et les deux langues, sur iPhone et sur Android.
+- [ ] **D16b. Au prochain build (après les retours du test fermé) :** appliquer les mises à jour correctives signalées par Expo Doctor sur le build 5 (`npx expo install --fix` : expo 57.0.29, expo-constants 57.0.22, expo-linking 57.0.13, expo-router 57.0.27, expo-sharing 57.0.23), puis vérifier `npm ci` avec npm 10 avant de lancer le build. Avertissement seulement, le build 5 est gardé pour le test fermé.
 
 ### E. Fiches des stores
-- [ ] **E17. Visuels :** captures d'écran (iPhone 6,7" et téléphone Android ; pas d'iPad, `supportsTablet` étant à `false`) et bannière Google de 1024×500. *Icône Google 512 × 512 et image de présentation 1024 × 500 prêtes le 14/10 (`store/icone-512.png`, `store/banniere-1024x500.png`). 4 captures des écrans publics (1080 × 1919, thème sombre) prêtes le 15/10 dans `store/captures/` ; restent des captures organisateur (création, saisie des scores) sur un téléphone, et les captures iPhone.*
-- [ ] **E18. Textes en français et en anglais :** nom, sous-titre, description et mots-clés. *Google Play : nom, description courte et complète rédigés le 14/10 en français et en anglais dans `store/fiche-google-play.md`, à relire. Reste Apple (sous-titre, mots-clés).*
+- [ ] **E17. Visuels :** captures d'écran (iPhone 6,7" et téléphone Android ; pas d'iPad, `supportsTablet` étant à `false`) et bannière Google de 1024×500. *Icône Google 512 × 512 et image de présentation 1024 × 500 prêtes le 14/10 (`store/icone-512.png`, `store/banniere-1024x500.png`). 4 captures des écrans publics (1080 × 1919, thème sombre) prêtes le 15/10 dans `store/captures/` ; restent des captures organisateur (création, saisie des scores) sur un téléphone, et les captures iPhone.* *Fiche Google Play terminée le 15/10 (FR et EN, icône, bannières, captures). Reste Apple.*
+- [ ] **E18. Textes en français et en anglais :** nom, sous-titre, description et mots-clés. *Google Play : nom, description courte et complète rédigés le 14/10 en français et en anglais dans `store/fiche-google-play.md`, à relire. Reste Apple (sous-titre, mots-clés).* *Saisis dans la Play Console le 15/10.*
 - [ ] **E19. Formulaires :** *Google, le 14/10 : politique de confidentialité, classification du contenu (envoyée : PEGI « ! », USK 12, ESRB Teen, IARC 12+, 14 au Brésil, relevés à cause du contenu partagé sans signalement, voir B8b), informations de connexion, public cible (13-15, 16-17, 18+, pas les enfants) et sécurité des données (7 types collectés, aucun partagé, chiffrés en transit, suppression du compte par lien) faits.*
   - App Privacy (Apple) et Data Safety (Google) : email, nom, photo et achats collectés ; pas de pistage ni de publicité.
   - Classification d'âge : répondre au questionnaire d'Apple et à celui de Google (IARC) selon le contenu réel (pas de violence, pas de contenu choquant ; noms d'équipes saisis par les utilisateurs et visibles avec le code du tournoi).
@@ -239,7 +248,13 @@ Légende : `[ ]` à faire · `[x]` fait
 
 ### F. Mise en ligne
 - [ ] **F21.** `eas build --profile production --platform all`, puis `eas submit`.
-- [ ] **F22.** Envoyer en validation. Apple répond en 1 à 3 jours en général. Chez Google, prévoir le test fermé de 14 jours si ton compte est concerné.
+- [ ] **F22.** Envoyer en validation. Apple répond en 1 à 3 jours en général. Chez Google, prévoir le test fermé de 14 jours si ton compte est concerné. *Google, prochaine étape : test fermé (canal Alpha) avec le build 5 (`olympiad-com.clement-5.aab`), au moins 12 testeurs pendant 14 jours.* *Étapes dans `store/test-ferme.md`.*
+  - [ ] Recruter 15 à 20 testeurs sur Android (liste d'e-mails « TEST FERMÉ » créée le 15/10 avec 3 testeurs ; pistes dans `store/test-ferme.md`, section 2 bis).
+  - [x] Refaire la classification du contenu (« Oui » au signalement, B8b). *Envoyée le 15/10 à 12 h 47 : classification inchangée (PEGI « ! », USK 12, ESRB Teen, IARC 12+, 14 au Brésil), cohérente avec les comptes dès 15 ans.*
+  - [ ] Ajouter les testeurs comme testeurs de licence (sinon leurs achats sont réels).
+  - [x] Piste Alpha : liste de testeurs, pays, release du build 5, envoi en examen. *Envoyé en examen le 15/10, en attente de validation par Google.*
+  - [ ] Release validée : envoyer le lien d'inscription à 15-20 testeurs (12 minimum).
+  - [ ] 14 jours avec 12 testeurs inscrits sans interruption, puis « Demander l'accès à la production ».
 - [ ] **F22b. Landing page :** remplacer les boutons « Bientôt sur… » par les vrais liens des fiches App Store et Google Play, et ajouter des captures d'écran.
 - [ ] **F23. Après la sortie :** surveiller les plantages (Sentry ou `expo-insights`, à ajouter si tu veux), les tableaux de bord RevenueCat et Supabase, et prévoir les mises à jour avec `eas update`.
 - [ ] **F24. QR codes lisibles sans l'app (amélioration) :** aujourd'hui le QR code ouvre un lien `olympiad://…` qui ne fonctionne que si l'app est installée. Le faire pointer vers une page web qui ouvre l'app ou redirige vers le bon store (liens universels / App Links).
@@ -255,6 +270,14 @@ Une ligne par modification, la plus récente en haut.
 | Date | Modification |
 |------|--------------|
 | 2026-10-13 | Émulateur Android `Pixel_7` (Play Store) prêt pour les tests, SDK sans accent `C:\Android\Sdk` |
+| 2026-10-15 | Classification refaite (« Oui » au signalement, résultat inchangé) ; test fermé Alpha (build 5) envoyé en examen |
+| 2026-10-15 | Réponses du questionnaire de classification notées dans `store/test-ferme.md` |
+| 2026-10-15 | Liste de testeurs « TEST FERMÉ » créée dans la Play Console (3 adresses) |
+| 2026-10-15 | Pistes pour recruter les testeurs du test fermé (`store/test-ferme.md`) |
+| 2026-10-15 | Guide du test fermé Google Play (`store/test-ferme.md`) et sous-étapes dans F22 |
+| 2026-10-15 | Fiche Google Play terminée (FR, EN) ; prochaine étape : test fermé |
+| 2026-10-15 | Build 5 gardé pour le test fermé ; mises à jour Expo reportées au prochain build (D16b) |
+| 2026-10-15 | Commits poussés sur GitHub ; build Android `versionCode` 5 réussi |
 | 2026-10-15 | Lien « Signaler ce tournoi » (B8b), noms de phase traduits, horaires et badge de langue (B8c), conditions d'utilisation art. 4 ; captures FR et EN refaites |
 | 2026-10-15 | Fiche anglaise : bannière et 7 captures en anglais (`store/captures-en/`) ; étape B8c (petits défauts d'affichage) |
 | 2026-10-15 | Captures Play Store refaites après régénération du calendrier démo (7 dans `store/captures/`, liste mise à jour dans `store/fiche-google-play.md`) |
