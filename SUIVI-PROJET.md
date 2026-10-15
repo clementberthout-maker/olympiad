@@ -185,6 +185,7 @@ OLYMPIAD sert à organiser des tournois sportifs amateurs. L'organisateur crée 
 - Classification du contenu refaite avec « Oui » au signalement : résultat inchangé. Release Alpha du build 5 envoyée en examen avec la liste « TEST FERMÉ ».
 - Réponses complètes au questionnaire de classification notées dans le guide (« Oui » au signalement, le reste inchangé depuis le 14/10).
 - Section « Trouver les testeurs » ajoutée au guide : groupe Google, entourage, public cible (clubs), échanges entre développeurs, services payants en dernier recours.
+- Release Alpha validée par Google le 15/10. Alerte « optimisation du code DEX » (R8 non activé) à corriger avant février 2027 (D16d).
 - Pas de compte de service pour `eas submit` : le `.aab` du build 5 est importé à la main dans la Console.
 
 ### E-mails Supabase (15 octobre)
@@ -244,6 +245,7 @@ Légende : `[ ]` à faire · `[x]` fait
   - Android : piste de test interne avec des testeurs de licence. *Fait le 14/10 (version 4, testeur de licence) : les parcours d'achat fonctionnent, à recontrôler une fois. Reste iOS (TestFlight).*
   - Parcours à couvrir : Pass acheté sur un tournoi encore en brouillon, Pass sur un tournoi existant, Pro, restauration, et changement de téléphone.
 - [ ] **D16. Tester l'application entière :** chaque sport, la phase finale, les co-organisateurs, l'export PDF, le QR code, la réinitialisation du mot de passe, les deux thèmes et les deux langues, sur iPhone et sur Android.
+- [ ] **D16d. Optimisation du code Android (R8), avant février 2027 :** alerte Play Console « L'optimisation du code DEX est inférieure à notre seuil » (obscurcissement 2 %, build 5). Installer `expo-build-properties` et activer `android.enableMinifyInReleaseBuilds` (et `enableShrinkResourcesInReleaseBuilds`) dans `app.json`, puis retester toute l'app et les achats sur le build obtenu (R8 peut casser des bibliothèques). Envoyer le fichier `mapping.txt` à la Play Console pour lire les plantages. Pas bloquant pour le test fermé.
 - [ ] **D16c. Mot de passe oublié par code (prochain build) :** le lien de réinitialisation n'est valable qu'environ 5 minutes et seulement sur l'appareil qui a fait la demande (PKCE, testé le 15/10). Le remplacer par un code à 6 chiffres saisi dans l'app (`{{ .Token }}`, `verifyOtp` type `recovery`). Détails dans `supabase/emails/README.md`.
 - [ ] **D16b. Au prochain build (après les retours du test fermé) :** appliquer les mises à jour correctives signalées par Expo Doctor sur le build 5 (`npx expo install --fix` : expo 57.0.29, expo-constants 57.0.22, expo-linking 57.0.13, expo-router 57.0.27, expo-sharing 57.0.23), puis vérifier `npm ci` avec npm 10 avant de lancer le build. Avertissement seulement, le build 5 est gardé pour le test fermé.
 
@@ -264,7 +266,7 @@ Légende : `[ ]` à faire · `[x]` fait
   - [x] Refaire la classification du contenu (« Oui » au signalement, B8b). *Envoyée le 15/10 à 12 h 47 : classification inchangée (PEGI « ! », USK 12, ESRB Teen, IARC 12+, 14 au Brésil), cohérente avec les comptes dès 15 ans.*
   - [ ] Ajouter les testeurs comme testeurs de licence (sinon leurs achats sont réels).
   - [x] Piste Alpha : liste de testeurs, pays, release du build 5, envoi en examen. *Envoyé en examen le 15/10, en attente de validation par Google.*
-  - [ ] Release validée : envoyer le lien d'inscription à 15-20 testeurs (12 minimum).
+  - [ ] Release validée : envoyer le lien d'inscription à 15-20 testeurs (12 minimum). *Release Alpha (build 5) validée par Google le 15/10 ; lien envoyé aux 3 premiers testeurs.*
   - [ ] 14 jours avec 12 testeurs inscrits sans interruption, puis « Demander l'accès à la production ».
 - [ ] **F22b. Landing page :** remplacer les boutons « Bientôt sur… » par les vrais liens des fiches App Store et Google Play, et ajouter des captures d'écran.
 - [ ] **F23. Après la sortie :** surveiller les plantages (Sentry ou `expo-insights`, à ajouter si tu veux), les tableaux de bord RevenueCat et Supabase, et prévoir les mises à jour avec `eas update`.
@@ -281,6 +283,7 @@ Une ligne par modification, la plus récente en haut.
 | Date | Modification |
 |------|--------------|
 | 2026-10-13 | Émulateur Android `Pixel_7` (Play Store) prêt pour les tests, SDK sans accent `C:\Android\Sdk` |
+| 2026-10-15 | Release Alpha (build 5) validée par Google ; alerte optimisation DEX notée (D16d, avant février 2027) |
 | 2026-10-15 | Ménage après les tests e-mail : compte de test supprimé, `localhost:8083` retiré des Redirect URLs |
 | 2026-10-15 | E-mails Supabase configurés et testés (SMTP Gmail) ; lien « Mot de passe oublié » limité à 5 min, signalé dans l'e-mail (D16c) |
 | 2026-10-15 | Commits poussés : `compte-confirme.html` en ligne sur GitHub Pages |
