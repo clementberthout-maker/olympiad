@@ -7,3 +7,9 @@ web-build/
 .env.local
 .idea/
 supabase/.temp/
+
+# Clés de signature (EAS credentials) : ne jamais commiter
+credentials.json
+credentials/
+*.jks
+*.keystore

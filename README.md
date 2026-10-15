@@ -116,7 +116,7 @@ eas build --profile production --platform all
 eas submit --platform all
 ```
 
-Identifiant de l'app (iOS et Android) : `com.clementberthout.olympiad`.
+Identifiant de l'app (iOS et Android) : `com.clement.olympiad`.
 
 ## Pages légales
 

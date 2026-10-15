@@ -9,14 +9,14 @@
     "icon": "./assets/icon.png",
     "backgroundColor": "#0b0f18",
     "ios": {
-      "bundleIdentifier": "com.clementberthout.olympiad",
+      "bundleIdentifier": "com.clement.olympiad",
       "supportsTablet": false,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
-      "package": "com.clementberthout.olympiad",
+      "package": "com.clement.olympiad",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0b0f18"
