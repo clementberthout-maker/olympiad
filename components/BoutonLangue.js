@@ -38,6 +38,8 @@ function creerStyles(c) {
       justifyContent: 'center',
       overflow: 'hidden',
     },
-    drapeau: { fontSize: 17 },
+    // Couleur utile seulement là où les drapeaux emoji ne sont pas dessinés
+    // (Windows, aperçu web) : ils s'affichent alors en lettres "FR" / "GB".
+    drapeau: { fontSize: 17, color: c.texte },
   });
 }

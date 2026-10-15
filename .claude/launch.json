@@ -4,6 +4,12 @@
     {
       "name": "olympiad-web",
       "url": "http://localhost:8081"
+    },
+    {
+      "name": "olympiad-web-dev",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["expo", "start", "--web", "--port", "8082", "--offline"],
+      "port": 8082
     }
   ]
 }

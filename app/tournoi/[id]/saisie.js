@@ -5,6 +5,7 @@ import { supabase } from '../../../lib/supabase';
 import { estPhaseDePoule } from '../../../lib/generation';
 import { useTheme } from '../../../lib/ThemeContext';
 import { useLangue } from '../../../lib/LangueContext';
+import { libellePhase } from '../../../lib/phases';
 import { POLICE_TITRE, POLICE_TEXTE, POLICE_TEXTE_SEMIBOLD } from '../../../lib/theme';
 import { vibrerSucces, vibrerAttention } from '../../../lib/haptique';
 import { messageErreur } from '../../../lib/erreurs';
@@ -152,7 +153,7 @@ export default function SaisieResultat() {
   return (
     <View style={styles.container}>
       <Text style={styles.contexte}>
-        {match.phase} · {new Date(match.horaire).toLocaleTimeString(langue === 'en' ? 'en-US' : 'fr-FR', {
+        {libellePhase(match.phase, t)} · {new Date(match.horaire).toLocaleTimeString(langue === 'en' ? 'en-US' : 'fr-FR', {
           hour: '2-digit',
           minute: '2-digit',
         })}

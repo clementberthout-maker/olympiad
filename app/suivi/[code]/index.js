@@ -13,6 +13,8 @@ import CarteSelectionnable from '../../../components/CarteSelectionnable';
 import Squelette from '../../../components/Squelette';
 import { useTheme } from '../../../lib/ThemeContext';
 import { useLangue } from '../../../lib/LangueContext';
+import { libellePhase } from '../../../lib/phases';
+import { signalerTournoi } from '../../../lib/liensLegaux';
 import { POLICE_TITRE, POLICE_TEXTE, POLICE_TEXTE_MEDIUM, POLICE_TEXTE_SEMIBOLD } from '../../../lib/theme';
 
 const cleSelectionEquipe = (tournoiId) => `olympiad:equipe:${tournoiId}`;
@@ -119,7 +121,7 @@ export default function Suivi() {
       [
         { text: t('commun.annuler'), style: 'cancel' },
         {
-          text: t('commun.supprimer'),
+          text: t('suivi.retirer'),
           style: 'destructive',
           onPress: async () => {
             vibrerAttention();
@@ -180,7 +182,7 @@ export default function Suivi() {
               if (equipesPoule.length === 0) return null;
               return (
                 <View key={poule.id} style={styles.sousGroupe}>
-                  <Text style={styles.sousGroupeTitre}>{poule.nom}</Text>
+                  <Text style={styles.sousGroupeTitre}>{libellePhase(poule.nom, t)}</Text>
                   {equipesPoule.map((equipe) => (
                     <CarteSelectionnable
                       key={equipe.id}
@@ -254,7 +256,7 @@ export default function Suivi() {
     return (
       <ClassementPoule
         key={poule.id}
-        nom={t('suivi.classementPoule', { nom: poule.nom })}
+        nom={t('suivi.classementPoule', { nom: libellePhase(poule.nom, t) })}
         classement={classement}
         equipeMiseEnAvantId={monEquipeId}
         sport={tournoi.sport}
@@ -440,7 +442,7 @@ export default function Suivi() {
             )}
             {groupesResultats.map(({ nom, matchs: matchsDuGroupe }) => (
               <View key={nom} style={styles.sousGroupe}>
-                <Text style={styles.sousGroupeTitre}>{nom}</Text>
+                <Text style={styles.sousGroupeTitre}>{libellePhase(nom, t)}</Text>
                 {matchsDuGroupe.map((match) => (
                   <View key={match.id} style={styles.ligneResultat}>
                     <Text style={styles.equipesResultat}>
@@ -460,13 +462,13 @@ export default function Suivi() {
               <Text style={styles.section}>{t('suivi.matchsAVenir')}</Text>
               {groupesAVenir.map(({ nom, matchs: matchsDuGroupe }) => (
                 <View key={nom} style={styles.sousGroupe}>
-                  <Text style={styles.sousGroupeTitre}>{nom}</Text>
+                  <Text style={styles.sousGroupeTitre}>{libellePhase(nom, t)}</Text>
                   {matchsDuGroupe.map((match) => (
                     <View key={match.id} style={styles.ligneResultat}>
                       <Text style={styles.equipesResultat}>
                         {nomEquipe(match.equipe_a_id)} · {nomEquipe(match.equipe_b_id)}
                       </Text>
-                      <Text style={styles.horaireAVenir}>
+                      <Text style={styles.horaireAVenir} numberOfLines={1}>
                         {new Date(match.horaire).toLocaleString(locale, {
                           weekday: 'short', hour: '2-digit', minute: '2-digit',
                         })}
@@ -479,6 +481,16 @@ export default function Suivi() {
           )}
         </>
       )}
+
+      <Pressable
+        style={styles.boutonSignaler}
+        onPress={() => signalerTournoi(
+          t('suivi.signalerSujet', { code: tournoi.code_acces }),
+          t('suivi.signalerCorps', { nom: tournoi.nom, code: tournoi.code_acces })
+        )}
+      >
+        <Text style={styles.texteBoutonSignaler}>{t('suivi.signalerTournoi')}</Text>
+      </Pressable>
 
       <Pressable style={styles.boutonSupprimerTournoi} onPress={confirmerSuppressionTournoiSuivi}>
         <Text style={styles.texteBoutonSupprimerTournoi}>{t('suivi.supprimerCeTournoi')}</Text>
@@ -549,10 +561,12 @@ function creerStyles(c) {
     equipesResultat: { flex: 1, flexShrink: 1, marginRight: 8, fontFamily: POLICE_TEXTE, fontSize: 13.5, color: c.texte },
     scoreResultat: { flexShrink: 0, textAlign: 'right', fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 13.5, color: c.texte },
     horaireAVenir: {
-      flexShrink: 0, width: 78, textAlign: 'right', fontFamily: POLICE_TEXTE, fontSize: 12.5,
+      flexShrink: 0, minWidth: 78, textAlign: 'right', fontFamily: POLICE_TEXTE, fontSize: 12.5,
       color: c.texteAttenue, fontVariant: ['tabular-nums'],
     },
-    boutonSupprimerTournoi: { alignItems: 'center', marginTop: 32 },
+    boutonSignaler: { alignItems: 'center', marginTop: 32 },
+    texteBoutonSignaler: { fontFamily: POLICE_TEXTE, fontSize: 13, color: c.texteAttenue, textDecorationLine: 'underline' },
+    boutonSupprimerTournoi: { alignItems: 'center', marginTop: 16 },
     texteBoutonSupprimerTournoi: {
       fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 13, color: c.danger, textDecorationLine: 'underline',
     },

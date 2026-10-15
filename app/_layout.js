@@ -1,5 +1,6 @@
 import { View, Text } from 'react-native';
 import { Stack } from 'expo-router';
+import '../lib/alertesWeb';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useFonts, BebasNeue_400Regular } from '@expo-google-fonts/bebas-neue';
 import {

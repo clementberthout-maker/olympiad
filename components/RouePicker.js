@@ -1,5 +1,5 @@
 import { useRef, useEffect, useMemo } from 'react';
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Platform, Pressable } from 'react-native';
 import { useTheme } from '../lib/ThemeContext';
 import { POLICE_TEXTE, POLICE_TEXTE_SEMIBOLD } from '../lib/theme';
 
@@ -23,9 +23,21 @@ export default function RouePicker({ valeurs, valeur, onChange, largeur = 64, fo
   }, [valeur]);
 
   function onScrollEnd(e) {
-    const y = e.nativeEvent.contentOffset.y;
+    choisirSelonPosition(e.nativeEvent.contentOffset.y);
+  }
+
+  function choisirSelonPosition(y) {
     const index = Math.min(Math.max(Math.round(y / HAUTEUR_ITEM), 0), valeurs.length - 1);
     onChange(valeurs[index]);
+  }
+
+  // Sur le web (aperçu), onMomentumScrollEnd n'est jamais émis à la souris :
+  // on valide la valeur quand le défilement s'arrête.
+  const minuterieWeb = useRef(null);
+  function onScrollWeb(e) {
+    const y = e.nativeEvent.contentOffset.y;
+    clearTimeout(minuterieWeb.current);
+    minuterieWeb.current = setTimeout(() => choisirSelonPosition(y), 150);
   }
 
   return (
@@ -38,14 +50,17 @@ export default function RouePicker({ valeurs, valeur, onChange, largeur = 64, fo
         decelerationRate="fast"
         contentContainerStyle={{ paddingVertical: HAUTEUR_ITEM }}
         onMomentumScrollEnd={onScrollEnd}
+        {...(Platform.OS === 'web' ? { onScroll: onScrollWeb, scrollEventThrottle: 50 } : {})}
         contentOffset={{ x: 0, y: indexInitial * HAUTEUR_ITEM }}
       >
         {valeurs.map((v) => (
-          <View key={v} style={[styles.item, { height: HAUTEUR_ITEM }]}>
+          // Toucher une valeur la sélectionne (indispensable sur le web, où
+          // la molette fait défiler la page plutôt que la roue).
+          <Pressable key={v} onPress={() => onChange(v)} style={[styles.item, { height: HAUTEUR_ITEM }]}>
             <Text style={[styles.texte, v === valeur && styles.texteSelectionne]}>
               {formatValeur(v)}
             </Text>
-          </View>
+          </Pressable>
         ))}
       </ScrollView>
     </View>

@@ -11,6 +11,7 @@ import BasculeVue from '../../../components/BasculeVue';
 import Squelette from '../../../components/Squelette';
 import { useTheme } from '../../../lib/ThemeContext';
 import { useLangue } from '../../../lib/LangueContext';
+import { libellePhase } from '../../../lib/phases';
 import { POLICE_TITRE, POLICE_TEXTE, POLICE_TEXTE_SEMIBOLD } from '../../../lib/theme';
 
 // Intervalle d'actualisation automatique : cet écran est pensé pour rester
@@ -161,7 +162,7 @@ export default function VueGrandEcran() {
 
       {groupesAffiches.map(({ nom, matchs }) => (
         <View key={nom} style={styles.groupe}>
-          <Text style={styles.nomPhase}>{nom}</Text>
+          <Text style={styles.nomPhase}>{libellePhase(nom, t)}</Text>
           {matchs.map((match) => {
             if (!match.equipe_b_id) {
               return (
@@ -182,7 +183,7 @@ export default function VueGrandEcran() {
                     {new Date(match.horaire).toLocaleString(locale, {
                       weekday: 'short', hour: '2-digit', minute: '2-digit',
                     })}
-                    {parTerrain ? ` · ${match.phase}` : match.terrain ? ` · ${t('saisie.terrain', { n: match.terrain })}` : ''}
+                    {parTerrain ? ` · ${libellePhase(match.phase, t)}` : match.terrain ? ` · ${t('saisie.terrain', { n: match.terrain })}` : ''}
                   </Text>
                 </View>
                 <Text style={termine ? styles.score : styles.aVenir}>
@@ -203,7 +204,7 @@ export default function VueGrandEcran() {
             const classement = calculerClassement(
               equipesPoule, matchsPoule, resultats, tournoi.critere_departage_poule, tournoi.sport
             );
-            return <ClassementPoule key={poule.id} nom={poule.nom} classement={classement} sport={tournoi.sport} />;
+            return <ClassementPoule key={poule.id} nom={libellePhase(poule.nom, t)} classement={classement} sport={tournoi.sport} />;
           })}
         </>
       )}

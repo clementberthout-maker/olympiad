@@ -58,6 +58,11 @@ export default function Connexion() {
       Alert.alert(t('connexion.connexionImpossible'), messageErreur(error, t));
       return;
     }
+    // Sur le web, pas d'enregistrement des identifiants (voir identifiantsEnregistres.js)
+    if (Platform.OS === 'web') {
+      router.replace('/');
+      return;
+    }
     const dejaEnregistres = identifiantsSauvegardes?.email === email
       && identifiantsSauvegardes?.motDePasse === motDePasse;
     if (dejaEnregistres) {
