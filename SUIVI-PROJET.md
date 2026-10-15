@@ -194,6 +194,7 @@ OLYMPIAD sert à organiser des tournois sportifs amateurs. L'organisateur crée 
 - Configuré dans Supabase par l'utilisateur : SMTP Gmail, Site URL, Redirect URLs (`olympiad://**`, `exp://**`, GitHub Pages), trois modèles d'e-mails.
 - Testé dans l'aperçu web : e-mails reçus avec le bon modèle ; « Mot de passe oublié » mène à l'écran « Nouveau mot de passe » ; inscription confirmée puis connexion réussie (compte `+test`).
 - Limite trouvée : le lien « Mot de passe oublié » ne marche qu'environ 5 minutes après la demande (erreur 422 ensuite). L'e-mail le dit maintenant ; code à 6 chiffres prévu au prochain build (D16c).
+- « Supprimer mon compte » ne répond pas dans le navigateur intégré de Claude (il bloque `confirm()`) : ce n'est pas un bug de l'app. Compte de test supprimé, `localhost:8083` retiré des Redirect URLs.
 - Dans l'aperçu web, Supabase renvoie la confirmation d'inscription vers la page d'origine (`localhost`) si elle est autorisée ; sur téléphone, ce sera la Site URL (`compte-confirme.html`).
 
 ## 3. Ce qu'il reste à faire
@@ -233,7 +234,7 @@ Légende : `[ ]` à faire · `[x]` fait
 - [ ] **C12. Supabase :**
   - Vérifier que toutes les migrations de `schema.sql` sont bien passées en production, jusqu'à `debloque`.
   - Configurer les URL de redirection pour l'app (`olympiad://`). *Préparé le 15/10 : Site URL `compte-confirme.html` et `olympiad://**`, voir `supabase/emails/README.md`. Page en ligne le 15/10 (commits poussés, vérifiée : « Adresse confirmée » et « Lien expiré »). Reste à saisir dans Supabase.*
-  - Brancher un envoi d'emails SMTP personnalisé : le service d'emails par défaut est très limité en production. *Préparé le 15/10 : SMTP Gmail et modèles FR/EN dans `supabase/emails/`. Configuré et testé le 15/10 (inscription et mot de passe oublié, dans l'aperçu web). Reste : retirer `http://localhost:8083/**` des Redirect URLs, supprimer le compte `+test`, et vérifier le mot de passe oublié sur un vrai téléphone (premiers testeurs).*
+  - Brancher un envoi d'emails SMTP personnalisé : le service d'emails par défaut est très limité en production. *Préparé le 15/10 : SMTP Gmail et modèles FR/EN dans `supabase/emails/`. Configuré et testé le 15/10 (inscription et mot de passe oublié, dans l'aperçu web). Ménage fait le 15/10 (compte `+test` supprimé, `localhost:8083` retiré des Redirect URLs). Reste : vérifier le mot de passe oublié sur un vrai téléphone (premiers testeurs).*
 - [x] **C13. Publier la politique de confidentialité :** activer GitHub Pages sur le dossier `/docs` (le dépôt doit être public, ou la page hébergée ailleurs) et noter l'adresse obtenue. *Fait : les pages sont en ligne sur https://clementberthout-maker.github.io/olympiad/ (`politique-confidentialite.html`, `conditions-utilisation.html`, `suppression-compte.html`). Le lien de suppression à déclarer à Google est `suppression-compte.html`.*
 
 ### D. Builds et tests
@@ -280,6 +281,7 @@ Une ligne par modification, la plus récente en haut.
 | Date | Modification |
 |------|--------------|
 | 2026-10-13 | Émulateur Android `Pixel_7` (Play Store) prêt pour les tests, SDK sans accent `C:\Android\Sdk` |
+| 2026-10-15 | Ménage après les tests e-mail : compte de test supprimé, `localhost:8083` retiré des Redirect URLs |
 | 2026-10-15 | E-mails Supabase configurés et testés (SMTP Gmail) ; lien « Mot de passe oublié » limité à 5 min, signalé dans l'e-mail (D16c) |
 | 2026-10-15 | Commits poussés : `compte-confirme.html` en ligne sur GitHub Pages |
 | 2026-10-15 | E-mails Supabase préparés : page `docs/compte-confirme.html`, modèles FR/EN et guide SMTP Gmail (`supabase/emails/`) |
