@@ -65,6 +65,12 @@ Garder un tableau simple des inscrits (nom, adresse, inscrit oui/non, installé 
 - Le compteur de 14 jours démarre quand 12 testeurs sont inscrits. Viser 15 à 20 personnes pour garder de la marge.
 - Pendant les 14 jours : demander aux testeurs d'ouvrir l'app plusieurs fois et de laisser un commentaire privé sur la fiche Play Store. Google demande ensuite ce qui a été testé et corrigé.
 
+**Le testeur voit « Désolé, impossible de trouver l'URL demandée » sur play.google.com** (vu le 15/10) :
+- lien ouvert dans le navigateur d'une messagerie (Messenger, Instagram, WhatsApp) qui n'est pas connecté à Google → menu « ⋯ » → « Ouvrir dans Chrome », ou copier le lien dans Chrome ;
+- compte Google du téléphone différent de l'adresse de la liste → changer de compte (photo en haut à droite dans Chrome) ou ajouter la bonne adresse à la liste ;
+- release validée il y a moins de quelques heures → réessayer plus tard ;
+- lien incomplet → renvoyer `https://play.google.com/apps/testing/com.clement.olympiad`.
+
 ## 4. Après 14 jours
 
 *Tableau de bord → Demander l'accès à la production*. Questions sur : recrutement des testeurs, engagement, retours reçus et modifications faites. Réponse de Google en 7 jours environ.
@@ -75,7 +81,7 @@ Garder un tableau simple des inscrits (nom, adresse, inscrit oui/non, installé 
 
 > Salut ! Je lance OLYMPIAD, une app pour organiser des tournois sportifs amateurs (calendrier, scores en direct, suivi par QR code). Google me demande 14 jours de test avant la sortie, et j'ai besoin de toi :
 >
-> 1. Ouvre ce lien sur ton téléphone Android, avec ton compte Gmail : [LIEN]
+> 1. Ouvre ce lien dans **Chrome** sur ton téléphone Android (pas dans Messenger, Instagram ou WhatsApp : copie-le et colle-le dans Chrome), connecté avec ton compte Gmail : [LIEN]
 > 2. Clique sur « Devenir testeur », puis installe l'app depuis le Play Store.
 > 3. Garde l'app installée **14 jours** et ouvre-la de temps en temps (crée un tournoi, ajoute des équipes, saisis un score).
 > 4. Si tu vois un bug ou une idée, dis-le moi ou laisse un avis privé sur la fiche.
@@ -86,7 +92,7 @@ Garder un tableau simple des inscrits (nom, adresse, inscrit oui/non, installé 
 
 > Hi! I'm launching OLYMPIAD, an app to run amateur sports tournaments (schedule, live scores, QR code following). Google requires 14 days of testing before release, and I need your help:
 >
-> 1. Open this link on your Android phone, signed in with your Gmail account: [LINK]
+> 1. Open this link in **Chrome** on your Android phone (not inside Messenger, Instagram or WhatsApp: copy it and paste it into Chrome), signed in with your Gmail account: [LINK]
 > 2. Tap "Become a tester", then install the app from the Play Store.
 > 3. Keep the app installed for **14 days** and open it now and then (create a tournament, add teams, enter a score).
 > 4. If you find a bug or have an idea, tell me or leave private feedback on the store listing.

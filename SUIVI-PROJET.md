@@ -185,6 +185,7 @@ OLYMPIAD sert à organiser des tournois sportifs amateurs. L'organisateur crée 
 - Classification du contenu refaite avec « Oui » au signalement : résultat inchangé. Release Alpha du build 5 envoyée en examen avec la liste « TEST FERMÉ ».
 - Réponses complètes au questionnaire de classification notées dans le guide (« Oui » au signalement, le reste inchangé depuis le 14/10).
 - Section « Trouver les testeurs » ajoutée au guide : groupe Google, entourage, public cible (clubs), échanges entre développeurs, services payants en dernier recours.
+- Premier retour d'un testeur : « impossible de trouver l'URL » sur play.google.com, lien ouvert dans le navigateur de Messenger. Message aux testeurs corrigé (ouvrir dans Chrome) et section de dépannage ajoutée au guide.
 - Release Alpha validée par Google le 15/10. Alerte « optimisation du code DEX » (R8 non activé) à corriger avant février 2027 (D16d).
 - Pas de compte de service pour `eas submit` : le `.aab` du build 5 est importé à la main dans la Console.
 
@@ -290,6 +291,7 @@ Une ligne par modification, la plus récente en haut.
 |------|--------------|
 | 2026-10-15 | Budget du projet (`BUDGET-PROJET.md`) : dépenses faites et à venir, domaine, e-mail pro, coûts cachés ; étapes C14 et C15 ajoutées |
 | 2026-10-13 | Émulateur Android `Pixel_7` (Play Store) prêt pour les tests, SDK sans accent `C:\Android\Sdk` |
+| 2026-10-15 | Premier retour testeur : lien d'inscription introuvable dans Messenger ; conseil « ouvrir dans Chrome » et dépannage ajoutés à `store/test-ferme.md` |
 | 2026-10-15 | Release Alpha (build 5) validée par Google ; alerte optimisation DEX notée (D16d, avant février 2027) |
 | 2026-10-15 | Ménage après les tests e-mail : compte de test supprimé, `localhost:8083` retiré des Redirect URLs |
 | 2026-10-15 | E-mails Supabase configurés et testés (SMTP Gmail) ; lien « Mot de passe oublié » limité à 5 min, signalé dans l'e-mail (D16c) |
