@@ -66,3 +66,11 @@ Les modèles sont en français puis en anglais : Supabase ne sait pas dans quell
 2. Dans l'app (build 5 ou Expo) : « Mot de passe oublié » avec ton adresse → l'e-mail arrive (vérifier aussi les spams), le lien ouvre l'écran « Nouveau mot de passe ».
 3. Créer un compte avec une autre adresse (par exemple `clement.berthout+test@gmail.com`) → e-mail de confirmation → la page « Adresse confirmée » s'affiche → connexion dans l'app.
 4. Supprimer ensuite ce compte de test depuis « Mon profil ».
+
+## Limite connue : lien « Mot de passe oublié » valable environ 5 minutes
+
+Testé le 15/10 : le lien arrive bien dans l'app, mais s'il est ouvert plus de 5 minutes environ après la demande, Supabase refuse l'échange final (erreur 422, alerte « Lien expiré » dans l'app). C'est la durée de vie de la demande PKCE côté Supabase, pas celle du lien de l'e-mail. L'e-mail le signale. Le lien doit aussi être ouvert sur l'appareil où la demande a été faite.
+
+Piste pour un prochain build : remplacer le lien par un code à 6 chiffres (`{{ .Token }}` dans le modèle, `supabase.auth.verifyOtp({ email, token, type: 'recovery' })` dans l'app), valable 1 heure et utilisable depuis n'importe quel appareil.
+
+Après les tests web, retirer `http://localhost:8083/**` des Redirect URLs.

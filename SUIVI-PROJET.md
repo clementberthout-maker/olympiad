@@ -191,6 +191,10 @@ OLYMPIAD sert à organiser des tournois sportifs amateurs. L'organisateur crée 
 - Sans nom de domaine : envoi par le SMTP de Gmail (`smtp.gmail.com`, mot de passe d'application), qui passe les contrôles anti-spam contrairement à Brevo avec une adresse Gmail.
 - Page `docs/compte-confirme.html` (FR, EN selon le navigateur) : retour après la confirmation d'inscription ou de changement d'adresse, message « Lien expiré » si Supabase renvoie une erreur, bouton `olympiad://connexion`. Avant, ces liens renvoyaient vers la Site URL par défaut (`localhost:3000`).
 - Modèles d'e-mails bilingues aux couleurs de l'app (`supabase/emails/` : confirmation, mot de passe oublié, changement d'adresse) et guide de configuration (`supabase/emails/README.md` : SMTP, limite d'envoi, Site URL, URL de redirection `olympiad://**`, tests).
+- Configuré dans Supabase par l'utilisateur : SMTP Gmail, Site URL, Redirect URLs (`olympiad://**`, `exp://**`, GitHub Pages), trois modèles d'e-mails.
+- Testé dans l'aperçu web : e-mails reçus avec le bon modèle ; « Mot de passe oublié » mène à l'écran « Nouveau mot de passe » ; inscription confirmée puis connexion réussie (compte `+test`).
+- Limite trouvée : le lien « Mot de passe oublié » ne marche qu'environ 5 minutes après la demande (erreur 422 ensuite). L'e-mail le dit maintenant ; code à 6 chiffres prévu au prochain build (D16c).
+- Dans l'aperçu web, Supabase renvoie la confirmation d'inscription vers la page d'origine (`localhost`) si elle est autorisée ; sur téléphone, ce sera la Site URL (`compte-confirme.html`).
 
 ## 3. Ce qu'il reste à faire
 
@@ -228,8 +232,8 @@ Légende : `[ ]` à faire · `[x]` fait
   - Créer une clé secrète RevenueCat (API v1, `sk_...`) et l'enregistrer dans Supabase comme secret `REVENUECAT_SECRET_KEY` de l'Edge Function (voir B6).
 - [ ] **C12. Supabase :**
   - Vérifier que toutes les migrations de `schema.sql` sont bien passées en production, jusqu'à `debloque`.
-  - Configurer les URL de redirection pour l'app (`olympiad://`). *Préparé le 15/10 : Site URL `compte-confirme.html` et `olympiad://**`, voir `supabase/emails/README.md`. Reste à publier la page (push) et à saisir dans Supabase.*
-  - Brancher un envoi d'emails SMTP personnalisé : le service d'emails par défaut est très limité en production. *Préparé le 15/10 : SMTP Gmail et modèles FR/EN dans `supabase/emails/`. Reste : mot de passe d'application Gmail, saisie dans Supabase, test des trois e-mails. À faire avant l'arrivée des testeurs.*
+  - Configurer les URL de redirection pour l'app (`olympiad://`). *Préparé le 15/10 : Site URL `compte-confirme.html` et `olympiad://**`, voir `supabase/emails/README.md`. Page en ligne le 15/10 (commits poussés, vérifiée : « Adresse confirmée » et « Lien expiré »). Reste à saisir dans Supabase.*
+  - Brancher un envoi d'emails SMTP personnalisé : le service d'emails par défaut est très limité en production. *Préparé le 15/10 : SMTP Gmail et modèles FR/EN dans `supabase/emails/`. Configuré et testé le 15/10 (inscription et mot de passe oublié, dans l'aperçu web). Reste : retirer `http://localhost:8083/**` des Redirect URLs, supprimer le compte `+test`, et vérifier le mot de passe oublié sur un vrai téléphone (premiers testeurs).*
 - [x] **C13. Publier la politique de confidentialité :** activer GitHub Pages sur le dossier `/docs` (le dépôt doit être public, ou la page hébergée ailleurs) et noter l'adresse obtenue. *Fait : les pages sont en ligne sur https://clementberthout-maker.github.io/olympiad/ (`politique-confidentialite.html`, `conditions-utilisation.html`, `suppression-compte.html`). Le lien de suppression à déclarer à Google est `suppression-compte.html`.*
 
 ### D. Builds et tests
@@ -239,6 +243,7 @@ Légende : `[ ]` à faire · `[x]` fait
   - Android : piste de test interne avec des testeurs de licence. *Fait le 14/10 (version 4, testeur de licence) : les parcours d'achat fonctionnent, à recontrôler une fois. Reste iOS (TestFlight).*
   - Parcours à couvrir : Pass acheté sur un tournoi encore en brouillon, Pass sur un tournoi existant, Pro, restauration, et changement de téléphone.
 - [ ] **D16. Tester l'application entière :** chaque sport, la phase finale, les co-organisateurs, l'export PDF, le QR code, la réinitialisation du mot de passe, les deux thèmes et les deux langues, sur iPhone et sur Android.
+- [ ] **D16c. Mot de passe oublié par code (prochain build) :** le lien de réinitialisation n'est valable qu'environ 5 minutes et seulement sur l'appareil qui a fait la demande (PKCE, testé le 15/10). Le remplacer par un code à 6 chiffres saisi dans l'app (`{{ .Token }}`, `verifyOtp` type `recovery`). Détails dans `supabase/emails/README.md`.
 - [ ] **D16b. Au prochain build (après les retours du test fermé) :** appliquer les mises à jour correctives signalées par Expo Doctor sur le build 5 (`npx expo install --fix` : expo 57.0.29, expo-constants 57.0.22, expo-linking 57.0.13, expo-router 57.0.27, expo-sharing 57.0.23), puis vérifier `npm ci` avec npm 10 avant de lancer le build. Avertissement seulement, le build 5 est gardé pour le test fermé.
 
 ### E. Fiches des stores
@@ -275,6 +280,8 @@ Une ligne par modification, la plus récente en haut.
 | Date | Modification |
 |------|--------------|
 | 2026-10-13 | Émulateur Android `Pixel_7` (Play Store) prêt pour les tests, SDK sans accent `C:\Android\Sdk` |
+| 2026-10-15 | E-mails Supabase configurés et testés (SMTP Gmail) ; lien « Mot de passe oublié » limité à 5 min, signalé dans l'e-mail (D16c) |
+| 2026-10-15 | Commits poussés : `compte-confirme.html` en ligne sur GitHub Pages |
 | 2026-10-15 | E-mails Supabase préparés : page `docs/compte-confirme.html`, modèles FR/EN et guide SMTP Gmail (`supabase/emails/`) |
 | 2026-10-15 | Classification refaite (« Oui » au signalement, résultat inchangé) ; test fermé Alpha (build 5) envoyé en examen |
 | 2026-10-15 | Réponses du questionnaire de classification notées dans `store/test-ferme.md` |
