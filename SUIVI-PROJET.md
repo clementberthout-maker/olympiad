@@ -198,6 +198,10 @@ OLYMPIAD sert à organiser des tournois sportifs amateurs. L'organisateur crée 
 - « Supprimer mon compte » ne répond pas dans le navigateur intégré de Claude (il bloque `confirm()`) : ce n'est pas un bug de l'app. Compte de test supprimé, `localhost:8083` retiré des Redirect URLs.
 - Dans l'aperçu web, Supabase renvoie la confirmation d'inscription vers la page d'origine (`localhost`) si elle est autorisée ; sur téléphone, ce sera la Site URL (`compte-confirme.html`).
 
+### Budget (15 octobre)
+- `BUDGET-PROJET.md` : dépenses déjà faites (Google Play, 25 $), dépenses obligatoires à venir (Apple 99 €/an, domaine `olympiad-app.com`, e-mail `support@`), options pour l'e-mail pro, services gratuits qui deviendront payants (Supabase Pro conseillé à la sortie), commissions, statut, marque, matériel de test, synthèse sur un an (≈ 135 € minimum, ≈ 420 € recommandé).
+- Risque relevé : le terme « olympiade » est protégé en France (Code du sport, art. L141-5). À vérifier avant d'acheter le domaine ou de déposer la marque.
+
 ## 3. Ce qu'il reste à faire
 
 Légende : `[ ]` à faire · `[x]` fait
@@ -236,6 +240,8 @@ Légende : `[ ]` à faire · `[x]` fait
   - Vérifier que toutes les migrations de `schema.sql` sont bien passées en production, jusqu'à `debloque`.
   - Configurer les URL de redirection pour l'app (`olympiad://`). *Préparé le 15/10 : Site URL `compte-confirme.html` et `olympiad://**`, voir `supabase/emails/README.md`. Page en ligne le 15/10 (commits poussés, vérifiée : « Adresse confirmée » et « Lien expiré »). Reste à saisir dans Supabase.*
   - Brancher un envoi d'emails SMTP personnalisé : le service d'emails par défaut est très limité en production. *Préparé le 15/10 : SMTP Gmail et modèles FR/EN dans `supabase/emails/`. Configuré et testé le 15/10 (inscription et mot de passe oublié, dans l'aperçu web). Ménage fait le 15/10 (compte `+test` supprimé, `localhost:8083` retiré des Redirect URLs). Reste : vérifier le mot de passe oublié sur un vrai téléphone (premiers testeurs).*
+- [ ] **C14. Nom de domaine et e-mail pro :** *Budget et options détaillés le 15/10 dans `BUDGET-PROJET.md`.* Vérifier d'abord le risque sur le nom (« olympiade » protégé par le CNOSF, art. L141-5 du Code du sport). Puis acheter `olympiad-app.com`, créer `support@olympiad-app.com` (Zoho Mail conseillé), configurer SPF/DKIM/DMARC, brancher le domaine sur GitHub Pages et mettre à jour `lib/liensLegaux.js` et l'URL de support. Facultatif : e-mails Supabase envoyés depuis le domaine (Brevo ou Resend).
+- [ ] **C15. Avant la sortie publique :** passer Supabase en Pro (un projet gratuit se met en pause après 7 jours sans activité, sans sauvegarde) ; s'inscrire à l'App Store Small Business Program (commission 15 % au lieu de 30 %) ; choisir l'adresse publique de développeur (affichée par Apple et Google) ; créer une micro-entreprise dès les premières ventes régulières.
 - [x] **C13. Publier la politique de confidentialité :** activer GitHub Pages sur le dossier `/docs` (le dépôt doit être public, ou la page hébergée ailleurs) et noter l'adresse obtenue. *Fait : les pages sont en ligne sur https://clementberthout-maker.github.io/olympiad/ (`politique-confidentialite.html`, `conditions-utilisation.html`, `suppression-compte.html`). Le lien de suppression à déclarer à Google est `suppression-compte.html`.*
 
 ### D. Builds et tests
@@ -282,6 +288,7 @@ Une ligne par modification, la plus récente en haut.
 
 | Date | Modification |
 |------|--------------|
+| 2026-10-15 | Budget du projet (`BUDGET-PROJET.md`) : dépenses faites et à venir, domaine, e-mail pro, coûts cachés ; étapes C14 et C15 ajoutées |
 | 2026-10-13 | Émulateur Android `Pixel_7` (Play Store) prêt pour les tests, SDK sans accent `C:\Android\Sdk` |
 | 2026-10-15 | Release Alpha (build 5) validée par Google ; alerte optimisation DEX notée (D16d, avant février 2027) |
 | 2026-10-15 | Ménage après les tests e-mail : compte de test supprimé, `localhost:8083` retiré des Redirect URLs |
