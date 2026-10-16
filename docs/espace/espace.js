@@ -238,7 +238,7 @@ function vueConnexion(mode) {
         <div class="champ"><label for="mdp">${tr('Mot de passe', 'Password')}</label><div class="avec-oeil"><input id="mdp" type="password" autocomplete="new-password" minlength="6" required><button type="button" data-action="oeil" aria-label="${tr('Afficher', 'Show')}">${ico('oeil')}</button></div></div>
         <p class="erreur-form" id="erreur-auth"></p>
         <button class="bouton plein" type="submit">${tr('Créer mon compte', 'Create my account')}</button>
-        <p class="mention-legale">${tr('En créant un compte, tu confirmes avoir au moins 15 ans et accepter les', 'By creating an account, you confirm you are at least 15 and accept the')} <a href="conditions-utilisation.html" target="_blank" rel="noopener">${tr('conditions d\'utilisation', 'terms of use')}</a> ${tr('et la', 'and the')} <a href="politique-confidentialite.html" target="_blank" rel="noopener">${tr('politique de confidentialité', 'privacy policy')}</a>.</p>
+        <p class="mention-legale">${tr('En créant un compte, tu confirmes avoir au moins 15 ans et accepter les', 'By creating an account, you confirm you are at least 15 and accept the')} <a href="conditions-utilisation.html">${tr('conditions d\'utilisation', 'terms of use')}</a> ${tr('et la', 'and the')} <a href="politique-confidentialite.html">${tr('politique de confidentialité', 'privacy policy')}</a>.</p>
       </form>`,
     oubli: `<form id="form-auth" data-mode="oubli" novalidate>
         <p class="intro" style="font-size:15px;margin:0 0 18px">${tr('Indique ton adresse e-mail : tu recevras un lien pour choisir un nouveau mot de passe. Ouvre-le dans ce navigateur.', 'Enter your email: you\'ll receive a link to choose a new password. Open it in this browser.')}</p>
@@ -405,7 +405,7 @@ function htmlAssistant() {
   } else if (b.etape === 2) {
     const sp = infosSport(b.sport);
     corps = `<div class="champs-2"><div class="champ"><label for="b-nom">${tr('Nom du tournoi', 'Tournament name')}</label><input id="b-nom" data-brouillon="nom" maxlength="80" value="${esc(b.nom)}" placeholder="${tr('Ex : Tournoi U13 de printemps', 'E.g. U13 Spring Cup')}"></div>
-      <div class="champ"><label for="b-date">${tr('Date', 'Date')}</label><input id="b-date" type="date" data-brouillon="date" value="${esc(b.date)}"></div></div>
+      <div class="champ"><label for="b-date">${tr('Date', 'Date')}</label>${champDate('b-date', 'data-brouillon="date"', b.date)}</div></div>
       <div class="titre-bloc">${tr('Format', 'Format')}</div>
       <div class="cartes-choix">${carteChoix('format', 'mixte', tr('Poules puis élimination directe', 'Groups then knockout'), tr('Le plus courant', 'The most common'), b.format)}${carteChoix('format', 'poules', tr('Poules uniquement', 'Groups only'), tr('Tout le monde se rencontre', 'Everyone plays each other'), b.format)}${carteChoix('format', 'elimination_directe', tr('Élimination directe', 'Knockout only'), tr('Un tableau final dès le départ', 'A bracket from the start'), b.format)}</div>
       ${b.sport === 'tennis' ? `<div class="titre-bloc">${tr('Simple ou double', 'Singles or doubles')}</div><div class="cartes-choix">${carteChoix('tennisDouble', 'false', tr('Simple', 'Singles'), '', b.tennisDouble)}${carteChoix('tennisDouble', 'true', tr('Double', 'Doubles'), '', b.tennisDouble)}</div>` : ''}
@@ -425,20 +425,20 @@ function htmlAssistant() {
     b.nombreQualifies = Math.min(b.nombreQualifies, Math.max(1, taillePoule));
     corps = `<div class="grille-reglages"><div>
         <div class="titre-bloc" style="margin-top:0">${tr('Terrains et poules', 'Fields and groups')}</div>
-        <div class="reglage"><div class="txt"><b>${tr('Terrains disponibles', 'Available fields')}</b><small>${tr('Plusieurs matchs en même temps', 'Several matches at once')}</small></div>${stepper('nombreTerrains', b.nombreTerrains, 1, 20)}</div>
-        ${b.format !== 'elimination_directe' ? `<div class="reglage"><div class="txt"><b>${tr('Nombre de poules', 'Number of groups')}</b><small>${tr('Équipes réparties au hasard', 'Teams drawn at random')}</small></div>${stepper('nombrePoules', b.nombrePoules, 1, maxPoules)}</div>` : ''}
-        ${b.format === 'mixte' ? `<div class="reglage"><div class="txt"><b>${tr('Qualifiés par poule', 'Qualifiers per group')}</b><small>${tr('Pour la phase finale', 'For the knockout stage')}</small></div>${stepper('nombreQualifies', b.nombreQualifies, 1, Math.max(1, taillePoule))}</div>` : ''}
+        <div class="reglage"><div class="txt"><b>${tr('Terrains disponibles', 'Available fields')}</b><small>${tr('Plusieurs matchs en même temps', 'Several matches at once')}</small></div>${champNombre('b-terrains', 'data-brouillon="nombreTerrains"', b.nombreTerrains, { min: 1, max: 20, titre: tr('Terrains', 'Fields'), icone: 'terrain', compact: true })}</div>
+        ${b.format !== 'elimination_directe' ? `<div class="reglage"><div class="txt"><b>${tr('Nombre de poules', 'Number of groups')}</b><small>${tr('Équipes réparties au hasard', 'Teams drawn at random')}</small></div>${champNombre('b-poules', 'data-brouillon="nombrePoules" data-rafraichir', b.nombrePoules, { min: 1, max: maxPoules, titre: tr('Poules', 'Groups'), icone: 'groupe', compact: true })}</div>` : ''}
+        ${b.format === 'mixte' ? `<div class="reglage"><div class="txt"><b>${tr('Qualifiés par poule', 'Qualifiers per group')}</b><small>${tr('Pour la phase finale', 'For the knockout stage')}</small></div>${champNombre('b-qualifies', 'data-brouillon="nombreQualifies"', b.nombreQualifies, { min: 1, max: Math.max(1, taillePoule), titre: tr('Qualifiés', 'Qualifiers'), icone: 'coupe', compact: true })}</div>` : ''}
         ${b.format !== 'poules' ? `<div class="reglage"><div class="txt"><b>${tr('Match pour la 3e place', 'Third-place match')}</b><small>${tr('Entre les perdants des demi-finales', 'Between the semi-final losers')}</small></div>${interrupteur('matchTroisiemePlace', b.matchTroisiemePlace)}</div>` : ''}
         ${b.sport === 'rugby' ? `<div class="reglage"><div class="txt"><b>${tr('Points bonus', 'Bonus points')}</b><small>${tr('Saisis match par match', 'Entered match by match')}</small></div>${interrupteur('pointsBonus', b.pointsBonus)}</div>` : ''}
         ${b.sport === 'tennis' ? `<div class="reglage"><div class="txt"><b>${tr('Sets gagnants', 'Winning sets')}</b><small>${tr('Pour remporter un match', 'To win a match')}</small></div>${stepper('setsGagnants', b.setsGagnants, 1, 3)}</div>` : ''}
       </div><div>
         <div class="titre-bloc" style="margin-top:0">${tr('Horaires', 'Times')}</div>
-        <div class="reglage"><div class="txt"><b>${tr('Premier match', 'First match')}</b></div><input class="input-heure" type="time" data-brouillon="heure" value="${esc(b.heure)}"></div>
-        <div class="reglage"><div class="txt"><b>${tr('Durée d\'un match', 'Match length')}</b><small>${tr('en minutes', 'in minutes')}</small></div>${stepper('dureeMatch', b.dureeMatch, 1, 180)}</div>
-        ${b.sport !== 'tennis' ? `<div class="reglage"><div class="txt"><b>${tr('Mi-temps', 'Half-time')}</b>${b.miTemps ? '' : `<small>${tr('Désactivée', 'Off')}</small>`}</div><div style="display:flex;gap:12px;align-items:center">${b.miTemps ? stepper('dureeMiTemps', b.dureeMiTemps, 1, 60) : ''}${interrupteur('miTemps', b.miTemps)}</div></div>` : ''}
-        <div class="reglage"><div class="txt"><b>${tr('Pause entre les matchs', 'Break between matches')}</b><small>${tr('en minutes', 'in minutes')}</small></div>${stepper('tempsPause', b.tempsPause, 0, 60)}</div>
+        <div class="reglage"><div class="txt"><b>${tr('Premier match', 'First match')}</b></div>${champHeure('b-heure', 'data-brouillon="heure"', b.heure, true)}</div>
+        <div class="reglage"><div class="txt"><b>${tr('Durée d\'un match', 'Match length')}</b><small>${tr('en minutes', 'in minutes')}</small></div>${champNombre('b-duree', 'data-brouillon="dureeMatch"', b.dureeMatch, { min: 1, max: 180, minutes: true, titre: tr('Durée d\'un match', 'Match length'), compact: true })}</div>
+        ${b.sport !== 'tennis' ? `<div class="reglage"><div class="txt"><b>${tr('Mi-temps', 'Half-time')}</b>${b.miTemps ? '' : `<small>${tr('Désactivée', 'Off')}</small>`}</div><div style="display:flex;gap:12px;align-items:center">${b.miTemps ? champNombre('b-mi-temps', 'data-brouillon="dureeMiTemps"', b.dureeMiTemps, { min: 1, max: 60, minutes: true, titre: tr('Mi-temps', 'Half-time'), compact: true }) : ''}${interrupteur('miTemps', b.miTemps)}</div></div>` : ''}
+        <div class="reglage"><div class="txt"><b>${tr('Pause entre les matchs', 'Break between matches')}</b><small>${tr('en minutes', 'in minutes')}</small></div>${champNombre('b-pause', 'data-brouillon="tempsPause"', b.tempsPause, { min: 0, max: 60, minutes: true, zero: tr('Aucune', 'None'), titre: tr('Pause entre les matchs', 'Break between matches'), compact: true })}</div>
         <div class="reglage"><div class="txt"><b>${tr('Pause déjeuner', 'Lunch break')}</b></div>${interrupteur('pauseDejeuner', b.pauseDejeuner)}</div>
-        ${b.pauseDejeuner ? `<div class="reglage"><div class="txt"><b>${tr('De', 'From')}</b></div><input class="input-heure" type="time" data-brouillon="debutPause" value="${esc(b.debutPause)}"><div class="txt"><b>${tr('à', 'to')}</b></div><input class="input-heure" type="time" data-brouillon="finPause" value="${esc(b.finPause)}"></div>` : ''}
+        ${b.pauseDejeuner ? `<div class="reglage"><div class="txt"><b>${tr('De', 'From')}</b></div>${champHeure('b-debut-pause', 'data-brouillon="debutPause"', b.debutPause, true)}<div class="txt"><b>${tr('à', 'to')}</b></div>${champHeure('b-fin-pause', 'data-brouillon="finPause"', b.finPause, true)}</div>` : ''}
       </div></div>
       <div class="resume-calendrier" id="resume-calendrier">${htmlResume()}</div>`;
   }
@@ -623,7 +623,7 @@ function htmlEnteteTournoi(onglet) {
       <a class="action-t" href="#/tournoi/${t.id}/ecran">${ico('ecran')}${tr('Grand écran', 'Big screen')}</a>
       ${d.principal ? `<button class="action-t" data-action="coorgs">${ico('groupe')}${tr('Co-organisateurs', 'Co-organizers')}${verrou}</button>` : ''}
       <button class="action-t" data-action="pdf">${ico('pdf')}${tr('Export PDF', 'PDF export')}${verrou}</button>
-      <a class="action-t" href="espace.html${MODE_DEMO ? '?demo=1' : ''}#/suivi/${esc(t.code_acces)}" target="_blank" rel="noopener">${ico('oeil')}${tr('Vue spectateur', 'Spectator view')}</a>
+      <a class="action-t" href="#/suivi/${esc(t.code_acces)}">${ico('oeil')}${tr('Vue spectateur', 'Spectator view')}</a>
     </div>
     <nav class="onglets-tournoi">${onglets.map(([o, l]) => `<a href="#/tournoi/${t.id}/${o}" data-onglet="${o}" class="${o === onglet ? 'actif' : ''}">${l}</a>`).join('')}</nav>
   </div></section>`;
@@ -726,24 +726,31 @@ function htmlEquipes() {
 }
 
 // Réglages
+const verrouiller = (html, oui) => (oui ? html.replace('class="selecteur-champ"', 'class="selecteur-champ" disabled') : html);
 function htmlReglages() {
   const c = etat.courant; const t = c.tournoi;
-  const champ = (cle, label, type, valeur, attr = '') => `<div class="champ"><label for="r-${cle}">${label}</label><input id="r-${cle}" data-reglage="${cle}" type="${type}" value="${esc(valeur ?? '')}" ${attr}></div>`;
+  const champ = (cle, label, type, valeur, attr = '') => {
+    if (type === 'date') return `<div class="champ"><label>${label}</label>${champDate(`r-${cle}`, `data-reglage="${cle}"`, valeur)}</div>`;
+    if (type === 'time') return `<div class="champ"><label>${label}</label>${champHeure(`r-${cle}`, `data-reglage="${cle}"`, valeur)}</div>`;
+    if (type === 'nombre') return `<div class="champ"><label>${label}</label>${champNombre(`r-${cle}`, `data-reglage="${cle}"`, valeur, attr)}</div>`;
+    return `<div class="champ"><label for="r-${cle}">${label}</label><input id="r-${cle}" data-reglage="${cle}" type="${type}" value="${esc(valeur ?? '')}" ${attr}></div>`;
+  };
   return `<form id="form-reglages" class="grille-reglages"><div>
       <div class="titre-bloc" style="margin-top:0">${tr('Informations', 'Details')}</div>
       ${champ('nom', tr('Nom du tournoi', 'Tournament name'), 'text', t.nom, 'maxlength="80"')}
       ${champ('date_debut', tr('Date', 'Date'), 'date', String(t.date_debut).slice(0, 10))}
       <div class="titre-bloc">${tr('Organisation', 'Organization')}</div>
-      <div class="champs-2">${champ('nombre_terrains', tr('Terrains', 'Fields'), 'number', t.nombre_terrains, 'min="1" max="20"')}${t.format === 'mixte' ? champ('nombre_qualifies_par_poule', tr('Qualifiés par poule', 'Qualifiers per group'), 'number', t.nombre_qualifies_par_poule, 'min="1" max="16"') : ''}</div>
+      <div class="champs-2">${champ('nombre_terrains', tr('Terrains', 'Fields'), 'nombre', t.nombre_terrains, { min: 1, max: 20, titre: tr('Terrains', 'Fields'), icone: 'terrain' })}${t.format === 'mixte' ? champ('nombre_qualifies_par_poule', tr('Qualifiés par poule', 'Qualifiers per group'), 'nombre', t.nombre_qualifies_par_poule, { min: 1, max: 16, titre: tr('Qualifiés', 'Qualifiers'), icone: 'coupe' }) : ''}</div>
       ${t.format !== 'poules' ? `<div class="reglage"><div class="txt"><b>${tr('Match pour la 3e place', 'Third-place match')}</b></div><button type="button" class="interrupteur" role="switch" aria-checked="${Boolean(t.match_troisieme_place)}" data-action="basculer-reglage" data-reglage="match_troisieme_place"></button></div>` : ''}
       ${t.sport === 'rugby' ? `<div class="reglage"><div class="txt"><b>${tr('Points bonus', 'Bonus points')}</b></div><button type="button" class="interrupteur" role="switch" aria-checked="${Boolean(t.points_bonus)}" data-action="basculer-reglage" data-reglage="points_bonus"></button></div>` : ''}
-      ${t.sport === 'tennis' ? champ('sets_gagnants', tr('Sets gagnants', 'Winning sets'), 'number', t.sets_gagnants, 'min="1" max="3"') : ''}
+      ${t.sport === 'tennis' ? champ('sets_gagnants', tr('Sets gagnants', 'Winning sets'), 'nombre', t.sets_gagnants, { min: 1, max: 3, titre: tr('Sets gagnants', 'Winning sets'), icone: 'tennis' }) : ''}
     </div><div>
       <div class="titre-bloc" style="margin-top:0">${tr('Horaires', 'Times')}<small>${tr('pour les prochains matchs générés', 'for the next generated matches')}</small></div>
-      <div class="champs-2">${champ('heure_premier_match', tr('Premier match', 'First match'), 'time', heureCourte(t.heure_premier_match))}${champ('duree_match', tr('Durée d\'un match (min)', 'Match length (min)'), 'number', t.duree_match, 'min="1" max="180"')}</div>
-      <div class="champs-2">${champ('temps_pause', tr('Pause entre matchs (min)', 'Break between matches (min)'), 'number', t.temps_pause, 'min="0" max="60"')}${t.sport !== 'tennis' ? champ('duree_mi_temps', tr('Mi-temps (min, 0 = aucune)', 'Half-time (min, 0 = none)'), 'number', t.mi_temps ? t.duree_mi_temps : 0, 'min="0" max="60"') : ''}</div>
+      <div class="champs-2">${champ('heure_premier_match', tr('Premier match', 'First match'), 'time', heureCourte(t.heure_premier_match))}${champ('duree_match', tr('Durée d\'un match', 'Match length'), 'nombre', t.duree_match, { min: 1, max: 180, minutes: true, titre: tr('Durée d\'un match', 'Match length') })}</div>
+      <div class="champs-2">${champ('temps_pause', tr('Pause entre matchs', 'Break between matches'), 'nombre', t.temps_pause, { min: 0, max: 60, minutes: true, zero: tr('Aucune', 'None'), titre: tr('Pause entre matchs', 'Break between matches') })}${t.sport !== 'tennis' ? champ('duree_mi_temps', tr('Mi-temps', 'Half-time'), 'nombre', t.mi_temps ? t.duree_mi_temps : 0, { min: 0, max: 60, minutes: true, zero: tr('Aucune', 'None'), titre: tr('Mi-temps', 'Half-time') }) : ''}</div>
       <div class="reglage"><div class="txt"><b>${tr('Pause déjeuner', 'Lunch break')}</b></div><button type="button" class="interrupteur" role="switch" aria-checked="${Boolean(t.pause_dejeuner)}" data-action="basculer-reglage" data-reglage="pause_dejeuner"></button></div>
-      <div class="champs-2">${champ('heure_debut_pause', tr('Début de la pause', 'Break start'), 'time', heureCourte(t.heure_debut_pause) || '12:30')}${champ('heure_fin_pause', tr('Fin de la pause', 'Break end'), 'time', heureCourte(t.heure_fin_pause) || '13:30')}</div>
+      <div class="zone-pause ${t.pause_dejeuner ? '' : 'verrouille'}" id="zone-pause"><div class="champs-2">${verrouiller(champ('heure_debut_pause', tr('Début de la pause', 'Break start'), 'time', heureCourte(t.heure_debut_pause) || '12:30'), !t.pause_dejeuner)}${verrouiller(champ('heure_fin_pause', tr('Fin de la pause', 'Break end'), 'time', heureCourte(t.heure_fin_pause) || '13:30'), !t.pause_dejeuner)}</div>
+        <p class="note-verrou">${ico('cadenas')}${tr('Active la pause déjeuner pour choisir ses horaires.', 'Turn on the lunch break to pick its times.')}</p></div>
       <p class="erreur-form" id="erreur-reglages"></p>
       <button class="bouton petit" type="submit">${tr('Enregistrer les réglages', 'Save settings')}</button>
     </div></form>
@@ -966,7 +973,7 @@ async function vueGrandEcran(id) {
   rendreGrandEcran();
   clearInterval(minuteurHorloge);
   minuteurHorloge = setInterval(() => { const h = $('.ge-horloge', ge); if (h) { const d = new Date(); h.textContent = `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`; } }, 1000);
-  try { if (ge.requestFullscreen && innerWidth > 900) ge.requestFullscreen().catch(() => {}); } catch (e) { /* rien */ }
+  try { const page = document.documentElement; if (page.requestFullscreen && innerWidth > 900 && !document.fullscreenElement) page.requestFullscreen().catch(() => {}); } catch (e) { /* rien */ }
 }
 function fermerGrandEcran() {
   const ge = $('#grand-ecran');
@@ -980,7 +987,8 @@ function rendreGrandEcran() {
   const c = etat.courant; if (!c) return;
   const t = c.tournoi; const a = analyser(c);
   const d = new Date();
-  const ligne = (m) => { const r = m.resultat; const fini = r?.statut === 'termine'; return `<div class="ge-match ${etat.majIds.has(m.id) ? 'maj' : ''}"><div class="eq">${esc(nomEquipe(c, m.equipe_a_id))} · ${esc(nomEquipe(c, m.equipe_b_id))}<small>${esc(libellePhase(m.phase))}${m.terrain ? ` · ${tr('terrain', 'field')} ${esc(m.terrain)}` : ''} · ${formaterHeure(m.horaire)}</small></div><span class="sc">${fini ? `${r.score_a}-${r.score_b}` : `<small style="font-family:var(--corps);font-size:15px">${tr('À venir', 'Upcoming')}</small>`}</span></div>`; };
+  const peutSaisir = Boolean(c.droits?.saisir);
+  const ligne = (m) => { const r = m.resultat; const fini = r?.statut === 'termine'; return `<div class="ge-match ${etat.majIds.has(m.id) ? 'maj' : ''} ${peutSaisir ? 'cliquable' : ''}" ${peutSaisir ? `data-action="saisir" data-match="${m.id}" role="button" tabindex="0" title="${tr('Saisir le score', 'Enter the score')}"` : ''}><div class="eq">${esc(nomEquipe(c, m.equipe_a_id))} · ${esc(nomEquipe(c, m.equipe_b_id))}<small>${esc(libellePhase(m.phase))}${m.terrain ? ` · ${tr('terrain', 'field')} ${esc(m.terrain)}` : ''} · ${formaterHeure(m.horaire)}</small></div><span class="sc">${fini ? `${r.score_a}-${r.score_b}` : `<small style="font-family:var(--corps);font-size:15px">${tr('À venir', 'Upcoming')}</small>`}</span></div>`; };
   const jouables = a.matchs.filter((m) => m.equipe_b_id);
   const avenir = jouables.filter((m) => m.resultat?.statut !== 'termine').sort((x, y) => new Date(x.horaire) - new Date(y.horaire)).slice(0, 7);
   const derniers = jouables.filter((m) => m.resultat?.statut === 'termine').sort((x, y) => new Date(y.horaire) - new Date(x.horaire)).slice(0, 8);
@@ -988,7 +996,13 @@ function rendreGrandEcran() {
   const [bp, bc] = (ABREV[t.sport] || ABREV.football)[langue === 'en' ? 1 : 0];
   const tables = cp.map(({ poule, classement }) => `<div class="s-tableau"><h4>${esc(libellePhase(poule.nom))}</h4><table><thead><tr><th></th><th>${tr('Équipe', 'Team')}</th><th>${tr('J', 'P')}</th><th>${bp}</th><th>${bc}</th><th>Diff</th><th>Pts</th></tr></thead><tbody>${classement.map((s, i) => `<tr class="${t.format === 'mixte' && i < t.nombre_qualifies_par_poule ? 'qualifie' : ''}"><td>${i + 1}</td><td>${esc(s.equipe.nom)}</td><td>${s.joues}</td><td>${s.buts_pour}</td><td>${s.buts_contre}</td><td>${s.diff_buts > 0 ? '+' : ''}${s.diff_buts}</td><td>${s.points}</td></tr>`).join('')}</tbody></table></div>`).join('');
   const vainqueur = a.vainqueur ? `<p class="coupe" style="color:#f3f2ed">🏆 <em>${esc(nomEquipe(c, a.vainqueur))}</em></p>` : '';
+  // Phases finales générées depuis le grand écran (mêmes règles que l'onglet Matchs)
+  let actionPhase = '';
+  if (c.droits?.gerer && a.peutPhaseFinale) actionPhase = `<div class="ge-action"><div><b>${tr('Toutes les poules sont terminées', 'All groups are finished')}</b><small>${tr(`${a.qualifies} qualifiés pour la phase finale`, `${a.qualifies} teams qualify for the knockouts`)}</small></div><button class="bouton petit" data-action="phase-finale">${tr('Générer la phase finale', 'Generate the knockouts')}</button></div>`;
+  else if (c.droits?.gerer && a.peutTourSuivant) actionPhase = `<div class="ge-action"><div><b>${esc(libellePhase(a.derniere.nom))} · ${tr('terminé', 'finished')}</b><small>${a.peutTroisieme ? tr('Finale et match pour la 3e place', 'Final and third-place match') : tr('Les vainqueurs passent au tour suivant', 'Winners go through')}</small></div><button class="bouton petit" data-action="tour-suivant">${tr('Générer le tour suivant', 'Generate the next round')}</button></div>`;
+  const astuce = peutSaisir ? `<p class="ge-astuce">${ico('direct')}${tr('Clique sur un match pour saisir ou corriger son score', 'Click a match to enter or fix its score')}</p>` : '';
   $('#grand-ecran').innerHTML = `<div class="ge-entete"><span class="s-marque"><svg aria-hidden="true" style="width:40px;height:40px"><use href="#i-marque"/></svg><span style="font-family:var(--titre);font-size:36px">OLYMPIAD</span></span><h2>${esc(t.nom)}</h2><span class="ge-horloge">${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}</span><div class="ge-code">${tr('Suis le tournoi avec le code', 'Follow with code')}<b>${esc(String(t.code_acces).toUpperCase())}</b></div><a class="ge-fermer" href="#/tournoi/${t.id}" style="display:inline-flex;align-items:center;text-decoration:none">${tr('Quitter', 'Exit')} (Esc)</a></div>
+    ${actionPhase}${astuce}
     <div class="ge-grille"><div class="ge-col"><h3>${tr('Classements', 'Standings')}</h3>${vainqueur}${tables || a.principales.map((p) => `<p class="s-eyebrow">${esc(libellePhase(p.nom))}</p>${p.matchs.filter((m) => m.equipe_b_id).map(ligne).join('')}`).join('') || `<p style="color:#808693">${tr('À venir', 'Upcoming')}</p>`}</div>
       <div class="ge-col"><h3>${tr('Prochains matchs', 'Next matches')}</h3>${avenir.map(ligne).join('') || `<p style="color:#808693">${tr('Tous les matchs sont joués.', 'All matches have been played.')}</p>`}</div>
       <div class="ge-col"><h3>${tr('Derniers résultats', 'Latest results')}</h3>${derniers.map(ligne).join('') || `<p style="color:#808693">${tr('Aucun résultat pour l\'instant.', 'No results yet.')}</p>`}</div></div>`;
@@ -999,6 +1013,7 @@ function rendreGrandEcran() {
 // Suivi public (suivi/[code]) : sans compte
 // ---------------------------------------------------------------------
 async function vueSuivi(code) {
+  etat.suiviDepuis = Boolean(etat.courant && String(etat.courant.tournoi.code_acces).toLowerCase() === code.toLowerCase() && etat.session);
   await chargement();
   let tournoi = null;
   try { tournoi = await donnees.tournoiParCode(code); } catch (e) { tournoi = null; }
@@ -1020,7 +1035,7 @@ function rendreSuivi() {
       <nav class="onglets-tournoi"><a href="#" data-action="onglet-suivi" data-onglet="classement" class="${etat.ongletSuivi === 'classement' ? 'actif' : ''}">${tr('Classement', 'Standings')}</a><a href="#" data-action="onglet-suivi" data-onglet="calendrier" class="${etat.ongletSuivi === 'calendrier' ? 'actif' : ''}">${tr('Calendrier', 'Schedule')}</a></nav>
     </div></section>
     <div class="page"><div class="contenu-onglet">${etat.ongletSuivi === 'classement' ? htmlClassement() : htmlMatchs(true)}</div>
-      <p class="mention" style="text-align:center;margin-top:34px">${tr('Tu organises ce tournoi ?', 'Running this tournament?')} <a href="espace.html${MODE_DEMO ? '?demo=1' : ''}#/connexion">${tr('Connecte-toi à l\'espace organisateur', 'Sign in to the organizer area')}</a> · <a href="index.html">OLYMPIAD</a></p></div>`;
+      <p class="mention" style="text-align:center;margin-top:34px">${etat.session && etat.suiviDepuis ? `<a class="bouton secondaire petit" href="#/tournoi/${t.id}">${tr('Retour à la gestion du tournoi', 'Back to tournament management')}</a>` : `${tr('Tu organises ce tournoi ?', 'Running this tournament?')} <a href="#/connexion">${tr('Connecte-toi à l\'espace organisateur', 'Sign in to the organizer area')}</a> · <a href="index.html">OLYMPIAD</a>`}</p></div>`;
   const ind = $('#indicateur-direct'); if (ind) ind.classList.add('connecte');
   etat.majIds.clear();
 }
@@ -1062,18 +1077,123 @@ function redimensionnerPhoto(fichier) {
 }
 
 // ---------------------------------------------------------------------
+// Sélecteurs de date et d'heure (remplacent ceux du navigateur)
+// La valeur vit dans un champ caché (data-reglage / data-brouillon) : les
+// formulaires la lisent comme avant, un événement « input » la signale.
+// ---------------------------------------------------------------------
+const texteDate = (v) => (v ? new Date(`${v}T12:00:00`).toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : tr('Choisir une date', 'Pick a date'));
+function champDate(id, attr, valeur) {
+  return `<div class="selecteur"><input type="hidden" id="${id}" ${attr} value="${esc(valeur || '')}"><button type="button" class="selecteur-champ" data-action="ouvrir-selecteur" data-type="date" data-cible="${id}" aria-haspopup="dialog">${ico('calendrier')}<span class="valeur">${esc(texteDate(valeur))}</span>${ico('chevron', 'chevron')}</button></div>`;
+}
+function champHeure(id, attr, valeur, compact = false) {
+  const v = heureCourte(valeur) || '09:00';
+  return `<div class="selecteur ${compact ? 'compact' : ''}"><input type="hidden" id="${id}" ${attr} value="${esc(v)}"><button type="button" class="selecteur-champ" data-action="ouvrir-selecteur" data-type="heure" data-cible="${id}" aria-haspopup="dialog">${ico('horloge')}<span class="valeur heure">${esc(v)}</span>${ico('chevron', 'chevron')}</button></div>`;
+}
+// Nombres : options { min, max, titre, icone, minutes, zero (libellé de 0), compact }
+const PRESETS_MINUTES = [0, 2, 3, 5, 8, 10, 12, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 120, 150, 180];
+const texteNombre = (v, d) => (Number(v) === 0 && d.zero ? d.zero : `${v}${d.minutes ? ' min' : ''}`);
+function champNombre(id, attr, valeur, o) {
+  const d = { min: o.min, max: o.max, titre: o.titre || '', minutes: o.minutes ? '1' : '', zero: o.zero || '' };
+  const data = Object.entries(d).map(([k, v]) => `data-${k}="${esc(String(v))}"`).join(' ');
+  return `<div class="selecteur nombre ${o.compact ? 'compact' : ''}"><input type="hidden" id="${id}" ${attr} data-nombre value="${esc(String(valeur))}"><button type="button" class="selecteur-champ" data-action="ouvrir-selecteur" data-type="nombre" data-cible="${id}" ${data} aria-haspopup="dialog">${ico(o.icone || (o.minutes ? 'horloge' : 'plus'))}<span class="valeur chiffre">${esc(texteNombre(valeur, d))}</span>${ico('chevron', 'chevron')}</button></div>`;
+}
+let selecteurOuvert = null; // { type, input, bouton, el, mois }
+function ouvrirSelecteur(bouton) {
+  if (selecteurOuvert && selecteurOuvert.bouton === bouton) { fermerSelecteur(); return; }
+  fermerSelecteur();
+  const input = document.getElementById(bouton.dataset.cible);
+  if (!input) return;
+  const el = document.createElement('div');
+  el.className = `popover-selecteur ${bouton.dataset.type} sel-${bouton.dataset.type}`;
+  el.setAttribute('role', 'dialog');
+  document.body.appendChild(el);
+  const base = bouton.dataset.type === 'date' ? new Date(`${input.value || new Date().toISOString().slice(0, 10)}T12:00:00`) : null;
+  selecteurOuvert = { type: bouton.dataset.type, input, bouton, el, mois: base ? new Date(base.getFullYear(), base.getMonth(), 1) : null };
+  bouton.classList.add('ouvert');
+  rendreSelecteur();
+  placerSelecteur();
+}
+function placerSelecteur() {
+  if (!selecteurOuvert) return;
+  const { el, bouton } = selecteurOuvert;
+  const r = bouton.getBoundingClientRect();
+  const l = el.offsetWidth; const h = el.offsetHeight;
+  let haut = r.bottom + 8;
+  if (haut + h > innerHeight - 12 && r.top - h - 8 > 12) { haut = r.top - h - 8; el.classList.add('au-dessus'); } else el.classList.remove('au-dessus');
+  el.style.top = `${Math.max(12, haut)}px`;
+  el.style.left = `${Math.min(Math.max(12, r.left), innerWidth - l - 12)}px`;
+}
+function fermerSelecteur() {
+  if (!selecteurOuvert) return;
+  const { el, bouton, input } = selecteurOuvert;
+  bouton.classList.remove('ouvert');
+  if ('rafraichir' in input.dataset && etat.brouillon) setTimeout(rafraichirAssistant, 190);
+  el.classList.add('sort');
+  setTimeout(() => el.remove(), 180);
+  selecteurOuvert = null;
+}
+function choisirValeur(valeur, fermer) {
+  const { input, bouton, type } = selecteurOuvert;
+  input.value = valeur;
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  $('.valeur', bouton).textContent = type === 'date' ? texteDate(valeur) : type === 'nombre' ? texteNombre(valeur, bouton.dataset) : valeur;
+  bouton.classList.remove('flash-valeur'); void bouton.offsetWidth; bouton.classList.add('flash-valeur');
+  if (fermer) fermerSelecteur(); else rendreSelecteur();
+}
+function rendreSelecteur(sens = 0) {
+  const o = selecteurOuvert; if (!o) return;
+  if (o.type === 'nombre') {
+    const d = o.bouton.dataset; const min = Number(d.min); const max = Number(d.max); const v = Number(o.input.value);
+    const valeurs = d.minutes ? [...new Set([...PRESETS_MINUTES.filter((x) => x >= min && x <= max), v])].sort((x, y) => x - y) : Array.from({ length: max - min + 1 }, (_, i) => min + i);
+    o.el.innerHTML = `<div class="sel-entete"><b class="sel-mois">${esc(d.titre)}</b><span class="sel-apercu" key="${v}">${esc(texteNombre(v, d))}</span></div>
+      <div class="sel-reglette"><button type="button" class="sel-nav" data-action="sel-pas" data-pas="-1" ${v <= min ? 'disabled' : ''} aria-label="−">${ico('moins')}</button><div class="sel-jauge"><i style="width:${max > min ? ((v - min) / (max - min)) * 100 : 100}%"></i></div><button type="button" class="sel-nav" data-action="sel-pas" data-pas="1" ${v >= max ? 'disabled' : ''} aria-label="+">${ico('plus')}</button></div>
+      <div class="sel-puces ${d.minutes ? 'minutes' : ''}">${valeurs.map((x, i) => `<button type="button" class="${x === v ? 'choisi' : ''}" style="--i:${i}" data-action="sel-nombre" data-valeur="${x}">${x === 0 && d.zero ? esc(d.zero) : x}</button>`).join('')}</div>
+      <div class="sel-pied"><span class="sel-astuce">${d.minutes ? tr('En minutes · ', 'In minutes · ') : ''}${min} – ${max}</span><button type="button" class="bouton petit" data-action="sel-fermer">OK</button></div>`;
+  } else if (o.type === 'date') {
+    const choisi = o.input.value;
+    const auj = new Date(); const ajd = `${auj.getFullYear()}-${pad(auj.getMonth() + 1)}-${pad(auj.getDate())}`;
+    const premier = o.mois; const decalage = (premier.getDay() + 6) % 7; // lundi en premier
+    const debut = new Date(premier); debut.setDate(1 - decalage);
+    const jours = [];
+    for (let i = 0; i < 42; i++) { const d = new Date(debut); d.setDate(debut.getDate() + i); jours.push(d); }
+    const nomsJours = Array.from({ length: 7 }, (_, i) => new Date(2024, 0, 1 + i).toLocaleDateString(locale(), { weekday: 'short' }).replace('.', '').slice(0, 3));
+    o.el.innerHTML = `<div class="sel-entete"><button type="button" class="sel-nav" data-action="sel-mois" data-sens="-1" aria-label="${tr('Mois précédent', 'Previous month')}">${ico('retour')}</button><b class="sel-mois ${sens ? (sens > 0 ? 'vers-gauche' : 'vers-droite') : ''}">${premier.toLocaleDateString(locale(), { month: 'long', year: 'numeric' })}</b><button type="button" class="sel-nav" data-action="sel-mois" data-sens="1" aria-label="${tr('Mois suivant', 'Next month')}">${ico('droite')}</button></div>
+      <div class="sel-jours-noms">${nomsJours.map((n) => `<span>${n}</span>`).join('')}</div>
+      <div class="sel-grille ${sens ? (sens > 0 ? 'vers-gauche' : 'vers-droite') : ''}">${jours.map((d) => { const v = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; const cls = [d.getMonth() !== premier.getMonth() ? 'autre' : '', v === ajd ? 'aujourdhui' : '', v === choisi ? 'choisi' : '', d.getDay() === 0 || d.getDay() === 6 ? 'weekend' : ''].join(' '); return `<button type="button" class="${cls}" data-action="sel-jour" data-valeur="${v}">${d.getDate()}</button>`; }).join('')}</div>
+      <div class="sel-pied"><button type="button" class="lien-discret" data-action="sel-jour" data-valeur="${ajd}">${tr('Aujourd\'hui', 'Today')}</button><button type="button" class="lien-discret" data-action="sel-fermer">${tr('Fermer', 'Close')}</button></div>`;
+  } else {
+    const [h, m] = (o.input.value || '09:00').split(':').map(Number);
+    const minutes = [...new Set([...Array.from({ length: 12 }, (_, i) => i * 5), m])].sort((x, y) => x - y);
+    o.el.innerHTML = `<div class="sel-entete"><b class="sel-mois">${tr('Horaire', 'Time')}</b><span class="sel-apercu">${pad(h)}<i>:</i>${pad(m)}</span></div>
+      <div class="sel-colonnes"><div><small>${tr('Heures', 'Hours')}</small><div class="sel-liste" data-liste="h">${Array.from({ length: 24 }, (_, i) => `<button type="button" class="${i === h ? 'choisi' : ''}" data-action="sel-heure" data-valeur="${i}">${pad(i)}</button>`).join('')}</div></div>
+        <div><small>${tr('Minutes', 'Minutes')}</small><div class="sel-liste" data-liste="m">${minutes.map((i) => `<button type="button" class="${i === m ? 'choisi' : ''}" data-action="sel-minute" data-valeur="${i}">${pad(i)}</button>`).join('')}</div></div></div>
+      <div class="sel-pied"><span class="sel-astuce">${tr('Choisis l\'heure puis les minutes', 'Pick the hour then the minutes')}</span><button type="button" class="bouton petit" data-action="sel-fermer">OK</button></div>`;
+    $$('.sel-liste', o.el).forEach((liste) => { const c = $('.choisi', liste); if (c) liste.scrollTo({ top: c.offsetTop - liste.clientHeight / 2 + c.offsetHeight / 2, behavior: 'instant' }); });
+  }
+}
+
+// ---------------------------------------------------------------------
 // Événements
 // ---------------------------------------------------------------------
 document.addEventListener('click', async (e) => {
   const cible = e.target.closest('[data-action]');
   const menu = $('#menu-deroulant');
   if (menu && !e.target.closest('.menu-utilisateur')) menu.classList.remove('ouvert');
+  if (selecteurOuvert && !e.target.closest('.popover-selecteur') && !e.target.closest('[data-action="ouvrir-selecteur"]')) fermerSelecteur();
   if (e.target.id === 'voile') { fermerTiroir(); fermerFenetre(); return; }
   if (!cible) return;
   const a = cible.dataset.action;
   const b = etat.brouillon;
   switch (a) {
     case 'menu': $('#menu-deroulant').classList.toggle('ouvert'); break;
+    case 'ouvrir-selecteur': ouvrirSelecteur(cible); break;
+    case 'sel-mois': { const o = selecteurOuvert; const sens = Number(cible.dataset.sens); o.mois = new Date(o.mois.getFullYear(), o.mois.getMonth() + sens, 1); rendreSelecteur(sens); break; }
+    case 'sel-jour': choisirValeur(cible.dataset.valeur, true); break;
+    case 'sel-nombre': choisirValeur(String(Number(cible.dataset.valeur)), true); break;
+    case 'sel-pas': { const d = selecteurOuvert.bouton.dataset; choisirValeur(String(Math.min(Number(d.max), Math.max(Number(d.min), Number(selecteurOuvert.input.value) + Number(cible.dataset.pas)))), false); placerSelecteur(); break; }
+    case 'sel-heure': { const m = (selecteurOuvert.input.value || '09:00').split(':')[1] || '00'; choisirValeur(`${pad(Number(cible.dataset.valeur))}:${m}`, false); break; }
+    case 'sel-minute': { const h = (selecteurOuvert.input.value || '09:00').split(':')[0]; choisirValeur(`${h}:${pad(Number(cible.dataset.valeur))}`, true); break; }
+    case 'sel-fermer': fermerSelecteur(); break;
     case 'deconnexion': await donnees.deconnexion(); etat.session = null; etat.courant = null; await chargerUtilisateur(); toast(tr('À bientôt !', 'See you soon!')); location.hash = '#/connexion'; break;
     case 'aller': location.hash = cible.dataset.cible; break;
     case 'oeil': { const champ = cible.parentElement.querySelector('input'); champ.type = champ.type === 'password' ? 'text' : 'password'; break; }
@@ -1170,7 +1290,16 @@ document.addEventListener('click', async (e) => {
       } catch (er) { toast(messageErreur(er), 'erreur'); cible.disabled = false; }
       break;
     }
-    case 'basculer-reglage': cible.setAttribute('aria-checked', String(cible.getAttribute('aria-checked') !== 'true')); break;
+    case 'basculer-reglage': {
+      const actif = cible.getAttribute('aria-checked') !== 'true';
+      cible.setAttribute('aria-checked', String(actif));
+      if (cible.dataset.reglage === 'pause_dejeuner') {
+        const zone = $('#zone-pause');
+        if (zone) { zone.classList.toggle('verrouille', !actif); $$('.selecteur-champ', zone).forEach((bt) => { bt.disabled = !actif; }); }
+        if (!actif && selecteurOuvert && zone?.contains(selecteurOuvert.bouton)) fermerSelecteur();
+      }
+      break;
+    }
     case 'supprimer-tournoi': {
       const t = etat.courant.tournoi;
       if (!await confirmer({ titre: tr('Supprimer le tournoi ?', 'Delete the tournament?'), texte: tr('Action définitive, pour tout le monde (spectateurs et co-organisateurs compris).', 'Permanent, for everyone (spectators and co-organizers included).'), bouton: tr('Supprimer définitivement', 'Delete permanently'), danger: true, saisie: tr('SUPPRIMER', 'DELETE') })) break;
@@ -1252,7 +1381,7 @@ document.addEventListener('submit', async (e) => {
 document.addEventListener('input', (e) => {
   const champ = e.target;
   if (champ.dataset.brouillon && etat.brouillon) {
-    etat.brouillon[champ.dataset.brouillon] = champ.value;
+    etat.brouillon[champ.dataset.brouillon] = 'nombre' in champ.dataset ? Number(champ.value) : champ.value;
     const resume = $('#resume-calendrier'); if (resume) resume.innerHTML = htmlResume();
     $('#erreur-assistant') && ($('#erreur-assistant').textContent = '');
   }
@@ -1273,9 +1402,12 @@ document.addEventListener('change', async (e) => {
 });
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
+    if (selecteurOuvert) { fermerSelecteur(); return; }
+    if ($('#tiroir').classList.contains('ouvert') || $('#fenetre').classList.contains('ouvert')) { fermerTiroir(); fermerFenetre(); return; }
     if ($('#grand-ecran').classList.contains('ouvert') && etat.courant) { location.hash = `#/tournoi/${etat.courant.tournoi.id}`; return; }
-    fermerTiroir(); fermerFenetre(); $('#menu-deroulant')?.classList.remove('ouvert');
+    $('#menu-deroulant')?.classList.remove('ouvert');
   }
+  if (e.key === 'Enter' && e.target.classList?.contains('ge-match') && e.target.dataset.match) { ouvrirSaisie(e.target.dataset.match); return; }
   if (saisie && e.target.dataset.score && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
     e.preventDefault();
     const cle = e.target.dataset.score;
@@ -1285,6 +1417,9 @@ document.addEventListener('keydown', (e) => {
     if (cle === 'a' || cle === 'b') majZoneTab();
   }
 });
+window.addEventListener('resize', () => placerSelecteur());
+window.addEventListener('scroll', () => placerSelecteur(), { passive: true });
+window.addEventListener('hashchange', () => fermerSelecteur());
 // Halo qui suit la souris sur les cartes de tournoi
 document.addEventListener('pointermove', (e) => {
   const carte = e.target.closest?.('.carte-tournoi');

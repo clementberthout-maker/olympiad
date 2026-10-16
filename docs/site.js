@@ -59,7 +59,7 @@
     'sim.sur': 'Try it without installing anything', 'sim.titre': 'The real app, right here.',
     'sim.intro': 'This simulator runs the OLYMPIAD engine in your browser: same schedule generation, same scoring, same standings. Create your tournament, enter scores, and watch everything update.',
     'sim.missions': 'Features discovered', 'sim.demo': 'Load a demo tournament', 'sim.spectateur': 'Spectator view',
-    'sim.note': 'Tip: open the spectator view in another tab, then enter a score here. It shows up there instantly, just like on spectators’ phones. Everything stays in your browser: nothing is sent.',
+    'sim.note': 'Tip: switch to the spectator view to see the tournament as the public does: every score you enter shows up there instantly, just like on spectators’ phones. Everything stays in your browser: nothing is sent.',
     'f.sur': 'Everything is in the app', 'f.titre': 'Built for the sideline', 'f.intro': 'For clubs, associations and volunteers who run one-day tournaments. And for everyone who wants to follow.',
     'f.tous': 'All', 'f.orga': 'Organizers', 'f.public': 'Teams & spectators',
     's.sur': '5 sports', 's.titre': 'Every sport has its rules', 's.intro': 'Scoring, wording and tiebreakers adapt automatically to the chosen sport.',
@@ -856,7 +856,7 @@
         <p class="s-sous" style="text-align:center">${tr('Code d\'accès', 'Access code')}</p>
         <button class="s-btn" data-a="copier" data-v="${t.code.toUpperCase()}">${ico('copier')}${tr('Copier le code', 'Copy the code')}</button>
         <button class="s-btn sec" data-a="partager-lien">${ico('partager')}${tr('Partager le lien', 'Share the link')}</button>
-        <button class="s-btn sec" data-a="ouvrir-onglet-spectateur">${ico('oeil')}${tr('Ouvrir la vue spectateur', 'Open spectator view')}</button>
+        <button class="s-btn sec" data-a="vers-suivi">${ico('oeil')}${tr('Voir la vue spectateur', 'See spectator view')}</button>
         <button class="s-btn sec" data-a="grand-ecran">${ico('ecran')}${tr('Afficher sur grand écran', 'Show on big screen')}</button>`;
     },
 
@@ -935,8 +935,8 @@
         ${onglets('langue', [['fr', 'Français'], ['en', 'English']], langue)}
         <div class="s-section">${tr('Informations légales', 'Legal')}</div>
         <div class="s-bloc">
-          <a class="s-interrupteur" style="text-decoration:none;color:inherit" href="politique-confidentialite.html" target="_blank" rel="noopener"><span>${tr('Politique de confidentialité', 'Privacy policy')}</span>${ico('droite', '')}</a>
-          <a class="s-interrupteur" style="text-decoration:none;color:inherit" href="conditions-utilisation.html" target="_blank" rel="noopener"><span>${tr('Conditions d\'utilisation', 'Terms of use')}</span>${ico('droite', '')}</a>
+          <a class="s-interrupteur" style="text-decoration:none;color:inherit" href="politique-confidentialite.html"><span>${tr('Politique de confidentialité', 'Privacy policy')}</span>${ico('droite', '')}</a>
+          <a class="s-interrupteur" style="text-decoration:none;color:inherit" href="conditions-utilisation.html"><span>${tr('Conditions d\'utilisation', 'Terms of use')}</span>${ico('droite', '')}</a>
         </div>
         ${S.connecte ? `<button class="s-btn sec" style="margin-top:20px" data-a="deconnexion">${tr('Se déconnecter', 'Sign out')}</button>` : `<button class="s-btn sec" style="margin-top:20px" data-a="connexion">${tr('Se connecter', 'Sign in')}</button>`}
         <button class="s-lien rouge" style="margin-top:12px" data-a="supprimer-compte">${tr('Supprimer mon compte', 'Delete my account')}</button>`;
@@ -962,7 +962,7 @@
         <label class="s-label">${tr('Prénom', 'First name')}</label><input class="s-champ" data-champ="prenom" value="${esc(S.profil.prenom)}" autocomplete="off">
         <label class="s-label">E-mail</label><input class="s-champ" type="email" data-champ="email" value="${esc(S.profil.email)}" autocomplete="off">
         <label class="s-label">${tr('Mot de passe', 'Password')}</label><input class="s-champ" type="password" data-champ="mdp" autocomplete="off">
-        <p class="s-aide" style="margin-top:12px">${tr('En créant un compte, tu confirmes avoir au moins 15 ans et accepter les', 'By creating an account, you confirm you are at least 15 and accept the')} <a href="conditions-utilisation.html" target="_blank" rel="noopener">${tr('conditions d\'utilisation', 'terms of use')}</a> ${tr('et la', 'and the')} <a href="politique-confidentialite.html" target="_blank" rel="noopener">${tr('politique de confidentialité', 'privacy policy')}</a>.</p>
+        <p class="s-aide" style="margin-top:12px">${tr('En créant un compte, tu confirmes avoir au moins 15 ans et accepter les', 'By creating an account, you confirm you are at least 15 and accept the')} <a href="conditions-utilisation.html">${tr('conditions d\'utilisation', 'terms of use')}</a> ${tr('et la', 'and the')} <a href="politique-confidentialite.html">${tr('politique de confidentialité', 'privacy policy')}</a>.</p>
         <button class="s-btn" data-a="se-connecter">${tr('Créer mon compte', 'Create my account')}</button>`;
     },
 
@@ -1431,7 +1431,6 @@
         else copier(url);
         break;
       }
-      case 'ouvrir-onglet-spectateur': window.open(lienSpectateur(), '_blank', 'noopener'); decouvrir('spectateur'); break;
       case 'grand-ecran': ouvrirGrandEcran(); break;
       case 'coorgs': if (!peutPremium(t)) aller('paywall', { raison: 'coorgs' }); else { aller('coorgs'); decouvrir('coorg'); } break;
       case 'pdf': if (!peutPremium(t)) aller('paywall', { raison: 'pdf' }); else exporterPDF(); break;
@@ -1590,8 +1589,10 @@
   }));
   $('#ouvrir-spectateur').addEventListener('click', () => {
     if (!T()) chargerDemo();
-    window.open(lienSpectateur(), '_blank', 'noopener');
+    S.ongletSuivi = 'calendrier';
+    reinitialiserVers('suivi');
     decouvrir('spectateur');
+    if (window.innerWidth < 1080) $('.telephone-sim').scrollIntoView({ behavior: mouvementReduit ? 'auto' : 'smooth', block: 'center' });
   });
 
   // ---------------------------------------------------------------------

@@ -242,6 +242,20 @@ OLYMPIAD sert à organiser des tournois sportifs amateurs. L'organisateur crée 
 - **Site** : bouton « Espace organisateur » dans l'en-tête, section « Ton tournoi, aussi sur ordinateur » (ouvrir, se connecter, démo), bouton dans la section finale.
 - **Vérifié en local** : en mode démo, tout le parcours (création d'un tournoi de rugby à 8 équipes, saisie, phase finale, finale, podium, onglets, QR code, grand écran, suivi public mis à jour en direct dans un autre onglet, mobile) ; en mode réel, la page de connexion et une requête publique à la base. **Testé avec un vrai compte par Clément le 16/10 (en ligne) : tout fonctionne.**
 
+### Navigation sur une seule page (16 octobre)
+- Plus aucun nouvel onglet sur le site. Les liens légaux du simulateur et de l'espace organisateur, ainsi que les liens CNIL et Apple des pages légales, s'ouvrent dans la même page.
+- Simulateur : « Vue spectateur » s'affiche directement dans le téléphone du simulateur. Le texte d'astuce est adapté (FR/EN).
+- Espace organisateur : « Vue spectateur » s'ouvre dans la même page, avec un bouton « Retour à la gestion du tournoi ».
+- Vérifié en local : un seul onglet ouvert, retour à la gestion avec tous les droits.
+
+### Grand écran interactif et sélecteurs date/heure (16 octobre)
+- Grand écran : un clic (ou Entrée) sur un match ouvre la saisie du score sans quitter le grand écran. Quand toutes les poules sont terminées, un bandeau propose de générer la phase finale (ou le tour suivant), directement depuis le grand écran.
+- Plein écran appliqué à toute la page pour que la fenêtre de saisie reste visible par-dessus.
+- Réglages et assistant de création : calendrier et sélecteur d'horaire refaits dans la D.A. (fenêtre animée, mois en glissé, aujourd'hui et week-ends marqués, colonnes heures/minutes défilantes avec aperçu), à la place des fenêtres du navigateur.
+- Vérifié en local (mode démo) : saisie et génération des demi-finales depuis le grand écran, choix d'une date et d'un horaire enregistrés dans les réglages.
+- Sélecteur de nombres dans la même D.A. (terrains, poules, qualifiés, sets, durée des matchs, mi-temps, pause entre matchs) : fenêtre animée avec boutons −/+, jauge et valeurs rapides, dans les réglages et dans l'assistant de création.
+- Réglages : les horaires de la pause déjeuner sont verrouillés (grisés, avec un cadenas) tant que la pause déjeuner n'est pas activée.
+
 ## 3. Ce qu'il reste à faire
 
 Légende : `[ ]` à faire · `[x]` fait
@@ -318,7 +332,7 @@ Légende : `[ ]` à faire · `[x]` fait
 - [ ] **F22b. Landing page :** remplacer les boutons « Bientôt sur… » par les vrais liens des fiches App Store et Google Play, et ajouter des captures d'écran. *Site refait le 15/10 avec un simulateur de l'app ; restent les liens des stores.*
 - [ ] **F22d. Remettre l'intro 3D en ligne** (quand Clément le décidera) : suivre `archives/intro-3d/README.md`, sans modifier l'animation. Penser au poids (≈ 14 Mo de ressources chargées après l'accueil) et la retester sur ordinateur et téléphone.
 - [ ] **F22e. Espace organisateur : finaliser.**
-  - [ ] Supabase > Authentication > URL Configuration > Redirect URLs : ajouter `https://clementberthout-maker.github.io/olympiad/espace.html**` (et `http://localhost:5500/olympiad/espace.html**` pour les tests), sinon le lien « Mot de passe oublié » demandé depuis le site ne revient pas sur l'espace.
+  - [x] Supabase > Authentication > URL Configuration > Redirect URLs : ajouter `https://clementberthout-maker.github.io/olympiad/espace.html**` *(fait par Clément le 16/10)* (et `http://localhost:5500/olympiad/espace.html**` pour les tests), sinon le lien « Mot de passe oublié » demandé depuis le site ne revient pas sur l'espace.
   - [x] Tester avec un vrai compte : *fait par Clément le 16/10, tout fonctionne.* Connexion, création d'un tournoi, scores vus en direct dans l'app sur un téléphone (et inversement), phase finale, co-organisateurs (avec un tournoi débloqué ou un compte Pro), export PDF, profil et photo, déconnexion.
   - [ ] Garder `docs/espace/moteur/` identique à `lib/generation.js`, `lib/classement.js` et `lib/sports.js`.
 - [ ] **F22c. Site : relire et publier.** Relire les textes du nouveau site (FR et EN), tester sur un vrai téléphone, puis pousser pour le mettre en ligne sur GitHub Pages. Le QR code du simulateur pointe vers la page elle-même (`#suivi/code`), pas vers l'app.
@@ -335,6 +349,9 @@ Une ligne par modification, la plus récente en haut.
 
 | Date | Modification |
 |------|--------------|
+| 2026-10-16 | Espace organisateur : sélecteur de nombres (terrains, poules, durées) et horaires de pause déjeuner verrouillés si la pause est désactivée |
+| 2026-10-16 | Espace organisateur : saisie des scores et phase finale depuis le grand écran ; calendrier et sélecteur d'horaire refaits dans la D.A. |
+| 2026-10-16 | Site : plus aucun nouvel onglet (liens légaux, vue spectateur du simulateur et de l'espace) ; Redirect URL Supabase ajoutée (F22e) |
 | 2026-10-16 | Espace organisateur testé en ligne avec un vrai compte par Clément : tout fonctionne (F22e) |
 | 2026-10-16 | Nom : STADIOS, STADIONA et AGORAE vérifiés ; seul STADIONA a ses domaines .app et .fr libres |
 | 2026-10-16 | Commits poussés : nouveau site, espace organisateur (`docs/espace.html`) et archive de l'intro 3D en ligne sur GitHub Pages |
