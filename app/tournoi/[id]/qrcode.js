@@ -30,15 +30,17 @@ export default function QrCodeTournoi() {
   if (!tournoi) return null;
 
   const lien = Linking.createURL(`suivi/${tournoi.code_acces}`);
+  // Affiché en majuscules, comme sur le site (la recherche ignore la casse)
+  const codeAffiche = String(tournoi.code_acces).toUpperCase();
 
   function partager() {
     Share.share({
-      message: t('qrcode.messagePartage', { nom: tournoi.nom, code: tournoi.code_acces, lien }),
+      message: t('qrcode.messagePartage', { nom: tournoi.nom, code: codeAffiche, lien }),
     });
   }
 
   async function copierLeCode() {
-    await Clipboard.setStringAsync(tournoi.code_acces);
+    await Clipboard.setStringAsync(codeAffiche);
     setCopie(true);
     setTimeout(() => setCopie(false), 2000);
   }
@@ -54,7 +56,7 @@ export default function QrCodeTournoi() {
 
       <Text style={styles.labelCode}>{t('qrcode.ouAvecLeCode')}</Text>
       <Pressable style={styles.ligneCode} onPress={copierLeCode} hitSlop={8}>
-        <Text style={styles.code}>{tournoi.code_acces}</Text>
+        <Text style={styles.code}>{codeAffiche}</Text>
         <Text style={styles.lienCopier}>{copie ? t('qrcode.copie') : t('qrcode.copier')}</Text>
       </Pressable>
 

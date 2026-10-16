@@ -536,8 +536,8 @@ export default function Suivi() {
       <Pressable
         style={styles.boutonSignaler}
         onPress={() => signalerTournoi(
-          t('suivi.signalerSujet', { code: tournoi.code_acces }),
-          t('suivi.signalerCorps', { nom: tournoi.nom, code: tournoi.code_acces })
+          t('suivi.signalerSujet', { code: String(tournoi.code_acces).toUpperCase() }),
+          t('suivi.signalerCorps', { nom: tournoi.nom, code: String(tournoi.code_acces).toUpperCase() })
         )}
       >
         <Text style={styles.texteBoutonSignaler}>{t('suivi.signalerTournoi')}</Text>

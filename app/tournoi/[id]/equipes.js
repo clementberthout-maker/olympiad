@@ -107,7 +107,7 @@ export default function GestionEquipes() {
   const [pauseFinH, setPauseFinH] = useState(13);
   const [pauseFinM, setPauseFinM] = useState(30);
   const [nombreQualifies, setNombreQualifies] = useState(2);
-  const [matchTroisiemePlace, setMatchTroisiemePlace] = useState(false);
+  const [matchTroisiemePlace, setMatchTroisiemePlace] = useState(true); // comme le simulateur du site : donne un podium complet
   const [pointsBonus, setPointsBonus] = useState(false);
   const [setsGagnants, setSetsGagnants] = useState(2);
   const [calendrierGenere, setCalendrierGenere] = useState(false);

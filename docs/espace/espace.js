@@ -374,7 +374,7 @@ function nouveauBrouillon() {
     etape: 1, sport: null, nom: '', date: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`, format: 'mixte', tennisDouble: false,
     departagePoule: 'diff_buts', departageElim: 'prolongations_tab', equipes: [], nombrePoules: 2, nombreTerrains: 1, heure: '09:00', dureeMatch: 60,
     miTemps: false, dureeMiTemps: 10, tempsPause: 15, pauseDejeuner: false, debutPause: '12:30', finPause: '13:30', nombreQualifies: 2,
-    matchTroisiemePlace: false, pointsBonus: false, setsGagnants: 2,
+    matchTroisiemePlace: true, pointsBonus: false, setsGagnants: 2,
   };
 }
 const ETAPES = [['Sport', 'Sport'], ['Tournoi', 'Tournament'], ['Équipes', 'Teams'], ['Organisation', 'Organization']];

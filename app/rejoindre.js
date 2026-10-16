@@ -116,8 +116,9 @@ export default function RejoindreTournoi() {
           style={styles.input}
           placeholder={t('rejoindre.placeholderCode')}
           value={code}
-          onChangeText={setCode}
-          autoCapitalize="none"
+          onChangeText={(v) => setCode(v.toUpperCase())}
+          autoCapitalize="characters"
+          autoCorrect={false}
           returnKeyType="done"
           onSubmitEditing={() => accederAuTournoi()}
         />

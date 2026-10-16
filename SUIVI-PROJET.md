@@ -287,6 +287,12 @@ OLYMPIAD sert à organiser des tournois sportifs amateurs. L'organisateur crée 
 - **G31** : un tournoi supprimé disparaît des « Tournois suivis ». Il est retiré quand son organisateur le supprime depuis l'app, et quand on ouvre un code qui n'existe plus (pas en cas de simple erreur réseau).
 - Vérifié dans l'aperçu web : retrait refusé dans l'app et dans l'espace (démo), code fantôme retiré de la liste, tournoi supprimé retiré de la liste, organisateur non ajouté à son propre tournoi (démo). Tournoi de test supprimé. **À livrer dans le prochain build.**
 
+### Petits défauts de l'app (16 octobre, G33)
+- Code d'accès affiché en majuscules dans l'app (écran QR, copie, partage, e-mail « Signaler »), comme sur le site. Le champ « Rejoindre » passe aussi en majuscules (exemple « A3F9K2 »). La recherche ignorait déjà la casse : les anciens codes et liens fonctionnent toujours.
+- Tutoiement partout dans l'app : « Tu fais partie de quelle équipe ? », « Ton prochain match », « Dernier résultat de ton équipe », retrait des tournois suivis, aide des horaires (`lib/traductions.js`).
+- Match pour la 3e place activé par défaut à la création, dans l'app et dans l'espace, comme dans le simulateur : le podium est complet sans réglage. Il reste désactivable, et les tournois existants gardent leur réglage.
+- Vérifié dans l'aperçu web : code « S2BA4A » sur l'écran QR, code tapé en minuscules converti et trouvé, textes tutoyés, « Oui » présélectionné pour la 3e place. **À livrer dans le prochain build.**
+
 ## 3. Ce qu'il reste à faire
 
 Légende : `[ ]` à faire · `[x]` fait
@@ -379,7 +385,7 @@ Légende : `[ ]` à faire · `[x]` fait
 - [x] **G30. Co-organisateur de son propre tournoi :** *Corrigé le 16/10 dans `schema.sql` et la démo ; migration exécutée dans Supabase par Clément le 16/10.* `rejoindre_comme_co_organisateur` (`supabase/schema.sql`) laisse l'organisateur principal s'ajouter à son propre tournoi. Ignorer ce cas dans la fonction.
 - [x] **G31. Tournoi supprimé encore dans « Tournois suivis »** *Corrigé le 16/10 ; à livrer au prochain build.* (app) : il s'ouvre sur « Tournoi introuvable », sans moyen de le retirer. Le retirer de la liste dans ce cas.
 - [ ] **G32. Pages légales sans retour au site :** tout s'ouvre dans la même page, mais `politique-confidentialite.html`, `conditions-utilisation.html` et `suppression-compte.html` n'ont aucun lien vers l'accueil. Ajouter un lien « Retour au site ». La politique (27/09) ne parle pas encore du site ni de l'espace organisateur.
-- [ ] **G33. Petits défauts :** titre de l'onglet du site resté en français en anglais, et « Football · 8 équipes » non traduit dans le téléphone de l'accueil ; « Bonjour » sans prénom dans l'espace (profil du compte démo vide : le remplir pour Google et Apple) ; « Quart de finale générée » (masculin) ; « fin des premier tour » (simulateur) ; tennis affiché « 1 pt nul » alors qu'il n'y a pas de nul ; code d'accès en minuscules dans l'app, en majuscules sur le site ; « Vous faites partie de quelle équipe ? » (vouvoiement) dans l'app ; doublon d'équipe ignoré sans message dans l'espace ; dates passées sélectionnables ; pas de lien « Signaler » sur le suivi public du site ; ni liens légaux dans le profil de l'espace ; « Voir un tournoi en direct » du site remplace le tournoi du simulateur sans prévenir ; match pour la 3e place activé par défaut dans le simulateur mais pas dans l'app.
+- [ ] **G33. Petits défauts :** *Partie app faite le 16/10 (code en majuscules, tutoiement, 3e place par défaut ; « Quart de finale générée » et « fin des premier tour » aussi corrigés). Restent : le site et l'espace, et le profil du compte démo à remplir.* titre de l'onglet du site resté en français en anglais, et « Football · 8 équipes » non traduit dans le téléphone de l'accueil ; « Bonjour » sans prénom dans l'espace (profil du compte démo vide : le remplir pour Google et Apple) ; « Quart de finale générée » (masculin) ; « fin des premier tour » (simulateur) ; tennis affiché « 1 pt nul » alors qu'il n'y a pas de nul ; code d'accès en minuscules dans l'app, en majuscules sur le site ; « Vous faites partie de quelle équipe ? » (vouvoiement) dans l'app ; doublon d'équipe ignoré sans message dans l'espace ; dates passées sélectionnables ; pas de lien « Signaler » sur le suivi public du site ; ni liens légaux dans le profil de l'espace ; « Voir un tournoi en direct » du site remplace le tournoi du simulateur sans prévenir ; match pour la 3e place activé par défaut dans le simulateur mais pas dans l'app.
 
 **Priorité conseillée :** commence par A1 à A4 (du code, sans dépendance extérieure) et, en parallèle, ouvre les comptes développeur (C9). La validation des comptes et le test fermé Google sont ce qui prend le plus de temps.
 
@@ -391,6 +397,7 @@ Une ligne par modification, la plus récente en haut.
 
 | Date | Modification |
 |------|--------------|
+| 2026-10-16 | App : code d'accès en majuscules, tutoiement partout, match pour la 3e place activé par défaut (G33, partie app) |
 | 2026-10-16 | Retrait d'équipe bloqué après la phase finale (G29), organisateur exclu de ses co-organisateurs (G30, migration exécutée), tournois supprimés retirés des suivis (G31) |
 | 2026-10-16 | Scores « en cours » : saisie et badge EN DIRECT dans l'app et l'espace, section « En direct » du suivi public (G26, partie 1) |
 | 2026-10-16 | App : calendrier organisateur en temps réel (G27) ; heure de fin estimée et alerte si les matchs débordent sur le lendemain dans l'app, l'espace et le simulateur (G28) |
