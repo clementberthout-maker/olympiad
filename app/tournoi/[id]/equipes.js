@@ -8,6 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../../../lib/supabase';
 import { genererCodeAcces } from '../../../lib/codeAcces';
 import { messageErreur } from '../../../lib/erreurs';
+import { retirerTournoiSuivi } from '../../../lib/tournoisSuivis';
 import {
   repartirEnPoules,
   genererCalendrierPoules,
@@ -110,6 +111,9 @@ export default function GestionEquipes() {
   const [pointsBonus, setPointsBonus] = useState(false);
   const [setsGagnants, setSetsGagnants] = useState(2);
   const [calendrierGenere, setCalendrierGenere] = useState(false);
+  // Matchs à élimination directe déjà générés (phase finale ou tournoi 100%
+  // élimination) : retirer une équipe casserait le tableau.
+  const [tableauLance, setTableauLance] = useState(false);
   const [reglagesHorairesActifs, setReglagesHorairesActifs] = useState(false);
 
   const [enCours, setEnCours] = useState(false);
@@ -203,6 +207,13 @@ export default function GestionEquipes() {
       .select('id', { count: 'exact', head: true })
       .eq('tournoi_id', id);
     setCalendrierGenere(Boolean(count));
+
+    const { count: nombreElimination } = await supabase
+      .from('matchs')
+      .select('id', { count: 'exact', head: true })
+      .eq('tournoi_id', id)
+      .not('phase', 'like', 'Poule %');
+    setTableauLance(Boolean(nombreElimination));
   }, [id, estBrouillon]);
 
   useFocusEffect(
@@ -276,6 +287,13 @@ export default function GestionEquipes() {
   }
 
   function confirmerSuppressionEquipe(equipe) {
+    if (tableauLance) {
+      Alert.alert(
+        t('equipes.retraitImpossibleTitre'),
+        t('equipes.retraitImpossibleTableau', { nom: equipe.nom })
+      );
+      return;
+    }
     if (!calendrierGenere) {
       supprimerEquipe(equipe.id);
       return;
@@ -571,6 +589,10 @@ export default function GestionEquipes() {
     if (error) {
       Alert.alert(t('commun.erreur'), messageErreur(error, t));
       return;
+    }
+    // Plus de raison de le proposer dans les tournois suivis de ce téléphone
+    if (tournoi?.code_acces) {
+      await retirerTournoiSuivi(tournoi.code_acces);
     }
     router.replace('/');
   }

@@ -262,6 +262,8 @@ function sourceDemo() {
     async rejoindreCommeCoOrganisateur(code) {
       const l = base.invitations.find((i) => i.code === code);
       if (!l) return null;
+      // Organisateur principal : il a déjà tous les droits (comme rejoindre_comme_co_organisateur)
+      if (base.tournois.some((t) => t.id === l.tournoi_id && t.organisateur_id === MOI)) return l.tournoi_id;
       if (!base.tournoi_organisateurs.some((x) => x.tournoi_id === l.tournoi_id && x.user_id === MOI)) base.tournoi_organisateurs.push({ tournoi_id: l.tournoi_id, user_id: MOI, peut_saisir_scores: true, peut_gerer_le_tournoi: false, peut_supprimer_le_tournoi: false, created_at: new Date().toISOString() });
       enregistrer('droits'); return l.tournoi_id;
     },

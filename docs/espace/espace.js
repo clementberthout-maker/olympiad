@@ -1286,6 +1286,11 @@ document.addEventListener('click', async (e) => {
       break;
     case 'supprimer-equipe': {
       const c = etat.courant; const eq = c.equipes.find((x) => x.id === cible.dataset.equipe);
+      // Phase à élimination directe déjà lancée : retirer l'équipe casserait le tableau
+      if (c.matchs.some((m) => !estPhaseDePoule(m.phase))) {
+        await confirmer({ titre: tr('Retrait impossible pour l\'instant', 'Can\'t remove it right now'), texte: tr(`La phase à élimination directe a commencé : retirer ${eq.nom} casserait le tableau. Pour la retirer, régénère d'abord le calendrier (les résultats saisis seront effacés).`, `The knockout stage has started: removing ${eq.nom} would break the bracket. To remove it, regenerate the schedule first (results entered will be cleared).`), bouton: tr('Compris', 'Got it') });
+        break;
+      }
       const ok = !c.matchs.length || await confirmer({ titre: tr(`Retirer ${eq.nom} ?`, `Remove ${eq.nom}?`), texte: tr('Ses matchs et leurs résultats seront aussi supprimés.', 'Their matches and results will be deleted too.'), bouton: tr('Retirer', 'Remove'), danger: true });
       if (!ok) break;
       try { await donnees.supprimerEquipe(eq.id); toast(tr('Retiré', 'Removed')); await rechargerCourant(false); } catch (er) { toast(messageErreur(er), 'erreur'); }

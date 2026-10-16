@@ -45,12 +45,15 @@ export default function Suivi() {
   const [monEquipeId, setMonEquipeId] = useState(undefined);
 
   const charger = useCallback(async () => {
-    const { data: t } = await supabase
+    const { data: t, error: erreurTournoi } = await supabase
       .from('tournois')
       .select('*')
       .ilike('code_acces', String(code).trim())
       .single();
     if (!t) {
+      // Aucun tournoi pour ce code (supprimé par son organisateur) : on le
+      // retire des tournois suivis. Pas en cas de simple erreur réseau.
+      if (erreurTournoi?.code === 'PGRST116') await retirerTournoiSuivi(String(code));
       setIntrouvable(true);
       return;
     }

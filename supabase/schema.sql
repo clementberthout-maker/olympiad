@@ -362,6 +362,12 @@ begin
     return null;
   end if;
 
+  -- L'organisateur principal a déjà tous les droits : on ne l'ajoute pas
+  -- comme co-organisateur de son propre tournoi.
+  if exists (select 1 from tournois where id = v_tournoi_id and organisateur_id = auth.uid()) then
+    return v_tournoi_id;
+  end if;
+
   insert into tournoi_organisateurs (tournoi_id, user_id)
   values (v_tournoi_id, auth.uid())
   on conflict (tournoi_id, user_id) do nothing;
