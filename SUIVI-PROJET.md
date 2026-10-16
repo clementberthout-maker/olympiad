@@ -301,6 +301,13 @@ OLYMPIAD sert à organiser des tournois sportifs amateurs. L'organisateur crée 
 - Vérifié dans le navigateur : titre et téléphone en anglais, barème du tennis, confirmation avant de remplacer un tournoi du simulateur, doublon signalé, jours passés désactivés, liens légaux du profil, lien « Signaler », bascule « En cours » de l'espace, liens de retour des trois pages légales. Pas de build nécessaire : en ligne dès la publication sur GitHub Pages.
 - À envisager : héberger les polices sur le site plutôt que chez Google Fonts, pour ne plus transmettre l'adresse IP des visiteurs à Google.
 
+### Préparation du build 6 (16 octobre)
+- D16b : `npx expo install --fix` (expo 57.0.30, expo-linking 57.0.13, expo-router 57.0.28, expo-sharing 57.0.23, expo-constants 57.0.22 dans le lockfile). `expo-doctor` : 21/21. `npm ci` vérifié avec npm 10.9.9 (comme EAS) dans un dossier à part : OK. Bundle Android compilé en local (Hermes, 6,5 Mo) avec les nouveaux textes, la clé RevenueCat `goog_` présente.
+- `npm audit` : 34 alertes (1 critique, 21 élevées), toutes dans les outils de compilation (Metro, Expo CLI, serveur de développement, signature de code), pas dans le code livré. Les correctifs proposés font revenir Expo ou React Native à de très anciennes versions : ignorés, comme le 27/09.
+- `react-native-web` réinstallé sans l'ajouter à `package.json` (la mise à jour l'avait retiré), pour l'aperçu web.
+- Contenu du build 6 : tirage de la phase finale (G25), calendrier en direct (G27), heure de fin et alerte de débordement (G28), scores « en cours » (G26), retrait d'équipe bloqué (G29), tournois supprimés retirés des suivis (G31), code en majuscules, tutoiement, 3e place par défaut (G33). Version affichée inchangée (1.0.0), `versionCode` 6 attribué par EAS. Pas de mot de passe oublié par code (D16c), gardé pour plus tard.
+- Notes de version FR/EN du build 6 ajoutées à `store/test-ferme.md`.
+
 ## 3. Ce qu'il reste à faire
 
 Légende : `[ ]` à faire · `[x]` fait
@@ -353,7 +360,7 @@ Légende : `[ ]` à faire · `[x]` fait
 - [ ] **D16. Tester l'application entière :** chaque sport, la phase finale, les co-organisateurs, l'export PDF, le QR code, la réinitialisation du mot de passe, les deux thèmes et les deux langues, sur iPhone et sur Android. *Test complet dans l'aperçu web le 16/10 (défauts en G25 à G33) ; reste à refaire sur de vrais téléphones, avec les achats.*
 - [ ] **D16d. Optimisation du code Android (R8), avant février 2027 :** alerte Play Console « L'optimisation du code DEX est inférieure à notre seuil » (obscurcissement 2 %, build 5). Installer `expo-build-properties` et activer `android.enableMinifyInReleaseBuilds` (et `enableShrinkResourcesInReleaseBuilds`) dans `app.json`, puis retester toute l'app et les achats sur le build obtenu (R8 peut casser des bibliothèques). Envoyer le fichier `mapping.txt` à la Play Console pour lire les plantages. Pas bloquant pour le test fermé.
 - [ ] **D16c. Mot de passe oublié par code (prochain build) :** le lien de réinitialisation n'est valable qu'environ 5 minutes et seulement sur l'appareil qui a fait la demande (PKCE, testé le 15/10). Le remplacer par un code à 6 chiffres saisi dans l'app (`{{ .Token }}`, `verifyOtp` type `recovery`). Détails dans `supabase/emails/README.md`.
-- [ ] **D16b. Au prochain build (après les retours du test fermé) :** appliquer les mises à jour correctives signalées par Expo Doctor sur le build 5 (`npx expo install --fix` : expo 57.0.29, expo-constants 57.0.22, expo-linking 57.0.13, expo-router 57.0.27, expo-sharing 57.0.23), puis vérifier `npm ci` avec npm 10 avant de lancer le build. Avertissement seulement, le build 5 est gardé pour le test fermé.
+- [x] **D16b. Au prochain build (après les retours du test fermé) :** appliquer les mises à jour correctives signalées par Expo Doctor sur le build 5 (`npx expo install --fix` : expo 57.0.29, expo-constants 57.0.22, expo-linking 57.0.13, expo-router 57.0.27, expo-sharing 57.0.23), puis vérifier `npm ci` avec npm 10 avant de lancer le build. Avertissement seulement, le build 5 est gardé pour le test fermé. *Fait le 16/10 pour le build 6 (expo-doctor 21/21, `npm ci` OK avec npm 10).*
 
 ### E. Fiches des stores
 - [ ] **E17. Visuels :** captures d'écran (iPhone 6,7" et téléphone Android ; pas d'iPad, `supportsTablet` étant à `false`) et bannière Google de 1024×500. *Icône Google 512 × 512 et image de présentation 1024 × 500 prêtes le 14/10 (`store/icone-512.png`, `store/banniere-1024x500.png`). 4 captures des écrans publics (1080 × 1919, thème sombre) prêtes le 15/10 dans `store/captures/` ; restent des captures organisateur (création, saisie des scores) sur un téléphone, et les captures iPhone.* *Fiche Google Play terminée le 15/10 (FR et EN, icône, bannières, captures). Reste Apple.*
@@ -363,7 +370,7 @@ Légende : `[ ]` à faire · `[x]` fait
   - Classification d'âge : répondre au questionnaire d'Apple et à celui de Google (IARC) selon le contenu réel (pas de violence, pas de contenu choquant ; noms d'équipes saisis par les utilisateurs et visibles avec le code du tournoi).
   - Public cible sur Google Play : 13-15 ans, 16-17 ans et 18 ans et plus (comptes dès 15 ans). Ne pas cocher de tranche de moins de 13 ans, pour ne pas relever du programme « Familles ».
   - Adresse de la politique de confidentialité et adresse de support. *Support : https://clementberthout-maker.github.io/olympiad/#aide ; marketing : https://clementberthout-maker.github.io/olympiad/*
-- [ ] **E20. Compte de démonstration** *Google : créé le 14/10, Pro offert par RevenueCat (entitlement promotionnel `pro`), tournoi de démonstration, identifiants déclarés dans « Informations de connexion ». À réutiliser pour Apple.* pour les équipes de validation Apple et Google, avec un tournoi déjà rempli.
+- [ ] **E20. Compte de démonstration** **Rappel (16/10) : remplir le nom et le prénom du profil du compte démo (« Mon profil », dans l'app ou sur le site), aujourd'hui vides.** *Google : créé le 14/10, Pro offert par RevenueCat (entitlement promotionnel `pro`), tournoi de démonstration, identifiants déclarés dans « Informations de connexion ». À réutiliser pour Apple.* pour les équipes de validation Apple et Google, avec un tournoi déjà rempli.
 
 ### F. Mise en ligne
 - [ ] **F21.** `eas build --profile production --platform all`, puis `eas submit`.
@@ -405,6 +412,7 @@ Une ligne par modification, la plus récente en haut.
 
 | Date | Modification |
 |------|--------------|
+| 2026-10-16 | Build 6 préparé : mises à jour Expo (D16b), expo-doctor 21/21, `npm ci` npm 10 et bundle Android vérifiés, notes de version ; rappel de remplir le profil du compte démo (E20) |
 | 2026-10-16 | Site et espace : traductions, tennis, confirmation de la démo, doublons, dates passées, liens légaux, « Signaler » (G33) ; pages légales avec retour au site et politique de confidentialité complétée (G32) ; correction de `$$(` |
 | 2026-10-16 | App : code d'accès en majuscules, tutoiement partout, match pour la 3e place activé par défaut (G33, partie app) |
 | 2026-10-16 | Retrait d'équipe bloqué après la phase finale (G29), organisateur exclu de ses co-organisateurs (G30, migration exécutée), tournois supprimés retirés des suivis (G31) |

@@ -107,3 +107,14 @@ Première version de test d'OLYMPIAD : création de tournois, calendrier automat
 `<en-US>`
 First test version of OLYMPIAD: tournament creation, automatic schedule, score entry and live following.
 `</en-US>`
+
+## Notes de version (build 6)
+
+Nom de la release : `6 (1.0.0)`. À coller dans la Play Console (500 caractères maximum par langue).
+
+`<fr-FR>`
+Scores « en cours » affichés en direct avec un badge EN DIRECT. Calendrier mis à jour en temps réel pour tous les organisateurs. Phase finale plus juste : les premiers de poule affrontent les deuxièmes d'une autre poule. Heure de fin estimée, avec une alerte si les matchs débordent sur le lendemain. Match pour la 3e place activé par défaut. Corrections diverses.
+`</fr-FR>`
+`<en-US>`
+In-progress scores shown live with a LIVE badge. Schedule updated in real time for every organizer. Fairer knockout draw: group winners face runners-up from another group. Estimated end time, with a warning if matches run into the next day. Third-place match on by default. Various fixes.
+`</en-US>`
