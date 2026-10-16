@@ -307,6 +307,7 @@ OLYMPIAD sert à organiser des tournois sportifs amateurs. L'organisateur crée 
 - `react-native-web` réinstallé sans l'ajouter à `package.json` (la mise à jour l'avait retiré), pour l'aperçu web.
 - Contenu du build 6 : tirage de la phase finale (G25), calendrier en direct (G27), heure de fin et alerte de débordement (G28), scores « en cours » (G26), retrait d'équipe bloqué (G29), tournois supprimés retirés des suivis (G31), code en majuscules, tutoiement, 3e place par défaut (G33). Version affichée inchangée (1.0.0), `versionCode` 6 attribué par EAS. Pas de mot de passe oublié par code (D16c), gardé pour plus tard.
 - Notes de version FR/EN du build 6 ajoutées à `store/test-ferme.md`.
+- **Build 6 réussi sur EAS le 16/10** (`versionCode` 6, clé `gqma_0PWKl` / SHA1 `58:99…` comme le build 5, clé RevenueCat chargée depuis l'environnement production) : https://expo.dev/accounts/clementberth/projects/olympiad/builds/ad4cb98f-9c60-4227-bcfc-2f289842406d. **Reste** : importer le `.aab` dans la Play Console (test fermé, piste Alpha), coller les notes de version et envoyer en examen.
 
 ## 3. Ce qu'il reste à faire
 
@@ -412,6 +413,7 @@ Une ligne par modification, la plus récente en haut.
 
 | Date | Modification |
 |------|--------------|
+| 2026-10-16 | Build 6 Android réussi sur EAS (`versionCode` 6), à importer dans la Play Console |
 | 2026-10-16 | Build 6 préparé : mises à jour Expo (D16b), expo-doctor 21/21, `npm ci` npm 10 et bundle Android vérifiés, notes de version ; rappel de remplir le profil du compte démo (E20) |
 | 2026-10-16 | Site et espace : traductions, tennis, confirmation de la démo, doublons, dates passées, liens légaux, « Signaler » (G33) ; pages légales avec retour au site et politique de confidentialité complétée (G32) ; correction de `$$(` |
 | 2026-10-16 | App : code d'accès en majuscules, tutoiement partout, match pour la 3e place activé par défaut (G33, partie app) |
