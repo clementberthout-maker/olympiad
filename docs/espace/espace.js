@@ -8,7 +8,7 @@
 import { donnees, MODE_DEMO } from './donnees.js';
 import {
   repartirEnPoules, genererCalendrierPoules, genererPremierTourEliminationDirecte, genererPhaseFinaleDepuisPoules,
-  genererTourSuivant, qualifiesParTeteDeSerie, genererMatchTroisiemePlace, resultatsAutoPourExempts, idEquipeGagnante, estPhaseDePoule,
+  genererTourSuivant, qualifiesParTeteDeSerie, joursApresDebut, genererMatchTroisiemePlace, resultatsAutoPourExempts, idEquipeGagnante, estPhaseDePoule,
   grouperParPhase, grouperParTerrain, NOM_MATCH_TROISIEME_PLACE,
 } from './moteur/generation.js';
 import { calculerClassement } from './moteur/classement.js';
@@ -463,9 +463,11 @@ function htmlResume() {
   else matchs = genererCalendrierPoules(repartirEnPoules(faux, b.nombrePoules).map((eq, i) => ({ id: `p${i}`, nom: `Poule ${String.fromCharCode(65 + i)}`, equipes: eq })), 'x', reglages);
   const fin = new Date(Math.max(...matchs.map((m) => new Date(m.horaire).getTime())) + reglages.dureeMatchMinutes * 60000);
   const total = b.format === 'elimination_directe' ? n - 1 + (b.matchTroisiemePlace && n >= 4 ? 1 : 0) : matchs.length;
+  const lendemain = joursApresDebut(fin, b.date) > 0;
   return `<div><strong>${n}</strong><span>${motEquipes({ sport: b.sport, tennis_double: b.tennisDouble })}</span></div>
     <div><strong>${total}</strong><span>${b.format === 'elimination_directe' ? tr('matchs au total', 'matches in total') : tr('matchs de poule', 'group matches')}</span></div>
-    <div><strong>${pad(fin.getHours())}:${pad(fin.getMinutes())}</strong><span>${b.format === 'elimination_directe' ? tr('fin du premier tour', 'end of first round') : tr('fin des poules', 'groups end')}</span></div>`;
+    <div><strong>${pad(fin.getHours())}:${pad(fin.getMinutes())}</strong><span>${b.format === 'elimination_directe' ? tr('fin du premier tour', 'end of first round') : tr('fin des poules', 'groups end')}${lendemain ? ` · ${tr('le lendemain', 'next day')}` : ''}</span></div>
+    ${lendemain ? `<p class="alerte-debordement">${tr('Attention : les matchs finiraient le lendemain. Ajoute des terrains, raccourcis les matchs ou réduis les pauses.', 'Warning: matches would end the next day. Add fields, shorten matches or reduce breaks.')}</p>` : ''}`;
 }
 function reglagesBrouillon(b) {
   const duree = b.dureeMatch + (b.miTemps && b.sport !== 'tennis' ? b.dureeMiTemps : 0);

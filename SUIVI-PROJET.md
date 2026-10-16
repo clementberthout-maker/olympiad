@@ -269,6 +269,12 @@ OLYMPIAD sert à organiser des tournois sportifs amateurs. L'organisateur crée 
 - Appliqué dans l'app (`app/tournoi/[id]/calendrier.js`), dans l'espace (`docs/espace/moteur/generation.js` recopié, `espace.js`) et dans le simulateur (`docs/site.js`). Message du simulateur « Quart de finale générée » remplacé par « Tour généré : … ».
 - Vérifié : script de test (2 400 tirages, 2 à 4 poules, avec exempts, jusqu'à la finale : tout passe), simulateur et espace en démo jusqu'à la finale, app compilée et calendrier ouvert sans erreur. **À livrer dans le prochain build** pour les téléphones.
 
+### Calendrier en direct et horaires qui débordent (16 octobre)
+- **G27** : le calendrier organisateur de l'app (`app/tournoi/[id]/calendrier.js`) s'abonne au temps réel tant qu'il est affiché (résultats et matchs du tournoi, rafales regroupées, résultats des autres tournois ignorés). Un score saisi ou effacé par un co-organisateur, ou depuis le site, apparaît sans quitter l'écran.
+- **G28** : nouvelle fonction `finEstimeePremierePhase` (et `joursApresDebut`) dans `lib/generation.js`, recopiée dans `docs/espace/moteur/`. L'app affiche maintenant « Fin des poules vers HH:MM » au-dessus du bouton de création. Si les matchs finissent le lendemain, l'heure s'affiche en rouge avec un conseil, et une confirmation est demandée avant de créer ou de régénérer le calendrier. Traductions FR/EN ajoutées (`lib/traductions.js`). Dans l'espace (assistant de création) et dans le simulateur, l'estimation indique « le lendemain » en rouge (corrige aussi « fin des premier tour »).
+- Vérifié dans l'aperçu web avec le compte démo : alerte à 22:15 le lendemain (12 équipes, 1 terrain, 60 min), création annulée sans rien écrire ; 8 équipes sur 2 terrains : « Fin des poules vers 16:15 », sans alerte ; score saisi puis effacé sur le site, visible aussitôt dans le calendrier de l'app. Tournoi de test supprimé. **À livrer dans le prochain build.**
+- Pas changé : les durées par défaut de l'app (60 min et 15 min de pause), ni la phase finale générée tard le soir (seules les poules et le premier tour sont estimés).
+
 ## 3. Ce qu'il reste à faire
 
 Légende : `[ ]` à faire · `[x]` fait
@@ -355,8 +361,8 @@ Légende : `[ ]` à faire · `[x]` fait
 ### G. Défauts trouvés au test complet (16/10)
 - [x] **G25. Tirage de la phase finale (important) :** *Corrigé le 16/10 (têtes de série croisées, tours suivants re-classés) dans l'app, l'espace et le simulateur ; à livrer au prochain build.* `genererTourAPartirDeListe` (`lib/generation.js:236`) mélange les qualifiés au hasard. Deux équipes d'une même poule se retrouvent en demi-finale (vu 4 fois sur 5, dans l'app aussi : les deux premiers de poule se sont rencontrés). Croiser A1–B2 / B1–A2 (tableau fixe), et garder le tableau pour les tours suivants (aujourd'hui retiré au sort à chaque tour). Recopier ensuite dans `docs/espace/moteur/` et `docs/site.js`.
 - [ ] **G26. Site qui promet plus que l'app :** le score « en cours » (EN DIRECT) existe dans le simulateur et sur le site, mais pas dans l'app ni dans l'espace (toujours « terminé »). Le grand écran de l'app est une simple liste, sans code d'accès ni gros caractères, contrairement à celui du site. Ajouter ces fonctions à l'app, ou corriger les textes du site.
-- [ ] **G27. Calendrier organisateur de l'app sans temps réel :** `app/tournoi/[id]/calendrier.js` ne se recharge qu'en revenant sur l'écran. Deux bénévoles ne voient pas les scores l'un de l'autre. Seul le suivi public est en direct, et le grand écran se rafraîchit à intervalle.
-- [ ] **G28. Horaires qui débordent :** avec les valeurs par défaut (1 terrain, matchs de 60 min, 15 min de pause), 12 équipes finissent leurs poules « à 22:15 », en fait le lendemain, sans alerte. Prévenir quand la fin dépasse la journée, et revoir les durées par défaut (60 min au football).
+- [x] **G27. Calendrier organisateur de l'app sans temps réel :** *Corrigé le 16/10 (abonnement temps réel sur l'écran) ; à livrer au prochain build.* `app/tournoi/[id]/calendrier.js` ne se recharge qu'en revenant sur l'écran. Deux bénévoles ne voient pas les scores l'un de l'autre. Seul le suivi public est en direct, et le grand écran se rafraîchit à intervalle.
+- [x] **G28. Horaires qui débordent :** *Alerte faite le 16/10 (app, espace, simulateur) ; à livrer au prochain build. Reste à décider : durées par défaut selon le sport.* avec les valeurs par défaut (1 terrain, matchs de 60 min, 15 min de pause), 12 équipes finissent leurs poules « à 22:15 », en fait le lendemain, sans alerte. Prévenir quand la fin dépasse la journée, et revoir les durées par défaut (60 min au football).
 - [ ] **G29. Équipe retirée après la phase finale :** sa demi-finale est supprimée et le tableau devient incohérent (finaliste sans demi-finale). Bloquer le retrait une fois la phase finale lancée, ou demander de régénérer.
 - [ ] **G30. Co-organisateur de son propre tournoi :** `rejoindre_comme_co_organisateur` (`supabase/schema.sql`) laisse l'organisateur principal s'ajouter à son propre tournoi. Ignorer ce cas dans la fonction.
 - [ ] **G31. Tournoi supprimé encore dans « Tournois suivis »** (app) : il s'ouvre sur « Tournoi introuvable », sans moyen de le retirer. Le retirer de la liste dans ce cas.
@@ -373,6 +379,7 @@ Une ligne par modification, la plus récente en haut.
 
 | Date | Modification |
 |------|--------------|
+| 2026-10-16 | App : calendrier organisateur en temps réel (G27) ; heure de fin estimée et alerte si les matchs débordent sur le lendemain dans l'app, l'espace et le simulateur (G28) |
 | 2026-10-16 | Phase finale : tirage par têtes de série croisées (A1–B2, B1–A2), sans même poule au 1er tour (G25), dans l'app, l'espace et le simulateur |
 | 2026-10-16 | Test complet du site, de l'espace organisateur et de l'app (compte démo) : défauts notés en G25 à G33 |
 | 2026-10-16 | Espace organisateur : sélecteur de nombres (terrains, poules, durées) et horaires de pause déjeuner verrouillés si la pause est désactivée |

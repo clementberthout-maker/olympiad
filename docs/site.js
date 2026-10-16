@@ -1020,8 +1020,13 @@
     }
     if (!matchs.length) return '';
     const fin = new Date(Math.max(...matchs.map((m) => new Date(m.horaire).getTime())) + reg.dureeMatchMinutes * 60000);
-    const etape = b.format === 'elimination_directe' ? tr('premier tour', 'first round') : tr('poules', 'groups');
-    return `⏱ ${b.format === 'elimination_directe' ? tr(`${nb} matchs au total`, `${nb} matches in total`) : tr(`${nb} matchs de poule`, `${nb} group matches`)} · ${tr(`fin des ${etape} vers`, `${etape} end around`)} <b style="color:var(--texte)">${pad(fin.getHours())}:${pad(fin.getMinutes())}</b>`;
+    const etape = b.format === 'elimination_directe' ? tr('du premier tour', 'first round') : tr('des poules', 'groups');
+    const jourFin = new Date(fin.getTime() - 1); jourFin.setHours(0, 0, 0, 0);
+    const lendemain = jourFin > new Date(`${b.date}T00:00:00`);
+    const texte = `⏱ ${b.format === 'elimination_directe' ? tr(`${nb} matchs au total`, `${nb} matches in total`) : tr(`${nb} matchs de poule`, `${nb} group matches`)} · ${tr(`fin ${etape} vers`, `${etape} end around`)} <b style="color:var(--texte)">${pad(fin.getHours())}:${pad(fin.getMinutes())}</b>`;
+    return lendemain
+      ? `${texte} <b style="color:var(--danger)">${tr('le lendemain : ajoute des terrains ou raccourcis les matchs.', 'the next day: add fields or shorten matches.')}</b>`
+      : texte;
   }
 
   // ---------------------------------------------------------------------

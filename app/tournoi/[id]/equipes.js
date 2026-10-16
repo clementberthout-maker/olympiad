@@ -13,6 +13,8 @@ import {
   genererCalendrierPoules,
   genererPremierTourEliminationDirecte,
   resultatsAutoPourExempts,
+  finEstimeePremierePhase,
+  joursApresDebut,
 } from '../../../lib/generation';
 import CarteSelectionnable from '../../../components/CarteSelectionnable';
 import RouePicker from '../../../components/RouePicker';
@@ -308,6 +310,28 @@ export default function GestionEquipes() {
     };
   }
 
+  // Heure de fin estimée des poules (ou du premier tour) avec les réglages
+  // en cours, pour prévenir quand le calendrier déborde sur le lendemain.
+  const finEstimee = dateEdit
+    ? finEstimeePremierePhase(equipes.length, formatTournoi, nombrePoules, reglagesDeGeneration())
+    : null;
+  const heureFinEstimee = finEstimee ? `${pad(finEstimee.getHours())}:${pad(finEstimee.getMinutes())}` : '';
+  const finLeLendemain = Boolean(finEstimee) && joursApresDebut(finEstimee, dateEdit) > 0;
+
+  // Demande confirmation avant de générer un calendrier qui finirait le
+  // lendemain ; sinon lance directement l'action.
+  function confirmerSiDebordement(action, libelleContinuer) {
+    if (!finLeLendemain) { action(); return; }
+    Alert.alert(
+      t('equipes.debordementTitre'),
+      t('equipes.debordementMessage', { heure: heureFinEstimee }),
+      [
+        { text: t('commun.annuler'), style: 'cancel' },
+        { text: libelleContinuer, onPress: action },
+      ]
+    );
+  }
+
   function allerAuCalendrier() {
     if (vientDuCalendrier) {
       router.back();
@@ -451,7 +475,7 @@ export default function GestionEquipes() {
       t('equipes.regenererMessage'),
       [
         { text: t('commun.annuler'), style: 'cancel' },
-        { text: t('equipes.regenerer'), style: 'destructive', onPress: regenererCalendrier },
+        { text: t('equipes.regenerer'), style: 'destructive', onPress: () => confirmerSiDebordement(regenererCalendrier, t('equipes.regenerer')) },
       ]
     );
   }
@@ -462,9 +486,9 @@ export default function GestionEquipes() {
   // tout juste d'être inséré et n'est pas encore dans l'état "tournoi").
   // Suppose qu'il n'y a rien à supprimer au préalable (voir
   // creerTournoiEtEquipes / sauvegarderReglages / regenererCalendrier).
-  async function genererLesMatchs(tournoiId, formatDuTournoi, equipesPourGeneration) {
+  function reglagesDeGeneration() {
     const reglagesTournoi = reglagesActuels();
-    const reglages = {
+    return {
       dateDebut: dateEdit,
       heureDebut: reglagesTournoi.heure_premier_match,
       dureeCreneauMinutes: dureeMatch + (miTemps ? dureeMiTemps : 0) + tempsPause,
@@ -474,6 +498,10 @@ export default function GestionEquipes() {
       heureDebutPause: reglagesTournoi.heure_debut_pause,
       heureFinPause: reglagesTournoi.heure_fin_pause,
     };
+  }
+
+  async function genererLesMatchs(tournoiId, formatDuTournoi, equipesPourGeneration) {
+    const reglages = reglagesDeGeneration();
 
     if (formatDuTournoi === 'elimination_directe') {
       const matchs = genererPremierTourEliminationDirecte(equipesPourGeneration, tournoiId, reglages);
@@ -841,7 +869,19 @@ export default function GestionEquipes() {
           </>
         )}
 
-        <Pressable style={styles.boutonSauvegarder} onPress={sauvegarderReglages} disabled={enCours}>
+        {finEstimee && (
+          <Text style={[styles.estimationFin, finLeLendemain && styles.estimationFinAlerte]}>
+            {finLeLendemain
+              ? t('equipes.finLendemain', { heure: heureFinEstimee })
+              : t(formatTournoi === 'elimination_directe' ? 'equipes.finPremierTour' : 'equipes.finPoules', { heure: heureFinEstimee })}
+          </Text>
+        )}
+
+        <Pressable
+          style={styles.boutonSauvegarder}
+          onPress={estBrouillon ? () => confirmerSiDebordement(sauvegarderReglages, t('equipes.creerQuandMeme')) : sauvegarderReglages}
+          disabled={enCours}
+        >
           <Text style={styles.texteBoutonSauvegarder}>
             {estBrouillon
               ? (enCours ? t('equipes.creationEnCours') : t('equipes.creerLeTournoi'))
@@ -975,6 +1015,8 @@ function creerStyles(c) {
     },
     texteBoutonRegenerer: { color: c.danger, fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 14.5 },
     avertissement: { fontFamily: POLICE_TEXTE, fontSize: 11.5, color: c.texteAttenue, textAlign: 'center', marginTop: 8 },
+    estimationFin: { fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 13, color: c.texteAttenue, textAlign: 'center', lineHeight: 18, marginTop: 8, marginBottom: 12 },
+    estimationFinAlerte: { color: c.danger },
     boutonSupprimerTournoi: { alignItems: 'center', marginTop: 32 },
     texteBoutonSupprimerTournoi: {
       fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 13, color: c.danger, textDecorationLine: 'underline',

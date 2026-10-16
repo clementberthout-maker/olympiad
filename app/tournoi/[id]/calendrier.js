@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, Pressable, ScrollView, Alert, Modal } from 'react-native';
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useRef } from 'react';
 import { Stack, useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as Print from 'expo-print';
@@ -74,6 +74,7 @@ export default function Calendrier() {
   const [parTerrain, setParTerrain] = useState(false);
   const [partageVisible, setPartageVisible] = useState(false);
   const [exportEnCours, setExportEnCours] = useState(false);
+  const idsMatchs = useRef(new Set()); // matchs de ce tournoi, pour filtrer le temps réel
 
   const charger = useCallback(async () => {
     const { data: t } = await supabase.from('tournois').select('*').eq('id', id).single();
@@ -105,12 +106,34 @@ export default function Calendrier() {
       groupes[match.phase].push({ ...match, resultat });
     }
     setPhases(Object.entries(groupes).map(([nom, matchs]) => ({ nom, matchs })));
+    idsMatchs.current = new Set((matchs || []).map((m) => m.id));
   }, [id]);
 
+  // Temps réel tant que l'écran est affiché : un score saisi par un
+  // co-organisateur (téléphone ou site) apparaît sans quitter l'écran.
+  // Les résultats n'ont pas de tournoi_id : on ignore ceux des autres
+  // tournois, et on regroupe les rafales (phase finale = plusieurs matchs).
   useFocusEffect(
     useCallback(() => {
       charger();
-    }, [charger])
+      let minuteur = null;
+      const rechargerBientot = () => {
+        clearTimeout(minuteur);
+        minuteur = setTimeout(charger, 300);
+      };
+      const canal = supabase
+        .channel(`calendrier-${id}-${Date.now()}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'resultats' }, (e) => {
+          const matchId = e.new?.match_id || e.old?.match_id;
+          if (!matchId || idsMatchs.current.has(matchId)) rechargerBientot();
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'matchs', filter: `tournoi_id=eq.${id}` }, rechargerBientot)
+        .subscribe();
+      return () => {
+        clearTimeout(minuteur);
+        supabase.removeChannel(canal);
+      };
+    }, [charger, id])
   );
 
   function ouvrirVueGrandEcran() {
