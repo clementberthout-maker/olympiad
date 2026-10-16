@@ -50,6 +50,7 @@
     'nav.essayer': 'Try it', 'nav.fonctions': 'Features', 'nav.sports': 'Sports', 'nav.offres': 'Plans', 'nav.aide': 'Help', 'nav.cta': 'Try it live',
     'heros.etiquette': 'Amateur sports tournaments · live', 'heros.l1': 'Run', 'heros.l2': 'your tournament.', 'heros.l3': 'Everyone follows.',
     'heros.accroche': 'OLYMPIAD builds your schedule, lets you enter scores from the sideline and shows results in real time to teams and spectators with a simple QR code. No account needed for them.',
+    'tel.titre': 'U13 Spring Cup', 'tel.meta': 'Football · 8 teams', 'tel.direct': 'LIVE', 'tel.matchs': 'Matches', 'tel.classement': 'Standings',
     'heros.cta': 'Create a tournament now', 'heros.cta2': 'Watch a live tournament', 'heros.bientot': 'Coming soon on', 'heros.badge': 'Soon',
     'heros.bulle1': 'updated for 48 spectators', 'heros.bulle2': 'QR code scanned', 'heros.bulle2b': 'no account, nothing to set up',
     'comment.sur': 'On the day', 'comment.titre': 'Three steps. Zero spreadsheets.', 'comment.intro': 'From the team list to the podium, everything is handled from your phone.',
@@ -87,8 +88,10 @@
   $$('[data-i18n-html]').forEach((el) => { FR[el.dataset.i18nHtml] = el.innerHTML; });
   $$('[data-i18n-placeholder]').forEach((el) => { FR[el.dataset.i18nPlaceholder] = el.placeholder; });
 
+  const TITRE_FR = document.title;
   function appliquerLangue() {
     document.documentElement.lang = langue;
+    document.title = langue === 'en' ? 'OLYMPIAD — Run your tournaments, followed live' : TITRE_FR;
     const dico = langue === 'en' ? EN : FR;
     $$('[data-i18n]').forEach((el) => { const v = dico[el.dataset.i18n]; if (v != null) el.innerHTML = v; });
     $$('[data-i18n-html]').forEach((el) => { const v = dico[el.dataset.i18nHtml]; if (v != null) el.innerHTML = v; });
@@ -1293,6 +1296,7 @@
       if (i < nbJoues) { const [a, c] = scoreAleatoire(t, true); t.resultats.push({ match_id: m.id, score_a: a, score_b: c, statut: 'termine', bonus_a: 0, bonus_b: 0 }); }
       else if (i < nbJoues + 2) t.resultats.push({ match_id: m.id, score_a: Math.floor(Math.random() * 2), score_b: Math.floor(Math.random() * 2), statut: 'en_cours', bonus_a: 0, bonus_b: 0 });
     });
+    t.demo = true;
     S.tournoi = t;
     S.role = 'orga';
     S.brouillon = null;
@@ -1613,10 +1617,16 @@
   }
   $('#missions').addEventListener('click', (e) => { const b = e.target.closest('[data-mission]'); if (b) allerMission(b.dataset.mission); });
   $$('[data-demo]').forEach((b) => b.addEventListener('click', () => {
-    chargerDemo();
-    if (b.dataset.demo === 'suivi') { S.ongletSuivi = 'calendrier'; reinitialiserVers('suivi'); } else { S.onglet = 'matchs'; reinitialiserVers('calendrier'); }
+    const charger = () => {
+      chargerDemo();
+      if (b.dataset.demo === 'suivi') { S.ongletSuivi = 'calendrier'; reinitialiserVers('suivi'); } else { S.onglet = 'matchs'; reinitialiserVers('calendrier'); }
+      toast(tr('Tournoi de démo chargé', 'Demo tournament loaded'));
+    };
     $('#essayer').scrollIntoView({ behavior: mouvementReduit ? 'auto' : 'smooth' });
-    toast(tr('Tournoi de démo chargé', 'Demo tournament loaded'));
+    // Le simulateur ne garde qu'un tournoi : on prévient avant d'écraser celui du visiteur
+    if (T() && !T().demo) {
+      confirmer(tr('Remplacer ton tournoi ?', 'Replace your tournament?'), tr(`Le simulateur garde un seul tournoi : « ${T().nom} » sera remplacé par le tournoi de démo.`, `The simulator keeps one tournament: “${T().nom}” will be replaced by the demo tournament.`), tr('Charger la démo', 'Load the demo'), charger);
+    } else charger();
   }));
   $('#ouvrir-spectateur').addEventListener('click', () => {
     if (!T()) chargerDemo();
@@ -1697,7 +1707,7 @@
     $('#sport-detail').innerHTML = `<svg class="grand-ico" aria-hidden="true"><use href="#i-${s.valeur}"/></svg>
       <h3 class="anime">${langue === 'en' ? s.en : s.fr}</h3>
       <p class="vocab anime">${tr(`Le score se compte en ${s.score[0]} · classement par ${s.diff[0].toLowerCase()}`, `Score counted in ${s.score[1]} · ranked by ${s.diff[1].toLowerCase()}`)}</p>
-      <div class="bareme anime" style="animation-delay:.05s"><div><strong>${s.v}</strong><span>${tr('pts victoire', 'pts win')}</span></div><div><strong>${s.n}</strong><span>${tr('pts nul', 'pts draw')}</span></div><div><strong>${s.d}</strong><span>${tr('pts défaite', 'pts loss')}</span></div></div>
+      <div class="bareme anime" style="animation-delay:.05s"><div><strong>${s.v}</strong><span>${tr('pts victoire', 'pts win')}</span></div>${s.valeur === 'tennis' ? '' : `<div><strong>${s.n}</strong><span>${tr('pts nul', 'pts draw')}</span></div>`}<div><strong>${s.d}</strong><span>${tr('pts défaite', 'pts loss')}</span></div></div>
       <h4 class="anime" style="animation-delay:.1s">${tr('Départage en phase finale', 'Knockout tiebreakers')}</h4>
       <div class="puces anime" style="animation-delay:.1s">${elim.map((x) => `<span>${x}</span>`).join('')}</div>
       <h4 class="anime" style="animation-delay:.15s">${tr('Spécificités', 'Specifics')}</h4>

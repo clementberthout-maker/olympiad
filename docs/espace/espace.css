@@ -455,6 +455,7 @@ body.page-espace { min-height: 100vh; display: flex; flex-direction: column; }
 .sel-grille button:active { transform: scale(0.9); }
 .sel-grille button.weekend { color: var(--lien); }
 .sel-grille button.autre { color: var(--texte-attenue); opacity: 0.45; }
+.sel-grille button:disabled { opacity: 0.25; cursor: default; background: none; transform: none; }
 .sel-grille button.aujourdhui::after { content: ""; position: absolute; left: 50%; bottom: 5px; width: 5px; height: 5px; margin-left: -2.5px; border-radius: 50%; background: var(--accent); }
 .sel-grille button.choisi { background: var(--accent); color: var(--accent-encre); box-shadow: 0 6px 16px var(--lueur); }
 .sel-grille button.choisi::after { background: var(--accent-encre); }

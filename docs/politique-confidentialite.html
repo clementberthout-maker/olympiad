@@ -60,19 +60,23 @@
   ul { padding-left: 1.3rem; }
   li { margin-bottom: 0.3rem; }
   em { color: var(--texte-attenue); }
+  .retour { display: inline-block; margin-bottom: 18px; font-weight: 600; text-decoration: none; }
+  .retour:hover { text-decoration: underline; }
+  .retour.bas { margin: 32px 0 0; }
 </style>
 </head>
 <body>
 <main>
+  <a class="retour" href="index.html">← Retour au site OLYMPIAD</a>
   <h1>Politique de confidentialité — OLYMPIAD</h1>
-  <p class="maj">Dernière mise à jour : 27 septembre 2026</p>
+  <p class="maj">Dernière mise à jour : 16 octobre 2026</p>
 
   <div class="encadre">
     <strong>Responsable du traitement :</strong> Clément Berthout, développeur de l'application OLYMPIAD.<br>
     <strong>Contact :</strong> <a href="mailto:clement.berthout@gmail.com">clement.berthout@gmail.com</a>
   </div>
 
-  <p>Cette politique explique quelles données l'application OLYMPIAD collecte, pourquoi, et comment exercer tes droits dessus.</p>
+  <p>Cette politique explique quelles données l'application OLYMPIAD et son site internet (y compris l'espace organisateur) collectent, pourquoi, et comment exercer tes droits dessus.</p>
 
   <h2>1. Données collectées</h2>
   <p><strong>Compte (à l'inscription) :</strong></p>
@@ -99,6 +103,21 @@
   </ul>
   <p>Nous ne collectons <strong>aucune donnée de localisation précise, aucun identifiant publicitaire, et n'affichons aucune publicité</strong> dans l'application.</p>
 
+  <h2>1 bis. Site internet et espace organisateur</h2>
+  <ul>
+    <li><strong>Espace organisateur :</strong> il utilise le même compte que l'application. Les données saisies (compte, profil, tournois, équipes, scores) sont exactement celles décrites ci-dessus, enregistrées au même endroit (Supabase). Ta session de connexion est gardée dans le stockage de ton navigateur jusqu'à ta déconnexion.</li>
+    <li><strong>Stockage du navigateur :</strong> le site y garde ta langue, ton thème, ainsi que les données du simulateur et du mode démo (« Découvrir en démo »). Ces données restent dans ton navigateur et ne nous sont jamais envoyées ; tu peux les effacer avec les données de navigation.</li>
+    <li><strong>Pas de mesure d'audience ni de cookie publicitaire :</strong> le site n'utilise aucun outil de statistiques ni de publicité.</li>
+    <li><strong>Services techniques chargés par le site :</strong> comme pour tout site web, ces services reçoivent ton adresse IP et les informations techniques de ton navigateur pour t'envoyer leurs fichiers :
+      <ul>
+        <li>GitHub Pages (hébergement du site), qui peut conserver des journaux techniques ;</li>
+        <li>Google Fonts (polices de caractères) ;</li>
+        <li>jsDelivr et cdnjs (bibliothèques de connexion à la base et de création des QR codes).</li>
+      </ul>
+    </li>
+    <li><strong>Signalement :</strong> le lien « Signaler ce tournoi » ouvre un e-mail prérempli dans ta messagerie ; nous ne recevons que ce que tu choisis d'envoyer.</li>
+  </ul>
+
   <h2>2. Pourquoi ces données sont collectées</h2>
   <ul>
     <li>Créer et gérer ton compte, t'authentifier</li>
@@ -115,6 +134,7 @@
     <li><strong>Supabase</strong> — hébergement de la base de données et de l'authentification</li>
     <li><strong>RevenueCat</strong> — gestion des abonnements et achats intégrés</li>
     <li><strong>Apple (App Store) / Google (Play Store)</strong> — traitement des paiements des achats intégrés</li>
+    <li><strong>GitHub (GitHub Pages), Google Fonts, jsDelivr et cdnjs</strong> — hébergement et fichiers techniques du site internet (voir 1 bis)</li>
   </ul>
   <p>Ces prestataires n'ont accès qu'aux données nécessaires à leur fonction et sont eux-mêmes soumis à leurs propres obligations de confidentialité.</p>
 
@@ -137,6 +157,7 @@
 
   <h2>9. Contact</h2>
   <p>Pour toute question sur cette politique ou tes données personnelles : <a href="mailto:clement.berthout@gmail.com">clement.berthout@gmail.com</a></p>
+  <a class="retour bas" href="index.html">← Retour au site OLYMPIAD</a>
 </main>
 </body>
 </html>

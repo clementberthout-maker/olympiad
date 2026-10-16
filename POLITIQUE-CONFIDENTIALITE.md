@@ -1,8 +1,8 @@
 # Politique de confidentialité — OLYMPIAD
 
-Dernière mise à jour : 27 septembre 2026
+Dernière mise à jour : 16 octobre 2026
 
-Cette politique explique quelles données l'application OLYMPIAD collecte, pourquoi, et comment les exercer tes droits dessus.
+Cette politique explique quelles données l'application OLYMPIAD et son site internet (y compris l'espace organisateur) collectent, pourquoi, et comment exercer tes droits dessus.
 
 **Responsable du traitement :** Clément Berthout, développeur de l'application OLYMPIAD.
 **Contact :** clement.berthout@gmail.com
@@ -31,6 +31,17 @@ Cette politique explique quelles données l'application OLYMPIAD collecte, pourq
 
 Nous ne collectons **aucune donnée de localisation précise, aucun identifiant publicitaire, et n'affichons aucune publicité** dans l'application.
 
+## 1 bis. Site internet et espace organisateur
+
+- **Espace organisateur :** il utilise le même compte que l'application. Les données saisies (compte, profil, tournois, équipes, scores) sont exactement celles décrites ci-dessus, enregistrées au même endroit (Supabase). Ta session de connexion est gardée dans le stockage de ton navigateur jusqu'à ta déconnexion.
+- **Stockage du navigateur :** le site y garde ta langue, ton thème, ainsi que les données du simulateur et du mode démo (« Découvrir en démo »). Ces données restent dans ton navigateur et ne nous sont jamais envoyées ; tu peux les effacer avec les données de navigation.
+- **Pas de mesure d'audience ni de cookie publicitaire :** le site n'utilise aucun outil de statistiques ni de publicité.
+- **Services techniques chargés par le site :** comme pour tout site web, ces services reçoivent ton adresse IP et les informations techniques de ton navigateur pour t'envoyer leurs fichiers :
+  - GitHub Pages (hébergement du site), qui peut conserver des journaux techniques ;
+  - Google Fonts (polices de caractères) ;
+  - jsDelivr et cdnjs (bibliothèques de connexion à la base et de création des QR codes).
+- **Signalement :** le lien « Signaler ce tournoi » ouvre un e-mail prérempli dans ta messagerie ; nous ne recevons que ce que tu choisis d'envoyer.
+
 ## 2. Pourquoi ces données sont collectées
 
 - Créer et gérer ton compte, t'authentifier
@@ -48,6 +59,7 @@ Aucune donnée n'est vendue. Elle est partagée uniquement avec les prestataires
 - **Supabase** — hébergement de la base de données et de l'authentification
 - **RevenueCat** — gestion des abonnements et achats intégrés
 - **Apple (App Store) / Google (Play Store)** — traitement des paiements des achats intégrés
+- **GitHub (GitHub Pages), Google Fonts, jsDelivr et cdnjs** — hébergement et fichiers techniques du site internet (voir 1 bis)
 
 Ces prestataires n'ont accès qu'aux données nécessaires à leur fonction et sont eux-mêmes soumis à leurs propres obligations de confidentialité.
 

@@ -1033,6 +1033,15 @@ async function vueSuivi(code) {
   await afficher(`<div id="vue-suivi"></div>`);
   rendreSuivi();
 }
+// Signalement d'un contenu inapproprié, comme dans l'app (lib/liensLegaux.js) :
+// e-mail prérempli avec le nom et le code du tournoi
+const EMAIL_CONTACT = 'clement.berthout@gmail.com';
+function lienSignalement(t) {
+  const code = String(t.code_acces).toUpperCase();
+  const sujet = tr(`Signalement du tournoi ${code}`, `Report for tournament ${code}`);
+  const corps = tr(`Tournoi : ${t.nom} (code ${code})\n\nQu'est-ce qui pose problème ? (nom d'équipe injurieux, contenu inapproprié…)\n\n`, `Tournament: ${t.nom} (code ${code})\n\nWhat is the problem? (offensive team name, inappropriate content…)\n\n`);
+  return `mailto:${EMAIL_CONTACT}?subject=${encodeURIComponent(sujet)}&body=${encodeURIComponent(corps)}`;
+}
 function rendreSuivi() {
   const zone = $('#vue-suivi'); const c = etat.courant; if (!zone || !c) return;
   const t = c.tournoi;
@@ -1042,6 +1051,7 @@ function rendreSuivi() {
       <nav class="onglets-tournoi"><a href="#" data-action="onglet-suivi" data-onglet="classement" class="${etat.ongletSuivi === 'classement' ? 'actif' : ''}">${tr('Classement', 'Standings')}</a><a href="#" data-action="onglet-suivi" data-onglet="calendrier" class="${etat.ongletSuivi === 'calendrier' ? 'actif' : ''}">${tr('Calendrier', 'Schedule')}</a></nav>
     </div></section>
     <div class="page"><div class="contenu-onglet">${etat.ongletSuivi === 'classement' ? htmlClassement() : htmlMatchs(true)}</div>
+      <p class="mention" style="text-align:center;margin-top:28px"><a href="${lienSignalement(t)}">${tr('Signaler ce tournoi', 'Report this tournament')}</a></p>
       <p class="mention" style="text-align:center;margin-top:34px">${etat.session && etat.suiviDepuis ? `<a class="bouton secondaire petit" href="#/tournoi/${t.id}">${tr('Retour à la gestion du tournoi', 'Back to tournament management')}</a>` : `${tr('Tu organises ce tournoi ?', 'Running this tournament?')} <a href="#/connexion">${tr('Connecte-toi à l\'espace organisateur', 'Sign in to the organizer area')}</a> · <a href="index.html">OLYMPIAD</a>`}</p></div>`;
   const ind = $('#indicateur-direct'); if (ind) ind.classList.add('connecte');
   etat.majIds.clear();
@@ -1066,7 +1076,8 @@ async function vueProfil() {
         <form class="section-profil" id="form-email" style="--i:2"><h3>E-mail</h3><div class="champ"><label>${tr('Nouvelle adresse e-mail', 'New email address')}</label><input id="p-email" type="email" value="${esc(etat.session.user.email || '')}"></div><p class="mention-legale" style="margin:0 0 12px">${tr('Un lien de confirmation sera envoyé à la nouvelle adresse.', 'A confirmation link will be sent to the new address.')}</p><button class="bouton petit secondaire" type="submit">${tr('Changer d\'adresse', 'Change email')}</button></form>
         <form class="section-profil" id="form-mdp" style="--i:3"><h3>${tr('Mot de passe', 'Password')}</h3><div class="champs-2"><div class="champ"><label>${tr('Mot de passe actuel', 'Current password')}</label><input id="p-ancien" type="password" autocomplete="current-password"></div><div class="champ"><label>${tr('Nouveau mot de passe', 'New password')}</label><input id="p-nouveau" type="password" autocomplete="new-password" minlength="6"></div></div><p class="erreur-form" id="erreur-mdp-profil"></p><button class="bouton petit secondaire" type="submit">${tr('Changer le mot de passe', 'Change password')}</button></form>
         <div class="section-profil" style="--i:4"><h3>${tr('Abonnement', 'Subscription')}</h3><p class="mention-legale" style="margin:0">${etat.pro ? tr('Ton abonnement OLYMPIAD Pro est actif : toutes les fonctions premium sont débloquées, ici et dans l\'app. Il se gère dans l\'App Store ou Google Play.', 'Your OLYMPIAD Pro subscription is active: every premium feature is unlocked, here and in the app. It\'s managed in the App Store or Google Play.') : tr('Offre gratuite : 12 équipes par tournoi, sans export PDF ni co-organisateurs. Le Pass Tournoi et OLYMPIAD Pro s\'achètent dans l\'application mobile.', 'Free plan: 12 teams per tournament, no PDF export or co-organizers. The Tournament Pass and OLYMPIAD Pro are bought in the mobile app.')}</p></div>
-        <div class="zone-danger" style="--i:5"><h3>${tr('Supprimer mon compte', 'Delete my account')}</h3><p>${tr('Tes tournois, équipes, résultats et ta photo seront supprimés définitivement. Pense à résilier l\'abonnement Pro dans le store.', 'Your tournaments, teams, results and photo will be permanently deleted. Remember to cancel Pro in the store.')}</p><button class="bouton petit danger" data-action="supprimer-compte">${tr('Supprimer mon compte', 'Delete my account')}</button></div>
+        <div class="section-profil" style="--i:5"><h3>${tr('Informations légales', 'Legal')}</h3><p class="mention-legale" style="margin:0"><a href="politique-confidentialite.html">${tr('Politique de confidentialité', 'Privacy policy')}</a> · <a href="conditions-utilisation.html">${tr('Conditions d\'utilisation', 'Terms of use')}</a></p></div>
+        <div class="zone-danger" style="--i:6"><h3>${tr('Supprimer mon compte', 'Delete my account')}</h3><p>${tr('Tes tournois, équipes, résultats et ta photo seront supprimés définitivement. Pense à résilier l\'abonnement Pro dans le store.', 'Your tournaments, teams, results and photo will be permanently deleted. Remember to cancel Pro in the store.')}</p><button class="bouton petit danger" data-action="supprimer-compte">${tr('Supprimer mon compte', 'Delete my account')}</button></div>
       </div></div></div>`);
 }
 function redimensionnerPhoto(fichier) {
@@ -1166,7 +1177,7 @@ function rendreSelecteur(sens = 0) {
     const nomsJours = Array.from({ length: 7 }, (_, i) => new Date(2024, 0, 1 + i).toLocaleDateString(locale(), { weekday: 'short' }).replace('.', '').slice(0, 3));
     o.el.innerHTML = `<div class="sel-entete"><button type="button" class="sel-nav" data-action="sel-mois" data-sens="-1" aria-label="${tr('Mois précédent', 'Previous month')}">${ico('retour')}</button><b class="sel-mois ${sens ? (sens > 0 ? 'vers-gauche' : 'vers-droite') : ''}">${premier.toLocaleDateString(locale(), { month: 'long', year: 'numeric' })}</b><button type="button" class="sel-nav" data-action="sel-mois" data-sens="1" aria-label="${tr('Mois suivant', 'Next month')}">${ico('droite')}</button></div>
       <div class="sel-jours-noms">${nomsJours.map((n) => `<span>${n}</span>`).join('')}</div>
-      <div class="sel-grille ${sens ? (sens > 0 ? 'vers-gauche' : 'vers-droite') : ''}">${jours.map((d) => { const v = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; const cls = [d.getMonth() !== premier.getMonth() ? 'autre' : '', v === ajd ? 'aujourdhui' : '', v === choisi ? 'choisi' : '', d.getDay() === 0 || d.getDay() === 6 ? 'weekend' : ''].join(' '); return `<button type="button" class="${cls}" data-action="sel-jour" data-valeur="${v}">${d.getDate()}</button>`; }).join('')}</div>
+      <div class="sel-grille ${sens ? (sens > 0 ? 'vers-gauche' : 'vers-droite') : ''}">${jours.map((d) => { const v = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; const cls = [d.getMonth() !== premier.getMonth() ? 'autre' : '', v === ajd ? 'aujourdhui' : '', v === choisi ? 'choisi' : '', d.getDay() === 0 || d.getDay() === 6 ? 'weekend' : ''].join(' '); const passe = v < ajd && v !== choisi; return `<button type="button" class="${cls}" data-action="sel-jour" data-valeur="${v}" ${passe ? 'disabled' : ''}>${d.getDate()}</button>`; }).join('')}</div>
       <div class="sel-pied"><button type="button" class="lien-discret" data-action="sel-jour" data-valeur="${ajd}">${tr('Aujourd\'hui', 'Today')}</button><button type="button" class="lien-discret" data-action="sel-fermer">${tr('Fermer', 'Close')}</button></div>`;
   } else {
     const [h, m] = (o.input.value || '09:00').split(':').map(Number);
@@ -1253,7 +1264,7 @@ document.addEventListener('click', async (e) => {
     }
     case 'statut-saisie':
       saisie.statut = cible.dataset.valeur;
-      $('[data-action="statut-saisie"]').forEach((b) => b.classList.toggle('actif', b === cible));
+      $$('[data-action="statut-saisie"]').forEach((b) => b.classList.toggle('actif', b === cible));
       $('#aide-statut').hidden = saisie.statut !== 'en_cours';
       $('#erreur-score').textContent = '';
       majZoneTab();
@@ -1340,14 +1351,18 @@ document.addEventListener('submit', async (e) => {
   if (f.id === 'form-auth') { soumettreAuth(f); return; }
   if (f.id === 'form-rejoindre') { rejoindreAvecCode($('#code-invitation', f).value, $('#erreur-rejoindre')); return; }
   if (f.id === 'form-equipe') {
-    const champ = $('#nouvelle-equipe');
-    if (ajouterEquipesBrouillon([champ.value])) { rafraichirAssistant(); $('#nouvelle-equipe').focus(); } else champ.select();
+    const champ = $('#nouvelle-equipe'); const nom = champ.value.trim();
+    if (ajouterEquipesBrouillon([champ.value])) { rafraichirAssistant(); $('#nouvelle-equipe').focus(); } else {
+      if (nom && etat.brouillon.equipes.some((e) => e.toLowerCase() === nom.toLowerCase())) $('#erreur-assistant').textContent = tr(`« ${nom} » est déjà dans la liste.`, `“${nom}” is already in the list.`);
+      champ.select();
+    }
     return;
   }
   if (f.id === 'form-score') { enregistrerScore($('button[type=submit]', f)); return; }
   if (f.id === 'form-ajout-equipe') {
     const c = etat.courant; const champ = $('#ajout-equipe'); const nom = champ.value.trim();
     if (!nom) return;
+    if (c.equipes.some((e) => e.nom.toLowerCase() === nom.toLowerCase())) { toast(tr(`« ${nom} » est déjà dans le tournoi.`, `“${nom}” is already in the tournament.`), 'erreur'); champ.select(); return; }
     if (c.equipes.length >= LIMITE_GRATUITE && !debloque(c.tournoi)) { toast(messageErreur({ code: 'OLY01' }), 'erreur'); return; }
     try { await donnees.insererEquipes([{ tournoi_id: c.tournoi.id, nom }]); champ.value = ''; await rechargerCourant(false); $('#ajout-equipe')?.focus(); toast(tr(`${nom} ajouté`, `${nom} added`)); } catch (er) { toast(messageErreur(er), 'erreur'); }
     return;
