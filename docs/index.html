@@ -2,9 +2,9 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>OLYMPIAD — Organise tes tournois, suivis en direct</title>
-<meta name="description" content="OLYMPIAD : l'application pour organiser des tournois sportifs amateurs. Calendrier automatique, scores saisis au bord du terrain, résultats en direct pour les équipes et les spectateurs.">
+<meta name="description" content="OLYMPIAD : l'application pour organiser des tournois sportifs amateurs. Calendrier automatique, scores saisis au bord du terrain, résultats en direct pour les équipes et les spectateurs. Essaie-la directement dans ton navigateur.">
 <meta property="og:title" content="OLYMPIAD — Organise tes tournois, suivis en direct">
 <meta property="og:description" content="Calendrier automatique, scores au bord du terrain, résultats en direct pour tout le monde avec un simple QR code.">
 <meta property="og:image" content="https://clementberthout-maker.github.io/olympiad/icon-512.png">
@@ -16,437 +16,383 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-<style>
-  /* Palette de l'app (lib/theme.js) : ambre + bleu nuit, clair en option */
-  :root {
-    --accent: #ebb517;
-    --accent-encre: #0d121b;
-    --fond: #0b0f18;
-    --surface: #181d26;
-    --surface-2: #212730;
-    --texte: #f3f2ed;
-    --texte-attenue: #9aa0ac;
-    --bordure: #2d333d;
-    --succes: #4ade80;
-    --danger: #e2585a;
-    --lien: #ebb517;
-  }
-  @media (prefers-color-scheme: light) {
-    :root {
-      --fond: #f2f5fb;
-      --surface: #ffffff;
-      --surface-2: #e8ecf3;
-      --texte: #11161f;
-      --texte-attenue: #5b606a;
-      --bordure: #d3d8e0;
-      --succes: #2f9e58;
-      --danger: #d33a3c;
-      --lien: #9a6700;
-    }
-  }
-
-  * { box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
-  body {
-    margin: 0;
-    background: var(--fond);
-    color: var(--texte);
-    font-family: "Work Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    font-size: 16px;
-    line-height: 1.6;
-    -webkit-font-smoothing: antialiased;
-  }
-  a { color: var(--lien); }
-  .conteneur { max-width: 1080px; margin: 0 auto; padding: 0 20px; }
-  .titre-marque, h1, h2, h3 { font-family: "Bebas Neue", Impact, sans-serif; font-weight: 400; letter-spacing: 0.02em; }
-
-  /* En-tête */
-  header {
-    position: sticky; top: 0; z-index: 10;
-    background: color-mix(in srgb, var(--fond) 88%, transparent);
-    backdrop-filter: blur(10px);
-    border-bottom: 1px solid var(--bordure);
-  }
-  .barre { display: flex; align-items: center; justify-content: space-between; height: 64px; }
-  .logo { display: flex; align-items: center; gap: 8px; text-decoration: none; color: var(--texte); }
-  .logo svg { width: 32px; height: 32px; }
-  .logo span { font-family: "Bebas Neue", Impact, sans-serif; font-size: 26px; letter-spacing: 0.08em; }
-  nav { display: flex; gap: 22px; }
-  nav a { color: var(--texte-attenue); text-decoration: none; font-weight: 500; font-size: 15px; }
-  nav a:hover { color: var(--texte); }
-
-  /* Héros */
-  .heros { padding: 72px 0 56px; }
-  .heros .conteneur { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 48px; align-items: center; }
-  .etiquette {
-    display: inline-block; padding: 5px 12px; border-radius: 999px;
-    background: color-mix(in srgb, var(--accent) 16%, transparent);
-    color: var(--lien); font-weight: 600; font-size: 13px; letter-spacing: 0.02em;
-  }
-  h1 { font-size: clamp(44px, 7vw, 76px); line-height: 0.98; margin: 18px 0 18px; }
-  h1 em { font-style: normal; color: var(--accent); }
-  .accroche { font-size: 18px; color: var(--texte-attenue); max-width: 34em; margin: 0 0 28px; }
-  .boutons-store { display: flex; flex-wrap: wrap; gap: 12px; }
-  .bouton-store {
-    display: flex; align-items: center; gap: 10px;
-    padding: 10px 18px; border-radius: 12px;
-    border: 1px solid var(--bordure); background: var(--surface);
-    color: var(--texte); text-decoration: none;
-  }
-  .bouton-store svg { width: 24px; height: 24px; flex-shrink: 0; }
-  .bouton-store small { display: block; font-size: 11px; color: var(--texte-attenue); line-height: 1.2; }
-  .bouton-store strong { display: block; font-size: 16px; line-height: 1.2; font-weight: 600; }
-  .note-store { margin-top: 12px; font-size: 13px; color: var(--texte-attenue); }
-
-  /* Aperçu de l'écran de suivi (à la place d'une capture) */
-  .telephone {
-    width: 100%; max-width: 330px; margin: 0 auto;
-    border-radius: 36px; padding: 12px;
-    background: #05070c; border: 1px solid #2d333d;
-    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(235, 181, 23, 0.08);
-  }
-  .ecran { border-radius: 26px; background: #0b0f18; color: #f3f2ed; padding: 22px 16px 18px; overflow: hidden; }
-  .ecran-entete { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
-  .ecran-titre { font-family: "Bebas Neue", Impact, sans-serif; font-size: 24px; letter-spacing: 0.03em; }
-  .direct { white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; color: #e2585a; letter-spacing: 0.06em; }
-  .direct::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #e2585a; animation: pulse 1.6s ease-in-out infinite; }
-  @keyframes pulse { 50% { opacity: 0.25; } }
-  .ecran-sous { font-size: 12px; color: #808693; margin-bottom: 14px; }
-  .onglets { display: flex; background: #181d26; border-radius: 10px; padding: 3px; margin-bottom: 14px; }
-  .onglets span { flex: 1; text-align: center; font-size: 12px; padding: 6px 0; border-radius: 8px; color: #808693; font-weight: 600; }
-  .onglets span.actif { background: #ebb517; color: #0d121b; }
-  .match {
-    display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px;
-    background: #181d26; border: 1px solid #2d333d; border-radius: 12px;
-    padding: 10px 12px; margin-bottom: 8px; font-size: 13px;
-  }
-  .match .eq-b { text-align: right; }
-  .score { font-family: "Bebas Neue", Impact, sans-serif; font-size: 22px; letter-spacing: 0.06em; color: #ebb517; }
-  .match .meta { grid-column: 1 / -1; font-size: 11px; color: #808693; display: flex; justify-content: space-between; margin-top: -2px; }
-  .match.en-cours { border-color: #ebb517; }
-  .classement { margin-top: 12px; font-size: 12px; }
-  .classement div { display: flex; justify-content: space-between; padding: 5px 4px; border-bottom: 1px solid #212730; }
-  .classement div:first-child { color: #808693; font-weight: 600; }
-  .classement b { color: #ebb517; font-weight: 700; }
-
-  /* Sections */
-  section { padding: 64px 0; scroll-margin-top: 64px; }
-  .section-alt { background: var(--surface); border-top: 1px solid var(--bordure); border-bottom: 1px solid var(--bordure); }
-  h2 { font-size: clamp(36px, 5vw, 52px); line-height: 1; margin: 0 0 12px; }
-  .intro { color: var(--texte-attenue); font-size: 17px; max-width: 40em; margin: 0 0 36px; }
-
-  .etapes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; counter-reset: etape; }
-  .etape { padding: 24px; border-radius: 16px; background: var(--fond); border: 1px solid var(--bordure); }
-  .etape::before {
-    counter-increment: etape; content: counter(etape);
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 38px; height: 38px; border-radius: 10px;
-    background: var(--accent); color: var(--accent-encre);
-    font-family: "Bebas Neue", Impact, sans-serif; font-size: 22px; margin-bottom: 14px;
-  }
-  .etape h3, .fonction h3, .offre h3 { font-size: 26px; margin: 0 0 6px; }
-  .etape p, .fonction p { margin: 0; color: var(--texte-attenue); font-size: 15px; }
-
-  .fonctions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-  .fonction { padding: 22px; border-radius: 16px; background: var(--surface); border: 1px solid var(--bordure); }
-  .fonction .icone {
-    width: 40px; height: 40px; border-radius: 10px; margin-bottom: 12px;
-    display: flex; align-items: center; justify-content: center;
-    background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent);
-  }
-  .fonction .icone svg { width: 22px; height: 22px; }
-
-  .sports { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 28px; }
-  .sports span {
-    padding: 7px 14px; border-radius: 999px; border: 1px solid var(--bordure);
-    background: var(--surface); font-weight: 600; font-size: 14px;
-  }
-
-  .offres { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; align-items: stretch; }
-  .offre {
-    padding: 26px; border-radius: 18px; background: var(--fond); border: 1px solid var(--bordure);
-    display: flex; flex-direction: column;
-  }
-  .offre.mise-en-avant { border: 2px solid var(--accent); }
-  .offre .prix { font-weight: 600; color: var(--lien); margin: 0 0 14px; font-size: 15px; }
-  .offre ul { list-style: none; padding: 0; margin: 0; }
-  .offre li { padding: 6px 0 6px 26px; position: relative; font-size: 15px; }
-  .offre li::before {
-    content: ""; position: absolute; left: 2px; top: 12px; width: 12px; height: 7px;
-    border-left: 2px solid var(--accent); border-bottom: 2px solid var(--accent); transform: rotate(-45deg);
-  }
-  .offre li.non { color: var(--texte-attenue); }
-  .offre li.non::before { border: none; width: 12px; height: 2px; background: var(--texte-attenue); top: 16px; transform: none; }
-  .mention { font-size: 13px; color: var(--texte-attenue); margin-top: 20px; }
-
-  .faq { max-width: 760px; }
-  details { border-bottom: 1px solid var(--bordure); padding: 4px 0; }
-  summary {
-    cursor: pointer; list-style: none; padding: 14px 32px 14px 0; position: relative;
-    font-weight: 600; font-size: 17px;
-  }
-  summary::-webkit-details-marker { display: none; }
-  summary::after {
-    content: "+"; position: absolute; right: 4px; top: 10px;
-    font-size: 24px; color: var(--accent); font-weight: 400;
-  }
-  details[open] summary::after { content: "−"; }
-  details p { margin: 0 0 16px; color: var(--texte-attenue); }
-
-  .contact {
-    margin-top: 36px; padding: 24px; border-radius: 16px;
-    background: var(--surface); border: 1px solid var(--bordure);
-    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px;
-  }
-  .contact h3 { font-size: 26px; margin: 0; }
-  .contact p { margin: 4px 0 0; color: var(--texte-attenue); }
-  .bouton {
-    display: inline-block; padding: 12px 22px; border-radius: 10px;
-    background: var(--accent); color: var(--accent-encre);
-    font-family: "Bebas Neue", Impact, sans-serif; font-size: 20px; letter-spacing: 0.04em; text-decoration: none;
-  }
-
-  footer { padding: 36px 0 48px; border-top: 1px solid var(--bordure); font-size: 14px; color: var(--texte-attenue); }
-  footer .conteneur { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; }
-  footer nav { flex-wrap: wrap; gap: 18px; }
-
-  @media (max-width: 860px) {
-    .heros { padding-top: 44px; }
-    .heros .conteneur { grid-template-columns: 1fr; }
-    .etapes, .fonctions, .offres { grid-template-columns: 1fr; }
-    header nav { display: none; }
-  }
-  @media (min-width: 861px) and (max-width: 1000px) {
-    .fonctions { grid-template-columns: repeat(2, 1fr); }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    html { scroll-behavior: auto; }
-    .direct::before { animation: none; }
-  }
-</style>
+<link rel="stylesheet" href="site.css">
+<script>
+  // Thème choisi lors d'une visite précédente, appliqué avant l'affichage
+  try { var th = localStorage.getItem('olympiad-theme'); if (th === 'light' || th === 'dark') document.documentElement.dataset.theme = th; } catch (e) {}
+</script>
 </head>
 <body>
 
-<header>
+<!-- Icônes communes au site et au simulateur -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-marque" viewBox="0 0 100 100"><g fill="#ebb517" class="barres"><rect x="18" y="26" width="8" height="48" rx="2" opacity="0.28"/><rect x="32" y="26" width="8" height="48" rx="2" opacity="0.6"/><rect x="46" y="26" width="8" height="48" rx="2"/><rect x="60" y="26" width="8" height="48" rx="2" opacity="0.6"/><rect x="74" y="26" width="8" height="48" rx="2" opacity="0.28"/></g></symbol>
+    <symbol id="i-football" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round"><circle cx="24" cy="24" r="19"/><path d="M24 15.5l8 5.8-3 9.4h-10l-3-9.4z" fill="currentColor"/><path d="M24 15.5V5.5M32 21.3l9.4-3M29 30.7l5.8 8M19 30.7l-5.8 8M16 21.3l-9.4-3"/></symbol>
+    <symbol id="i-rugby" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><ellipse cx="24" cy="24" rx="21" ry="12.5" transform="rotate(-38 24 24)"/><path d="M16.5 31.5l15-15M19 24.5l4.5 4.5M22.5 21l4.5 4.5M26 17.5l4.5 4.5"/></symbol>
+    <symbol id="i-handball" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="24" cy="24" r="19"/><path d="M8 17c9 2 15 8 17 25M13 8.5c9 6 21 7 30 6M40 34c-8-1-13-5-15-14"/></symbol>
+    <symbol id="i-basketball" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.6"><circle cx="24" cy="24" r="19"/><path d="M5 24h38M24 5v38M10.5 10.5c5 5 5 22 0 27M37.5 10.5c-5 5-5 22 0 27"/></symbol>
+    <symbol id="i-tennis" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.6"><circle cx="24" cy="24" r="19"/><path d="M8.5 13c7 5.5 7 16.5 0 22M39.5 13c-7 5.5-7 16.5 0 22"/></symbol>
+    <symbol id="i-retour" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></symbol>
+    <symbol id="i-fleche" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></symbol>
+    <symbol id="i-droite" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></symbol>
+    <symbol id="i-moins" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M5 12h14"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-coche" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+    <symbol id="i-croix" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+    <symbol id="i-partager" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7.5 7.5L12 3l4.5 4.5M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></symbol>
+    <symbol id="i-qr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v.01M14 20h.01M17 17h4v4h-4"/></symbol>
+    <symbol id="i-ecran" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4" width="19" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></symbol>
+    <symbol id="i-groupe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><circle cx="17.5" cy="9" r="2.5"/><path d="M17 14.5a5 5 0 0 1 4.5 5"/></symbol>
+    <symbol id="i-pdf" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M12 12v6M9 15l3 3 3-3"/></symbol>
+    <symbol id="i-calendrier" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
+    <symbol id="i-direct" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-8 4 16 3-8h4"/></symbol>
+    <symbol id="i-coupe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></symbol>
+    <symbol id="i-cadenas" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
+    <symbol id="i-profil" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol>
+    <symbol id="i-soleil" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.5M12 19.5V22M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2 12h2.5M19.5 12H22M4.2 19.8L6 18M18 6l1.8-1.8"/></symbol>
+    <symbol id="i-lune" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z"/></symbol>
+    <symbol id="i-copier" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></symbol>
+    <symbol id="i-camera" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.5"/></symbol>
+    <symbol id="i-poubelle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M5 7l1 13a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1l1-13M9 7V4h6v3"/></symbol>
+    <symbol id="i-recherche" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></symbol>
+    <symbol id="i-globe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.8 3 2.8 15 0 18M12 3c-2.8 3-2.8 15 0 18"/></symbol>
+    <symbol id="i-vibre" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="3" width="10" height="18" rx="2"/><path d="M3 9v6M21 9v6"/></symbol>
+    <symbol id="i-cle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M17 6l3 3M15 8l2 2"/></symbol>
+    <symbol id="i-terrain" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5" width="19" height="14" rx="1.5"/><path d="M12 5v14"/><circle cx="12" cy="12" r="2.6"/></symbol>
+    <symbol id="i-bouclier" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 4.5-3.4 8-8 9-4.6-1-8-4.5-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></symbol>
+    <symbol id="i-oeil" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+  </defs>
+</svg>
+
+<div class="progression-lecture" aria-hidden="true"></div>
+
+<div id="accueil"></div>
+
+<header class="entete">
   <div class="conteneur barre">
-    <a class="logo" href="#" aria-label="OLYMPIAD, accueil">
-      <svg viewBox="0 0 100 100" aria-hidden="true"><g fill="#ebb517">
-        <rect x="18" y="26" width="8" height="48" rx="2" opacity="0.28"/>
-        <rect x="32" y="26" width="8" height="48" rx="2" opacity="0.6"/>
-        <rect x="46" y="26" width="8" height="48" rx="2"/>
-        <rect x="60" y="26" width="8" height="48" rx="2" opacity="0.6"/>
-        <rect x="74" y="26" width="8" height="48" rx="2" opacity="0.28"/>
-      </g></svg>
+    <a class="logo" href="#accueil" aria-label="OLYMPIAD">
+      <svg aria-hidden="true"><use href="#i-marque"/></svg>
       <span>OLYMPIAD</span>
     </a>
-    <nav aria-label="Navigation principale">
-      <a href="#fonctionnalites">Fonctionnalités</a>
-      <a href="#offres">Offres</a>
-      <a href="#aide">Aide</a>
+    <nav class="nav-principale" aria-label="Navigation principale">
+      <a href="#essayer" data-i18n="nav.essayer">Essayer</a>
+      <a href="#fonctionnalites" data-i18n="nav.fonctions">Fonctionnalités</a>
+      <a href="#sports" data-i18n="nav.sports">Sports</a>
+      <a href="#offres" data-i18n="nav.offres">Offres</a>
+      <a href="#aide" data-i18n="nav.aide">Aide</a>
     </nav>
+    <div class="outils">
+      <button class="pastille" id="bouton-langue" type="button" aria-label="Changer de langue / Change language">EN</button>
+      <button class="pastille" id="bouton-theme" type="button" aria-label="Changer de thème">
+        <svg class="ico-lune" aria-hidden="true"><use href="#i-lune"/></svg>
+        <svg class="ico-soleil" aria-hidden="true" style="display:none"><use href="#i-soleil"/></svg>
+      </button>
+      <a class="lien-espace" href="espace.html" aria-label="Espace organisateur" title="Espace organisateur">
+        <svg aria-hidden="true"><use href="#i-profil"/></svg><span data-i18n="nav.espace">Espace organisateur</span>
+      </a>
+      <a class="cta-entete" href="#essayer" data-i18n="nav.cta">Essayer en direct</a>
+    </div>
   </div>
 </header>
 
 <main>
-  <section class="heros">
+  <!-- Héros -->
+  <section class="heros" id="haut">
     <div class="conteneur">
       <div>
-        <span class="etiquette">Tournois sportifs amateurs</span>
-        <h1>Organise ton tournoi.<br><em>Tout le monde suit en direct.</em></h1>
-        <p class="accroche">OLYMPIAD génère ton calendrier, te laisse saisir les scores au bord du terrain et affiche les résultats en temps réel aux équipes et aux spectateurs, avec un simple QR code. Sans compte pour eux.</p>
-        <div class="boutons-store">
+        <span class="etiquette"><span class="point-direct"></span><span data-i18n="heros.etiquette">Tournois sportifs amateurs · en direct</span></span>
+        <h1>
+          <span class="ligne"><span data-i18n="heros.l1">Organise</span></span>
+          <span class="ligne"><span data-i18n="heros.l2">ton tournoi.</span></span>
+          <span class="ligne"><span><em data-i18n="heros.l3">Tout le monde suit.</em></span></span>
+        </h1>
+        <div class="boutons-store" aria-label="Bientôt disponible sur l'App Store et Google Play">
           <span class="bouton-store">
+            <span class="bientot" data-i18n="heros.badge">Bientôt</span>
             <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.37 12.63c-.02-2.2 1.8-3.26 1.88-3.31-1.03-1.5-2.62-1.7-3.18-1.73-1.35-.14-2.64.8-3.33.8-.69 0-1.74-.78-2.87-.76-1.47.02-2.83.86-3.59 2.18-1.53 2.66-.39 6.6 1.1 8.76.73 1.06 1.6 2.24 2.73 2.2 1.1-.04 1.51-.71 2.84-.71 1.32 0 1.7.71 2.86.69 1.18-.02 1.93-1.07 2.65-2.13.84-1.22 1.18-2.41 1.2-2.47-.03-.01-2.3-.88-2.32-3.52zM14.2 6.16c.6-.73 1.01-1.74.9-2.75-.87.04-1.92.58-2.54 1.3-.56.64-1.05 1.67-.92 2.66.97.08 1.96-.49 2.56-1.21z"/></svg>
-            <span><small>Bientôt sur l'</small><strong>App Store</strong></span>
+            <span><small data-i18n="heros.bientot">Bientôt disponible sur</small><strong>App Store</strong></span>
           </span>
           <span class="bouton-store">
+            <span class="bientot" data-i18n="heros.badge">Bientôt</span>
             <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3.6 2.2c-.24.25-.38.64-.38 1.14v17.32c0 .5.14.89.38 1.14l.06.06 9.7-9.7v-.23l-9.7-9.8-.06.07zm12.99 12.99-3.23-3.24v-.23l3.23-3.24.07.04 3.83 2.18c1.1.62 1.1 1.64 0 2.26l-3.83 2.18-.07.05zm-.08.04L13.2 12 3.6 21.6c.36.38.94.42 1.6.05l11.31-6.42zm0-6.46L5.2 2.35c-.66-.38-1.24-.33-1.6.05L13.2 12l3.31-3.23z"/></svg>
-            <span><small>Bientôt sur</small><strong>Google Play</strong></span>
+            <span><small data-i18n="heros.bientot">Bientôt disponible sur</small><strong>Google Play</strong></span>
           </span>
         </div>
-        <p class="note-store">Disponible prochainement sur iPhone et Android.</p>
+        <p class="accroche" data-i18n="heros.accroche">OLYMPIAD génère ton calendrier, te laisse saisir les scores au bord du terrain et affiche les résultats en temps réel aux équipes et aux spectateurs, avec un simple QR code. Sans compte pour eux.</p>
+        <div class="actions-heros">
+          <a class="bouton" href="#essayer"><span data-i18n="heros.cta">Créer un tournoi maintenant</span><svg aria-hidden="true"><use href="#i-fleche"/></svg></a>
+          <button class="bouton secondaire" type="button" data-demo="suivi"><span data-i18n="heros.cta2">Voir un tournoi en direct</span></button>
+        </div>
       </div>
 
-      <div class="telephone" role="img" aria-label="Aperçu de l'écran de suivi d'un tournoi dans l'application OLYMPIAD : matchs en direct et classement de poule.">
-        <div class="ecran">
-          <div class="ecran-entete">
-            <span class="ecran-titre">Tournoi U13</span>
-            <span class="direct">EN DIRECT</span>
-          </div>
-          <div class="ecran-sous">Football · Stade municipal · 8 équipes</div>
-          <div class="onglets"><span class="actif">Par poule</span><span>Par terrain</span></div>
-          <div class="match en-cours">
-            <span>Les Aigles</span><span class="score">2 - 1</span><span class="eq-b">FC Rivière</span>
-            <span class="meta"><span>Poule A · Terrain 1</span><span>En cours</span></span>
-          </div>
-          <div class="match">
-            <span>Étoile Sud</span><span class="score">0 - 0</span><span class="eq-b">US Collines</span>
-            <span class="meta"><span>Poule A · Terrain 2</span><span>Terminé</span></span>
-          </div>
-          <div class="match">
-            <span>Les Aigles</span><span class="score">– : –</span><span class="eq-b">Étoile Sud</span>
-            <span class="meta"><span>Poule A · Terrain 1</span><span>14 h 30</span></span>
-          </div>
-          <div class="classement">
-            <div><span>Poule A</span><span>Pts</span></div>
-            <div><span>1. Les Aigles</span><b>6</b></div>
-            <div><span>2. FC Rivière</span><b>3</b></div>
-            <div><span>3. Étoile Sud</span><b>1</b></div>
+      <div class="scene-heros" id="scene-heros">
+        <div class="bulle b1" aria-hidden="true">
+          <span class="ico"><svg><use href="#i-direct"/></svg></span>
+          <span><span id="bulle-but">But ! Les Aigles</span><small data-i18n="heros.bulle1">mis à jour pour 48 spectateurs</small></span>
+        </div>
+        <div class="bulle b2" aria-hidden="true">
+          <span class="ico"><svg><use href="#i-qr"/></svg></span>
+          <span><span data-i18n="heros.bulle2">QR code scanné</span><small data-i18n="heros.bulle2b">sans compte, sans appli à configurer</small></span>
+        </div>
+        <div class="telephone" id="telephone-heros" role="img" aria-label="Aperçu animé de l'écran de suivi d'un tournoi dans OLYMPIAD : scores en direct et classement de poule.">
+          <div class="ecran-demo">
+            <div class="barre-etat"><span>14:32</span><span>●●● 5G</span></div>
+            <div class="entete-app"><svg><use href="#i-marque"/></svg><span>OLYMPIAD</span></div>
+            <div class="titre-tournoi">Tournoi U13 de printemps</div>
+            <div class="meta"><span>Football · 8 équipes</span><span class="direct">EN DIRECT</span></div>
+            <div class="seg" id="demo-seg"><i></i><span class="actif">Matchs</span><span>Classement</span></div>
+            <div class="demo-panneau" id="demo-matchs"></div>
+            <div class="demo-panneau cache" id="demo-classement" hidden></div>
           </div>
         </div>
       </div>
     </div>
   </section>
 
-  <section class="section-alt" id="comment">
+  <div class="bandeau" aria-hidden="true">
+    <div class="bandeau-piste" id="bandeau"></div>
+  </div>
+
+  <!-- Comment ça marche -->
+  <section id="comment">
     <div class="conteneur">
-      <h2>Comment ça marche</h2>
-      <p class="intro">De la liste des équipes au podium, tout se gère depuis ton téléphone, le jour J.</p>
-      <div class="etapes">
-        <div class="etape">
-          <h3>Crée ton tournoi</h3>
-          <p>Choisis le sport, le format (poules, élimination directe ou les deux) et ajoute les équipes. Le calendrier est généré automatiquement, par terrain et par horaire.</p>
+      <p class="surtitre reveler" data-i18n="comment.sur">Le jour J</p>
+      <h2 class="reveler" data-i18n="comment.titre">Trois étapes. Zéro tableur.</h2>
+      <p class="intro reveler" data-i18n="comment.intro">De la liste des équipes au podium, tout se gère depuis ton téléphone.</p>
+      <div class="etapes" id="etapes">
+        <div class="etapes-ligne" aria-hidden="true"><i></i></div>
+        <div class="etape reveler">
+          <span class="num">1</span>
+          <h3 data-i18n="comment.e1t">Crée ton tournoi</h3>
+          <p data-i18n="comment.e1p">Choisis le sport, le format (poules, élimination directe ou les deux) et ajoute les équipes. Le calendrier est généré automatiquement, par terrain et par horaire.</p>
         </div>
-        <div class="etape">
-          <h3>Partage le QR code</h3>
-          <p>Affiche-le à l'accueil ou envoie le lien : équipes et spectateurs suivent le tournoi en un scan, sans créer de compte.</p>
+        <div class="etape reveler" style="--delai:0.1s">
+          <span class="num">2</span>
+          <h3 data-i18n="comment.e2t">Partage le QR code</h3>
+          <p data-i18n="comment.e2p">Affiche-le à l'accueil ou envoie le lien : équipes et spectateurs suivent le tournoi en un scan, sans créer de compte.</p>
         </div>
-        <div class="etape">
-          <h3>Saisis les scores</h3>
-          <p>Au bord du terrain, en quelques touches. Classements, phases finales et podium se mettent à jour en direct pour tout le monde.</p>
+        <div class="etape reveler" style="--delai:0.2s">
+          <span class="num">3</span>
+          <h3 data-i18n="comment.e3t">Saisis les scores</h3>
+          <p data-i18n="comment.e3p">Au bord du terrain, en quelques touches. Classements, phases finales et podium se mettent à jour en direct pour tout le monde.</p>
         </div>
       </div>
     </div>
   </section>
 
+  <!-- Simulateur -->
+  <section class="section-alt" id="essayer">
+    <div class="conteneur simulateur">
+      <div class="guide">
+        <p class="surtitre reveler" data-i18n="sim.sur">Essaie sans rien installer</p>
+        <h2 class="reveler" data-i18n="sim.titre">L'app, en vrai, ici.</h2>
+        <p class="intro reveler" data-i18n="sim.intro">Ce simulateur fait tourner le moteur d'OLYMPIAD dans ton navigateur : même génération de calendrier, mêmes barèmes, mêmes classements. Crée ton tournoi, saisis des scores, et regarde tout se mettre à jour.</p>
+        <div class="reveler">
+          <div class="guide-entete">
+            <h3 data-i18n="sim.missions">Fonctionnalités découvertes</h3>
+            <span id="compte-missions">0 / 14</span>
+          </div>
+          <div class="jauge"><i id="jauge-missions"></i></div>
+          <ul class="missions" id="missions"></ul>
+          <div class="guide-actions">
+            <button class="bouton" type="button" data-demo="tournoi"><span data-i18n="sim.demo">Charger un tournoi de démo</span></button>
+            <button class="bouton secondaire" type="button" id="ouvrir-spectateur"><svg aria-hidden="true"><use href="#i-oeil"/></svg><span data-i18n="sim.spectateur">Vue spectateur</span></button>
+          </div>
+          <p class="note-sim" data-i18n="sim.note">Astuce : ouvre la vue spectateur dans un autre onglet, puis saisis un score ici. Il s'affiche là-bas instantanément, comme sur le téléphone des spectateurs. Tout reste dans ton navigateur : rien n'est envoyé.</p>
+        </div>
+      </div>
+
+      <div class="telephone-sim reveler">
+        <div class="sim" id="sim">
+          <div class="sim-etat" aria-hidden="true">
+            <span id="sim-heure">9:41</span>
+            <span class="icones">
+              <svg viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="15" width="4" height="6" rx="1"/><rect x="8" y="11" width="4" height="10" rx="1"/><rect x="14" y="7" width="4" height="14" rx="1"/><rect x="20" y="3" width="2.5" height="18" rx="1" opacity=".35"/></svg>
+              <svg viewBox="0 0 28 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1.5" y="6" width="22" height="12" rx="3.5"/><rect x="4" y="8.5" width="15" height="7" rx="1.5" fill="currentColor" stroke="none"/><path d="M26 10.5v3"/></svg>
+            </span>
+          </div>
+          <div class="sim-pile" id="sim-pile"></div>
+          <div class="sim-voile" id="sim-voile"></div>
+          <div class="sim-feuille" id="sim-feuille" role="dialog" aria-modal="true"></div>
+          <div class="sim-toast" id="sim-toast" role="status"><svg><use href="#i-coche"/></svg><span></span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Fonctionnalités -->
   <section id="fonctionnalites">
     <div class="conteneur">
-      <h2>Tout pour ton tournoi</h2>
-      <p class="intro">Pensée pour les clubs, les associations et les bénévoles qui organisent des tournois d'une journée.</p>
-      <div class="fonctions">
-        <div class="fonction">
-          <div class="icone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
-          <h3>Calendrier automatique</h3>
-          <p>Poules organisées par journées pour éviter les matchs enchaînés, répartition par terrain, phase finale avec exempts.</p>
-        </div>
-        <div class="fonction">
-          <div class="icone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg></div>
-          <h3>Résultats en direct</h3>
-          <p>Chaque score saisi apparaît aussitôt sur les téléphones des équipes et des spectateurs.</p>
-        </div>
-        <div class="fonction">
-          <div class="icone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg></div>
-          <h3>Classements et podium</h3>
-          <p>Classement de poule détaillé, départages au choix, tirs au but, match pour la 3e place.</p>
-        </div>
-        <div class="fonction">
-          <div class="icone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v.01M14 20h.01M17 17h4v4h-4"/></svg></div>
-          <h3>QR code et grand écran</h3>
-          <p>Un QR code par tournoi, et une vue grand écran à afficher sur une télé ou un vidéoprojecteur.</p>
-        </div>
-        <div class="fonction">
-          <div class="icone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><circle cx="17.5" cy="9" r="2.5"/><path d="M17 14.5a5 5 0 0 1 4.5 5"/></svg></div>
-          <h3>Co-organisateurs</h3>
-          <p>Invite des bénévoles à saisir les scores sur les autres terrains, avec des droits choisis pour chacun.</p>
-        </div>
-        <div class="fonction">
-          <div class="icone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M12 12v6M9 15l3 3 3-3"/></svg></div>
-          <h3>Export PDF</h3>
-          <p>Le programme complet en PDF, à imprimer ou à envoyer aux équipes avant le tournoi.</p>
-        </div>
+      <p class="surtitre reveler" data-i18n="f.sur">Tout est dans l'app</p>
+      <h2 class="reveler" data-i18n="f.titre">Pensée pour le bord du terrain</h2>
+      <p class="intro reveler" data-i18n="f.intro">Pour les clubs, les associations et les bénévoles qui organisent des tournois d'une journée. Et pour tous ceux qui veulent suivre.</p>
+      <div class="filtres reveler" role="group" aria-label="Filtrer">
+        <button type="button" class="actif" data-filtre="tous" data-i18n="f.tous">Tout</button>
+        <button type="button" data-filtre="orga" data-i18n="f.orga">Organisateurs</button>
+        <button type="button" data-filtre="public" data-i18n="f.public">Équipes et spectateurs</button>
       </div>
-      <div class="sports" aria-label="Sports disponibles">
-        <span>Football</span><span>Rugby</span><span>Handball</span><span>Basket-ball</span><span>Tennis</span>
+      <div class="bento" id="bento"></div>
+    </div>
+  </section>
+
+  <!-- Sports -->
+  <section class="section-alt" id="sports">
+    <div class="conteneur">
+      <p class="surtitre reveler" data-i18n="s.sur">5 sports</p>
+      <h2 class="reveler" data-i18n="s.titre">Chaque sport a ses règles</h2>
+      <p class="intro reveler" data-i18n="s.intro">Barème, vocabulaire et départages s'adaptent automatiquement au sport choisi.</p>
+      <div class="sports-zone reveler">
+        <div class="sports-liste" id="sports-liste" role="tablist"></div>
+        <div class="sport-detail" id="sport-detail" role="tabpanel"></div>
       </div>
     </div>
   </section>
 
-  <section class="section-alt" id="offres">
+  <!-- Offres -->
+  <!-- Espace organisateur : l'app OLYMPIAD dans le navigateur (docs/app/) -->
+  <section id="ordinateur">
+    <div class="conteneur espace">
+      <div class="espace-texte">
+        <p class="surtitre reveler" data-i18n="e.sur">Espace organisateur</p>
+        <h2 class="reveler" data-i18n="e.titre">Ton tournoi, aussi sur ordinateur</h2>
+        <p class="intro reveler" data-i18n="e.intro">Connecte-toi avec ton compte OLYMPIAD et gère tes tournois depuis ton navigateur. Tout est synchronisé en temps réel avec l'application : saisis un score sur l'ordinateur, il apparaît aussitôt sur les téléphones.</p>
+        <ul class="espace-liste reveler">
+          <li data-i18n="e.l1">Créer un tournoi, ajouter les équipes, générer le calendrier</li>
+          <li data-i18n="e.l2">Saisir les scores en direct, au clavier</li>
+          <li data-i18n="e.l3">Classements, phases finales, QR code et vue grand écran</li>
+          <li data-i18n="e.l4">Mêmes tournois, même compte, mêmes offres que sur ton téléphone</li>
+        </ul>
+        <div class="actions-heros reveler">
+          <a class="bouton" href="espace.html"><span data-i18n="e.cta">Ouvrir l'espace organisateur</span><svg aria-hidden="true"><use href="#i-fleche"/></svg></a>
+          <a class="bouton secondaire" href="espace.html#/connexion" data-i18n="e.cta2">Se connecter</a>
+          <a class="bouton secondaire" href="espace.html?demo=1" data-i18n="e.cta3">Découvrir en démo</a>
+        </div>
+        <p class="mention reveler" data-i18n="e.note">Les achats (Pass Tournoi, OLYMPIAD Pro) se font dans l'application mobile ; ils sont ensuite reconnus ici avec le même compte.</p>
+      </div>
+      <div class="ecran-ordi reveler" aria-hidden="true">
+        <div class="ordi-barre"><i></i><i></i><i></i><span>clementberthout-maker.github.io/olympiad/espace.html</span></div>
+        <div class="ordi-contenu">
+          <div class="ordi-titre">Tournoi U13 de printemps</div>
+          <div class="ordi-sous" data-i18n="e.ecran">Touche un match pour saisir ou modifier son résultat</div>
+          <div class="ordi-onglets"><b>Par poule</b><span>Par terrain</span></div>
+          <div class="ordi-poule">POULE A</div>
+          <div class="ordi-match"><span>Racing Vallée · Étoile Sud</span><b>1-0</b></div>
+          <div class="ordi-match live"><span>FC Rivière · AS Montagne</span><b>2-2</b></div>
+          <div class="ordi-match"><span>Étoile Sud · FC Rivière</span><em>14:30</em></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="offres">
     <div class="conteneur">
-      <h2>Offres</h2>
-      <p class="intro">Commence gratuitement. Débloque un tournoi ou tous tes tournois quand tu en as besoin.</p>
+      <p class="surtitre reveler" data-i18n="o.sur">Offres</p>
+      <h2 class="reveler" data-i18n="o.titre">Gratuit pour commencer</h2>
+      <p class="intro reveler" data-i18n="o.intro">Débloque un tournoi ou tous tes tournois, seulement quand tu en as besoin.</p>
       <div class="offres">
-        <div class="offre">
-          <h3>Gratuit</h3>
+        <div class="offre reveler">
+          <h3 data-i18n="o.g">Gratuit</h3>
           <p class="prix">0 €</p>
           <ul>
-            <li>Jusqu'à 12 équipes par tournoi</li>
-            <li>Calendrier, scores et suivi en direct</li>
-            <li>QR code et vue grand écran</li>
-            <li class="non">Export PDF</li>
-            <li class="non">Co-organisateurs</li>
+            <li data-i18n="o.g1">Jusqu'à 12 équipes par tournoi</li>
+            <li data-i18n="o.g2">Calendrier, scores et suivi en direct</li>
+            <li data-i18n="o.g3">QR code et vue grand écran</li>
+            <li data-i18n="o.g4">5 sports, phases finales et podium</li>
+            <li class="non" data-i18n="o.g5">Export PDF</li>
+            <li class="non" data-i18n="o.g6">Co-organisateurs</li>
           </ul>
         </div>
-        <div class="offre">
-          <h3>Pass Tournoi</h3>
-          <p class="prix">Achat unique, pour un tournoi</p>
+        <div class="offre reveler" style="--delai:0.1s">
+          <h3 data-i18n="o.p">Pass Tournoi</h3>
+          <p class="prix" data-i18n="o.pprix">Achat unique, pour un tournoi</p>
           <ul>
-            <li>Équipes illimitées</li>
-            <li>Export PDF du programme</li>
-            <li>Co-organisateurs</li>
-            <li>Sans abonnement</li>
+            <li data-i18n="o.p1">Équipes illimitées</li>
+            <li data-i18n="o.p2">Export PDF du programme</li>
+            <li data-i18n="o.p3">Co-organisateurs</li>
+            <li data-i18n="o.p4">Sans abonnement</li>
           </ul>
         </div>
-        <div class="offre mise-en-avant">
+        <div class="offre vedette reveler" style="--delai:0.2s">
+          <span class="ruban" data-i18n="o.ruban">Pour les clubs</span>
           <h3>OLYMPIAD Pro</h3>
-          <p class="prix">Abonnement mensuel ou annuel</p>
+          <p class="prix" data-i18n="o.proprix">Abonnement mensuel ou annuel</p>
           <ul>
-            <li>Toutes les fonctionnalités premium</li>
-            <li>Sur tous tes tournois</li>
-            <li>Idéal pour les clubs qui organisent souvent</li>
-            <li>Résiliable à tout moment</li>
+            <li data-i18n="o.pro1">Toutes les fonctionnalités premium</li>
+            <li data-i18n="o.pro2">Sur tous tes tournois</li>
+            <li data-i18n="o.pro3">Idéal pour les clubs qui organisent souvent</li>
+            <li data-i18n="o.pro4">Résiliable à tout moment</li>
           </ul>
         </div>
       </div>
-      <p class="mention">Les prix sont affichés dans l'application avant tout achat. Paiement via l'App Store ou Google Play ; l'abonnement Pro se renouvelle automatiquement sauf résiliation au moins 24 h avant la fin de la période. Voir les <a href="conditions-utilisation.html">conditions d'utilisation</a>.</p>
+      <p class="mention" data-i18n-html="o.mention">Les prix sont affichés dans l'application avant tout achat. Paiement via l'App Store ou Google Play ; l'abonnement Pro se renouvelle automatiquement sauf résiliation au moins 24 h avant la fin de la période. Voir les <a href="conditions-utilisation.html">conditions d'utilisation</a>.</p>
     </div>
   </section>
 
-  <section id="aide">
+  <!-- Aide (URL de support donnée à Apple : garder l'ancre #aide) -->
+  <section class="section-alt" id="aide">
     <div class="conteneur">
-      <h2>Aide</h2>
-      <p class="intro">Les réponses aux questions les plus fréquentes.</p>
-      <div class="faq">
-        <details>
-          <summary>Faut-il un compte pour suivre un tournoi&nbsp;?</summary>
-          <p>Non. Les équipes et les spectateurs rejoignent le tournoi en scannant son QR code ou en saisissant son code d'accès dans l'application. Seul l'organisateur a besoin d'un compte.</p>
-        </details>
-        <details>
-          <summary>Comment rejoindre un tournoi&nbsp;?</summary>
-          <p>Dans l'application, touche « Rejoindre un tournoi », puis scanne le QR code affiché par l'organisateur ou saisis le code d'accès qu'il t'a communiqué.</p>
-        </details>
-        <details>
-          <summary>Qui peut créer un compte organisateur&nbsp;?</summary>
-          <p>Toute personne âgée d'au moins 15 ans. Le compte permet de créer, gérer et partager tes tournois.</p>
-        </details>
-        <details>
-          <summary>Combien d'équipes puis-je ajouter gratuitement&nbsp;?</summary>
-          <p>Jusqu'à 12 équipes (ou joueurs) par tournoi. Au-delà, débloque le tournoi avec un Pass Tournoi ou passe à OLYMPIAD Pro.</p>
-        </details>
-        <details>
-          <summary>Plusieurs personnes peuvent-elles saisir les scores&nbsp;?</summary>
-          <p>Oui, avec un Pass Tournoi ou l'abonnement Pro : invite des co-organisateurs depuis ton tournoi, et choisis pour chacun s'il peut saisir les scores, gérer le tournoi ou le supprimer.</p>
-        </details>
-        <details>
-          <summary>J'ai changé de téléphone, comment récupérer mes achats&nbsp;?</summary>
-          <p>Connecte-toi avec le même compte, puis touche « Restaurer mes achats » dans Mon profil ou sur l'écran des offres. Un Pass Tournoi acheté mais pas encore appliqué peut être utilisé avec « J'ai déjà un Pass Tournoi non utilisé ».</p>
-        </details>
-        <details>
-          <summary>Comment résilier l'abonnement Pro&nbsp;?</summary>
-          <p>L'abonnement se gère dans les réglages de ton compte App Store (iPhone) ou Google Play (Android). La résiliation prend effet à la fin de la période déjà payée.</p>
-        </details>
-        <details>
-          <summary>Comment supprimer mon compte&nbsp;?</summary>
-          <p>Dans l'application : Mon profil, puis « Supprimer mon compte ». Tes données sont supprimées immédiatement. Plus de détails sur la page <a href="suppression-compte.html">Supprimer mon compte</a>.</p>
-        </details>
-      </div>
-
-      <div class="contact">
+      <p class="surtitre reveler" data-i18n="a.sur">Support</p>
+      <h2 class="reveler" data-i18n="a.titre">Aide</h2>
+      <p class="intro reveler" data-i18n="a.intro">Les réponses aux questions les plus fréquentes.</p>
+      <div class="aide-grille">
         <div>
-          <h3>Une question, un problème&nbsp;?</h3>
-          <p>Écris-nous par e-mail, avec le nom de ton tournoi si ta question le concerne.</p>
+          <div id="faq">
+            <details>
+              <summary data-i18n="a.q1">Faut-il un compte pour suivre un tournoi&nbsp;?</summary>
+              <div class="reponse"><p data-i18n="a.r1">Non. Les équipes et les spectateurs rejoignent le tournoi en scannant son QR code ou en saisissant son code d'accès dans l'application. Seul l'organisateur a besoin d'un compte.</p></div>
+            </details>
+            <details>
+              <summary data-i18n="a.q2">Comment rejoindre un tournoi&nbsp;?</summary>
+              <div class="reponse"><p data-i18n="a.r2">Dans l'application, touche « Rejoindre un tournoi », puis scanne le QR code affiché par l'organisateur ou saisis le code d'accès qu'il t'a communiqué.</p></div>
+            </details>
+            <details>
+              <summary data-i18n="a.q3">Qui peut créer un compte organisateur&nbsp;?</summary>
+              <div class="reponse"><p data-i18n="a.r3">Toute personne âgée d'au moins 15 ans. Le compte permet de créer, gérer et partager tes tournois.</p></div>
+            </details>
+            <details>
+              <summary data-i18n="a.q4">Combien d'équipes puis-je ajouter gratuitement&nbsp;?</summary>
+              <div class="reponse"><p data-i18n="a.r4">Jusqu'à 12 équipes (ou joueurs) par tournoi. Au-delà, débloque le tournoi avec un Pass Tournoi ou passe à OLYMPIAD Pro.</p></div>
+            </details>
+            <details>
+              <summary data-i18n="a.q5">Plusieurs personnes peuvent-elles saisir les scores&nbsp;?</summary>
+              <div class="reponse"><p data-i18n="a.r5">Oui, avec un Pass Tournoi ou l'abonnement Pro : invite des co-organisateurs depuis ton tournoi, et choisis pour chacun s'il peut saisir les scores, gérer le tournoi ou le supprimer.</p></div>
+            </details>
+            <details>
+              <summary data-i18n="a.q6">J'ai changé de téléphone, comment récupérer mes achats&nbsp;?</summary>
+              <div class="reponse"><p data-i18n="a.r6">Connecte-toi avec le même compte, puis touche « Restaurer mes achats » dans Mon profil ou sur l'écran des offres. Un Pass Tournoi acheté mais pas encore appliqué peut être utilisé avec « J'ai déjà un Pass Tournoi non utilisé ».</p></div>
+            </details>
+            <details>
+              <summary data-i18n="a.q7">Comment résilier l'abonnement Pro&nbsp;?</summary>
+              <div class="reponse"><p data-i18n="a.r7">L'abonnement se gère dans les réglages de ton compte App Store (iPhone) ou Google Play (Android). La résiliation prend effet à la fin de la période déjà payée.</p></div>
+            </details>
+            <details>
+              <summary data-i18n="a.q8">Comment supprimer mon compte&nbsp;?</summary>
+              <div class="reponse"><p data-i18n-html="a.r8">Dans l'application : Mon profil, puis « Supprimer mon compte ». Tes données sont supprimées immédiatement. Plus de détails sur la page <a href="suppression-compte.html">Supprimer mon compte</a>.</p></div>
+            </details>
+            <details>
+              <summary data-i18n="a.q9">Le simulateur de ce site enregistre-t-il mes données&nbsp;?</summary>
+              <div class="reponse"><p data-i18n="a.r9">Non. Le tournoi que tu crées ici reste dans ton navigateur (stockage local) et n'est envoyé nulle part. Pour un vrai tournoi partagé avec tes équipes, utilise l'application.</p></div>
+            </details>
+          </div>
         </div>
-        <a class="bouton" href="mailto:clement.berthout@gmail.com?subject=OLYMPIAD%20-%20Support">Contacter le support</a>
+        <aside class="contact reveler">
+          <h3 data-i18n="a.contactT">Une question, un problème&nbsp;?</h3>
+          <p data-i18n="a.contactP">Écris-nous par e-mail, avec le nom de ton tournoi si ta question le concerne.</p>
+          <a class="bouton" href="mailto:clement.berthout@gmail.com?subject=OLYMPIAD%20-%20Support" data-i18n="a.contactB">Contacter le support</a>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="final">
+    <div class="conteneur">
+      <h2 class="reveler" data-i18n="fin.titre">Prêt pour le coup d'envoi&nbsp;?</h2>
+      <p class="reveler" data-i18n="fin.p">OLYMPIAD arrive bientôt sur iPhone et Android. En attendant, prépare ton tournoi ici même.</p>
+      <div class="actions-heros reveler">
+        <a class="bouton" href="#essayer" data-i18n="fin.cta">Essayer le simulateur</a>
+        <a class="bouton secondaire" href="espace.html" data-i18n="fin.cta2">Espace organisateur</a>
       </div>
     </div>
   </section>
@@ -454,15 +400,24 @@
 
 <footer>
   <div class="conteneur">
+    <a class="logo" href="#accueil" aria-label="OLYMPIAD"><svg aria-hidden="true"><use href="#i-marque"/></svg><span>OLYMPIAD</span></a>
     <span>© 2026 OLYMPIAD · Clément Berthout</span>
     <nav aria-label="Liens légaux">
-      <a href="politique-confidentialite.html">Politique de confidentialité</a>
-      <a href="conditions-utilisation.html">Conditions d'utilisation</a>
-      <a href="suppression-compte.html">Supprimer mon compte</a>
-      <a href="mailto:clement.berthout@gmail.com">Contact</a>
+      <a href="politique-confidentialite.html" data-i18n="pied.conf">Politique de confidentialité</a>
+      <a href="conditions-utilisation.html" data-i18n="pied.cgu">Conditions d'utilisation</a>
+      <a href="suppression-compte.html" data-i18n="pied.supp">Supprimer mon compte</a>
+      <a href="mailto:clement.berthout@gmail.com" data-i18n="pied.contact">Contact</a>
     </nav>
   </div>
 </footer>
 
+<!-- Vue grand écran (télé, vidéoprojecteur) -->
+<div class="grand-ecran" id="grand-ecran" role="dialog" aria-modal="true" aria-label="Vue grand écran"></div>
+
+<!-- Programme imprimable (export PDF) -->
+<div class="impression" id="impression"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
+<script src="site.js" defer></script>
 </body>
 </html>

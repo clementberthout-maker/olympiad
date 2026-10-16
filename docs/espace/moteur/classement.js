@@ -1,0 +1,97 @@
+// Copie conforme de lib/classement.js (application mobile) : même moteur que l'app.
+// Si lib/classement.js change, recopier ce fichier (seul l'import de sports.js diffère).
+import { infosSport } from './sports.js';
+
+// Calcule le classement d'une poule à la volée, à partir des résultats.
+// Ne stocke rien : conforme au principe "classement calculé, pas stocké"
+// défini dans 03-MODELE-DONNEES.md.
+//
+// Barème selon le sport (voir lib/sports.js) : football 3/1/0, rugby 4/2/0.
+// Départage par défaut : différence de buts (configurable par tournoi via
+// le champ critere_departage_poule).
+
+export function calculerClassement(equipes, matchs, resultats, critereDepartage = 'diff_buts', sport = 'football') {
+  const { pointsVictoire, pointsNul, pointsDefaite } = infosSport(sport);
+  const stats = {};
+
+  for (const equipe of equipes) {
+    stats[equipe.id] = {
+      equipe,
+      joues: 0,
+      victoires: 0,
+      nuls: 0,
+      defaites: 0,
+      points: 0,
+      buts_pour: 0,
+      buts_contre: 0,
+      confrontations: {}, // resultats tête-à-tête, utile pour le départage
+    };
+  }
+
+  const matchsTermines = matchs.filter((m) => {
+    const r = resultats.find((res) => res.match_id === m.id);
+    return r && r.statut === 'termine';
+  });
+
+  for (const match of matchsTermines) {
+    const resultat = resultats.find((r) => r.match_id === match.id);
+    const a = stats[match.equipe_a_id];
+    const b = stats[match.equipe_b_id];
+    if (!a || !b) continue;
+
+    a.joues += 1;
+    b.joues += 1;
+    a.buts_pour += resultat.score_a;
+    a.buts_contre += resultat.score_b;
+    b.buts_pour += resultat.score_b;
+    b.buts_contre += resultat.score_a;
+
+    if (resultat.score_a > resultat.score_b) {
+      a.points += pointsVictoire;
+      b.points += pointsDefaite;
+      a.victoires += 1;
+      b.defaites += 1;
+    } else if (resultat.score_a < resultat.score_b) {
+      b.points += pointsVictoire;
+      a.points += pointsDefaite;
+      b.victoires += 1;
+      a.defaites += 1;
+    } else {
+      a.points += pointsNul;
+      b.points += pointsNul;
+      a.nuls += 1;
+      b.nuls += 1;
+    }
+
+    // Points bonus (rugby) : ajoutés au classement s'ils ont été saisis match
+    // par match (voir tournoi/[id]/saisie.js) — restent à 0 sinon, football
+    // comme rugby sans ce réglage activé (voir tournois.points_bonus).
+    a.points += resultat.bonus_a || 0;
+    b.points += resultat.bonus_b || 0;
+
+    // Mémorise le résultat de la confrontation directe (utile si le critère
+    // de départage choisi par l'organisateur est "confrontation_directe")
+    a.confrontations[b.equipe.id] = resultat.score_a - resultat.score_b;
+    b.confrontations[a.equipe.id] = resultat.score_b - resultat.score_a;
+  }
+
+  const classement = Object.values(stats).map((s) => ({
+    ...s,
+    diff_buts: s.buts_pour - s.buts_contre,
+  }));
+
+  classement.sort((x, y) => {
+    if (y.points !== x.points) return y.points - x.points;
+
+    if (critereDepartage === 'confrontation_directe') {
+      const face_a_face = x.confrontations[y.equipe.id];
+      if (face_a_face !== undefined && face_a_face !== 0) return -face_a_face;
+    }
+
+    // Différence de buts en critère par défaut ou en repli
+    if (y.diff_buts !== x.diff_buts) return y.diff_buts - x.diff_buts;
+    return y.buts_pour - x.buts_pour;
+  });
+
+  return classement;
+}

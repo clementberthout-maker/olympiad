@@ -1,0 +1,39 @@
+/* À ajouter à la fin de docs/site.css */
+/* ---------- Intro 3D : stade de nuit → bureau → écran (intro3d.js) ---------- */
+#intro-espace { height: 520vh; }
+.cinema { position: fixed; inset: 0; z-index: 90; background: #04060b; overflow: hidden; pointer-events: none; color: #f3f2ed; }
+/* Fin de l'intro : tout disparaît, y compris la page posée sur l'écran 3D */
+.cinema.fini, .cinema.fini * { visibility: hidden !important; }
+.cinema-3d, .cinema-3d canvas, .cinema-css3d { position: absolute; inset: 0; width: 100%; height: 100%; }
+.cinema-3d canvas { display: block; opacity: 0; transition: opacity 1.4s var(--ease); }
+.cinema.pret .cinema-3d canvas { opacity: 1; }
+.cinema-css3d { overflow: hidden; }
+.cinema-page { background: #0b0f18; overflow: hidden; visibility: hidden; }
+.cinema-page iframe { width: 100%; height: 100%; border: 0; display: block; pointer-events: none; background: #0b0f18; }
+.intro-vignette { position: absolute; inset: 0; background: radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, 0.55)); }
+.cinema-grain { position: absolute; inset: -50%; opacity: 0.05; mix-blend-mode: overlay; animation: grain 0.9s steps(5) infinite;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+@keyframes grain { 0% { transform: translate(0, 0); } 20% { transform: translate(-3%, 2%); } 40% { transform: translate(2%, -3%); } 60% { transform: translate(-2%, -1%); } 80% { transform: translate(3%, 3%); } 100% { transform: translate(0, 0); } }
+.intro-texte { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 0 20px; text-shadow: 0 6px 40px rgba(0, 0, 0, 0.8); }
+.intro-logo { display: flex; align-items: center; gap: 0.12em; font-size: clamp(64px, 13vw, 168px); animation: introApparition 1.4s var(--ease) 0.5s backwards; }
+.intro-logo svg { width: 0.62em; height: 0.62em; }
+.intro-logo span { font-family: var(--titre); line-height: 0.9; letter-spacing: 0.02em; padding-top: 0.08em; }
+.intro-texte p { font-size: clamp(17px, 2.2vw, 24px); color: rgba(243, 242, 237, 0.85); margin: 10px 0 0; animation: introApparition 1.4s var(--ease) 0.9s backwards; }
+.intro-molette { position: absolute; bottom: 44px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 10px; font-size: 12px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(243, 242, 237, 0.8); animation: introApparition 1s var(--ease) 1.6s backwards; }
+.souris { width: 26px; height: 42px; border: 2px solid rgba(243, 242, 237, 0.75); border-radius: 14px; position: relative; }
+.souris::after { content: ""; position: absolute; left: 50%; top: 8px; width: 4px; height: 8px; margin-left: -2px; border-radius: 2px; background: #ebb517; animation: molette 1.6s ease-in-out infinite; }
+@keyframes molette { 0% { transform: translateY(0); opacity: 1; } 70% { transform: translateY(12px); opacity: 0; } 100% { opacity: 0; } }
+@keyframes introApparition { from { opacity: 0; transform: translateY(24px); } }
+.intro-legende { position: absolute; left: 0; right: 0; bottom: 9%; margin: 0; text-align: center; font-family: var(--titre); font-size: clamp(26px, 3.6vw, 46px); letter-spacing: 0.03em; opacity: 0; padding: 0 20px; text-shadow: 0 4px 30px rgba(0, 0, 0, 0.85); }
+.intro-passer {
+  position: fixed; right: 20px; bottom: 20px; z-index: 91; height: 42px; padding: 0 18px; border-radius: 999px; cursor: pointer;
+  border: 1px solid rgba(243, 242, 237, 0.25); background: rgba(11, 15, 24, 0.6); color: #f3f2ed; font-weight: 600; font-size: 14px;
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); opacity: 0; pointer-events: none; transition: opacity 0.3s, border-color 0.2s;
+}
+.intro-passer.visible { opacity: 1; pointer-events: auto; }
+.intro-passer:hover { border-color: #ebb517; }
+/* Page affichée dans l'écran du portable, ou intro indisponible : pas d'intro */
+.ecran .cinema, .ecran #intro-espace, .ecran .intro-passer,
+.sans-intro .cinema, .sans-intro #intro-espace, .sans-intro .intro-passer { display: none; }
+html.ecran, html.ecran body { overflow: hidden; }
+@media (max-width: 640px) { #intro-espace { height: 440vh; } .intro-passer { right: 12px; bottom: 12px; } }

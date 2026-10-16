@@ -3,7 +3,7 @@
 > Fichier tenu à jour automatiquement par Claude à chaque modification du projet
 > (voir `CLAUDE.md` et le hook `.claude/hooks/verifier-suivi.sh`).
 
-**Dernière mise à jour :** 15 octobre 2026
+**Dernière mise à jour :** 16 octobre 2026
 
 ---
 
@@ -203,6 +203,44 @@ OLYMPIAD sert à organiser des tournois sportifs amateurs. L'organisateur crée 
 - `BUDGET-PROJET.md` : dépenses déjà faites (Google Play, 25 $), dépenses obligatoires à venir (Apple 99 €/an, domaine `olympiad-app.com`, e-mail `support@`), options pour l'e-mail pro, services gratuits qui deviendront payants (Supabase Pro conseillé à la sortie), commissions, statut, marque, matériel de test, synthèse sur un an (≈ 135 € minimum, ≈ 420 € recommandé).
 - Risque relevé : le terme « olympiade » est protégé en France (Code du sport, art. L141-5). À vérifier avant d'acheter le domaine ou de déposer la marque.
 
+### Site internet (15 octobre)
+- `docs/index.html` refait en site complet, avec la même identité que l'app (ambre, bleu nuit, Bebas Neue, Work Sans), styles et scripts séparés dans `docs/site.css` et `docs/site.js`. L'ancre `#aide` (URL de support Apple) est conservée.
+- **Simulateur de l'app dans la page** : accueil, choix du sport, création (formats, départages, simple/double, sets gagnants), équipes (limite de 12, points bonus, terrains, poules, qualifiés, horaires et pause déjeuner, heure de fin estimée), calendrier par poule ou par terrain, saisie des scores (en cours/terminé, tirs au but, bonus), classements, phase finale, 3e place, podium, QR code, vue spectateur, grand écran, co-organisateurs et droits, export PDF (impression), paywall simulé, rejoindre par code ou comme organisateur, profil (photo, thème, langue, suppression), connexion, inscription, mot de passe oublié. Le moteur reprend `lib/generation.js` et `lib/classement.js`.
+- Temps réel entre onglets (BroadcastChannel) : la vue spectateur ouverte depuis le QR code se met à jour dès qu'un score est saisi. Tout reste dans le navigateur (localStorage), rien n'est envoyé.
+- Site interactif : téléphone animé avec scores en direct, 14 « fonctionnalités à découvrir » cochées au fil de l'essai, grille des fonctionnalités filtrable, onglets par sport (barème, départages), recherche dans l'aide, français/anglais, thème clair/sombre, adapté au mobile.
+- **Intro 3D à la molette** (`archives/intro-3d/intro3d.js`, Three.js 0.160 chargé depuis jsDelivr) : un seul plan-séquence, sans coupure. Vue plongeante sur un stade éclairé la nuit (tribunes et foule, rampe de projecteurs, faisceaux dans la brume, panneaux LED OLYMPIAD, ville autour), descente vers le rond central, passage derrière l'organisateur assis à son bureau (chaise, portable, lampe, tasse, ombres portées), puis par-dessus son épaule jusque dans l'écran du portable. L'écran affiche la vraie page d'accueil (iframe `?ecran=1` posée en CSS 3D sur l'écran) ; quand il remplit la fenêtre, la page prend le relais au pixel près (fondu sur mobile). Textures dessinées dans le code (pelouse, foule, bois, cheveux), aucun fichier 3D à télécharger. Remplace l'intro SVG (`intro.js` supprimé). Sans WebGL, le site s'ouvre directement sur l'accueil.
+- **Intro plus réaliste (ressources CC0 Poly Haven, `archives/intro-3d/assets/3d/`, ≈ 11 Mo, détail dans `LICENCE.md`)** : éclairage d'ambiance et reflets par un HDRI de nuit, textures PBR (plateau en noyer, chaise en cuir, sweat en polaire, jean), vrais modèles 3D de carnets et de plante grasse, occlusion ambiante (GTAO) de près, mains avec doigts. Chargées après le premier affichage. Poly Haven n'a ni portable moderne, ni chaise de bureau, ni personnage : ceux-ci restent modélisés dans le code.
+- **Bug corrigé** : en arrivant sur le site, la page affichée dans l'écran du portable restait visible et figée par-dessus le site (visibilité forcée sur l'élément). La position de défilement est aussi relue à chaque image.
+- **Organisateur réaliste** : avatar humain Microsoft Rocketbox (licence MIT, `archives/intro-3d/assets/3d/personnage/`, ≈ 1,7 Mo après conversion des textures TGA de 12 Mo en JPEG/PNG 1024 px). Posé assis os par os : buste penché vers l'écran, cuisses et mollets, cinématique inverse des bras jusqu'au clavier, doigts posés ; animation discrète (doigts qui tapent, respiration, tête). Chaise ajustée, deux éléments seulement du modèle de carnets. Le personnage dessiné reste en secours pendant le chargement.
+- Aperçu local : `node .claude/serveur-site.js` (configuration `site-vitrine` dans `.claude/launch.json`). Vérifié dans le navigateur (desktop et mobile, FR/EN, clair/sombre).
+- Modèle 3D de l'organisateur ajouté dans `archives/intro-3d/assets/3d/personnage/` (`organisateur.fbx` et textures `m017_*`, ≈ 1,7 Mo). Source et licence à noter dans `LICENCE.md`.
+
+### Nouveau nom de l'application (15 octobre)
+- Pistes étudiées pour remplacer OLYMPIAD (racine « olymp- » à éviter, art. L141-5 du Code du sport) : PODIAD, TOURNIAD, STADION, AGORIA…
+- Premières vérifications sur STADION et AGORIA : les deux sont déjà pris. STADION est le nom d'une agence numérique sportive londonienne. AGORIA est celui de la fédération belge de la technologie, et aussi d'un DJ. Leurs domaines .app, .fr et .com sont enregistrés. Variantes proposées : STADIOS, AGORAE, AGORENA.
+
+### Intro 3D validée, puis retirée du site (15 octobre)
+- **Validée** par Clément le 15 octobre dans sa dernière version (avatar Rocketbox). **Consigne : ne plus modifier l'animation 3D.**
+- **Retirée entièrement du site** pour l'instant : plus aucun code, style, script Three.js ni ressource 3D dans `docs/` (le site s'ouvre directement sur l'accueil). Seule trace conservée : l'ancre vide `<div id="accueil">` en haut de la page, cible des logos.
+- **Conservée à l'identique** dans `archives/intro-3d/` (hors GitHub Pages) : `intro3d.js`, ressources `assets/3d/` (≈ 14 Mo : HDRI, textures, modèles, personnage, licences CC0 et MIT), extraits exacts à remettre dans `docs/index.html`, `docs/site.css` et `docs/site.js`, et un `README.md` qui décrit l'animation et la procédure de remise en ligne.
+- Rappel du déroulé validé : vue plongeante sur le stade de nuit → descente vers le rond central → derrière l'organisateur assis à son bureau → par-dessus son épaule → zoom dans l'écran du portable, qui affiche la vraie page d'accueil ; un seul plan, sans coupure, piloté par la molette, avec un bouton « Passer l'intro ».
+
+### Accueil du site retouché (15 octobre)
+- Badges « Bientôt disponible sur » App Store et Google Play remontés juste sous le grand titre, visibles dès l'ouverture (ordinateur et téléphone) et redessinés : couleurs inversées très contrastées, plus grands, étiquette ambre « Bientôt ».
+- Chiffres du héros retirés (5 sports, 3 formats, 0 compte pour les spectateurs).
+- Aide : barre de recherche retirée (questions affichées directement).
+
+### Espace organisateur sur le site (15 octobre)
+- Première approche abandonnée à la demande de Clément : publier l'app compilée pour le web (`docs/app/`). Tout a été retiré, et le code de l'app est revenu à son état d'origine (aucun changement pour iPhone et Android).
+- **Espace organisateur conçu pour le site** : `docs/espace.html` + `docs/espace/` (`espace.js`, `espace.css`, `donnees.js`). Même D.A. que le site (en-tête, couleurs, polices, thème clair/sombre, FR/EN), avec des animations : transitions de pages, cartes en cascade, assistant à étapes, panneau de saisie coulissant, scores qui rebondissent, matchs mis à jour en surbrillance, podium qui monte, halo qui suit la souris.
+- **Branché directement sur la base Supabase de l'app** (supabase-js 2.45.4 depuis jsDelivr, même clé publique que `lib/supabase.js`) : mêmes tables, mêmes règles d'accès, mêmes écritures que l'app (création du tournoi puis des équipes, des poules et des matchs, résultats `termine`, phases finales, invitations co-organisateurs). Le moteur de l'app est copié à l'identique dans `docs/espace/moteur/` (`generation.js`, `classement.js`, `sports.js`) : **à recopier si `lib/` change.**
+- **Fonctions** : connexion, création de compte (15 ans et plus, liens légaux), mot de passe oublié (retour sur `espace.html?reinit=1`) ; tableau de bord des tournois (organisateur et co-organisateur, statut du jour) ; assistant de création en 4 étapes (sport, format et départages, équipes avec collage d'une liste, organisation et horaires, avec l'estimation de l'heure de fin) ; page tournoi avec onglets Matchs (par poule ou par terrain, saisie au clavier, tirs au but, points bonus), Classement (tableaux de poule, tableau final, podium), Équipes (ajout, retrait, régénération du calendrier) et Réglages (horaires, terrains, qualifiés, suppression) ; phase finale, tour suivant et 3e place ; QR code imprimable, grand écran, co-organisateurs avec leurs droits, export PDF (impression), profil (photo, informations, e-mail, mot de passe, suppression du compte) ; temps réel Supabase avec indicateur « EN DIRECT ».
+- **Suivi public sans compte** : `espace.html#/suivi/<code>` (classement et calendrier en direct). Le QR code généré depuis le site pointe vers cette page web, alors que celui de l'app ouvre `olympiad://suivi/…` (voir F24).
+- **Offres** : l'abonnement Pro est lu dans `abonnements_pro`. Le déblocage est lu dans `tournois.debloque`. Les achats restent dans l'app mobile, et l'espace l'explique (limite de 12 équipes, PDF, co-organisateurs).
+- **Mode démo** : `espace.html?demo=1`, avec des données fictives dans le navigateur et le temps réel entre onglets. Il sert de découverte pour les visiteurs (bouton « Découvrir en démo » sur le site) et de banc d'essai.
+- **Site** : bouton « Espace organisateur » dans l'en-tête, section « Ton tournoi, aussi sur ordinateur » (ouvrir, se connecter, démo), bouton dans la section finale.
+- **Vérifié en local** : en mode démo, tout le parcours (création d'un tournoi de rugby à 8 équipes, saisie, phase finale, finale, podium, onglets, QR code, grand écran, suivi public mis à jour en direct dans un autre onglet, mobile) ; en mode réel, la page de connexion et une requête publique à la base. **Pas testé avec un vrai compte** (connexion et écritures réelles) : à faire par Clément.
+
 ## 3. Ce qu'il reste à faire
 
 Légende : `[ ]` à faire · `[x]` fait
@@ -242,6 +280,7 @@ Légende : `[ ]` à faire · `[x]` fait
   - Configurer les URL de redirection pour l'app (`olympiad://`). *Préparé le 15/10 : Site URL `compte-confirme.html` et `olympiad://**`, voir `supabase/emails/README.md`. Page en ligne le 15/10 (commits poussés, vérifiée : « Adresse confirmée » et « Lien expiré »). Reste à saisir dans Supabase.*
   - Brancher un envoi d'emails SMTP personnalisé : le service d'emails par défaut est très limité en production. *Préparé le 15/10 : SMTP Gmail et modèles FR/EN dans `supabase/emails/`. Configuré et testé le 15/10 (inscription et mot de passe oublié, dans l'aperçu web). Ménage fait le 15/10 (compte `+test` supprimé, `localhost:8083` retiré des Redirect URLs). Reste : vérifier le mot de passe oublié sur un vrai téléphone (premiers testeurs).*
 - [ ] **C14. Nom de domaine et e-mail pro :** *Budget et options détaillés le 15/10 dans `BUDGET-PROJET.md`.* Vérifier d'abord le risque sur le nom (« olympiade » protégé par le CNOSF, art. L141-5 du Code du sport). Puis acheter `olympiad-app.com`, créer `support@olympiad-app.com` (Zoho Mail conseillé), configurer SPF/DKIM/DMARC, brancher le domaine sur GitHub Pages et mettre à jour `lib/liensLegaux.js` et l'URL de support. Facultatif : e-mails Supabase envoyés depuis le domaine (Brevo ou Resend).
+- [ ] **C14b. Choisir le nouveau nom (avant C14) :** vérifier les marques sur INPI et TMview (classes 9 et 41), les stores, les domaines et les réseaux sociaux. Ensuite, renommer l'app (nom affiché, logo, textes, fiches des stores, site). L'identifiant `com.clement.olympiad` peut rester.
 - [ ] **C15. Avant la sortie publique :** passer Supabase en Pro (un projet gratuit se met en pause après 7 jours sans activité, sans sauvegarde) ; s'inscrire à l'App Store Small Business Program (commission 15 % au lieu de 30 %) ; choisir l'adresse publique de développeur (affichée par Apple et Google) ; créer une micro-entreprise dès les premières ventes régulières.
 - [x] **C13. Publier la politique de confidentialité :** activer GitHub Pages sur le dossier `/docs` (le dépôt doit être public, ou la page hébergée ailleurs) et noter l'adresse obtenue. *Fait : les pages sont en ligne sur https://clementberthout-maker.github.io/olympiad/ (`politique-confidentialite.html`, `conditions-utilisation.html`, `suppression-compte.html`). Le lien de suppression à déclarer à Google est `suppression-compte.html`.*
 
@@ -275,7 +314,13 @@ Légende : `[ ]` à faire · `[x]` fait
   - [x] Piste Alpha : liste de testeurs, pays, release du build 5, envoi en examen. *Envoyé en examen le 15/10, en attente de validation par Google.*
   - [ ] Release validée : envoyer le lien d'inscription à 15-20 testeurs (12 minimum). *Release Alpha (build 5) validée par Google le 15/10 ; lien envoyé aux 3 premiers testeurs.*
   - [ ] 14 jours avec 12 testeurs inscrits sans interruption, puis « Demander l'accès à la production ».
-- [ ] **F22b. Landing page :** remplacer les boutons « Bientôt sur… » par les vrais liens des fiches App Store et Google Play, et ajouter des captures d'écran.
+- [ ] **F22b. Landing page :** remplacer les boutons « Bientôt sur… » par les vrais liens des fiches App Store et Google Play, et ajouter des captures d'écran. *Site refait le 15/10 avec un simulateur de l'app ; restent les liens des stores.*
+- [ ] **F22d. Remettre l'intro 3D en ligne** (quand Clément le décidera) : suivre `archives/intro-3d/README.md`, sans modifier l'animation. Penser au poids (≈ 14 Mo de ressources chargées après l'accueil) et la retester sur ordinateur et téléphone.
+- [ ] **F22e. Espace organisateur : finaliser.**
+  - [ ] Supabase > Authentication > URL Configuration > Redirect URLs : ajouter `https://clementberthout-maker.github.io/olympiad/espace.html**` (et `http://localhost:5500/olympiad/espace.html**` pour les tests), sinon le lien « Mot de passe oublié » demandé depuis le site ne revient pas sur l'espace.
+  - [ ] Tester avec un vrai compte : connexion, création d'un tournoi, scores vus en direct dans l'app sur un téléphone (et inversement), phase finale, co-organisateurs (avec un tournoi débloqué ou un compte Pro), export PDF, profil et photo, déconnexion.
+  - [ ] Garder `docs/espace/moteur/` identique à `lib/generation.js`, `lib/classement.js` et `lib/sports.js`.
+- [ ] **F22c. Site : relire et publier.** Relire les textes du nouveau site (FR et EN), tester sur un vrai téléphone, puis pousser pour le mettre en ligne sur GitHub Pages. Le QR code du simulateur pointe vers la page elle-même (`#suivi/code`), pas vers l'app.
 - [ ] **F23. Après la sortie :** surveiller les plantages (Sentry ou `expo-insights`, à ajouter si tu veux), les tableaux de bord RevenueCat et Supabase, et prévoir les mises à jour avec `eas update`.
 - [ ] **F24. QR codes lisibles sans l'app (amélioration) :** aujourd'hui le QR code ouvre un lien `olympiad://…` qui ne fonctionne que si l'app est installée. Le faire pointer vers une page web qui ouvre l'app ou redirige vers le bon store (liens universels / App Links).
 
@@ -289,6 +334,16 @@ Une ligne par modification, la plus récente en haut.
 
 | Date | Modification |
 |------|--------------|
+| 2026-10-16 | Commits poussés : nouveau site, espace organisateur (`docs/espace.html`) et archive de l'intro 3D en ligne sur GitHub Pages |
+| 2026-10-15 | Espace organisateur propre au site (`docs/espace.html`, `docs/espace/`) : même D.A., animations, branché sur Supabase, moteur de l'app copié, suivi public, mode démo ; version web compilée de l'app abandonnée et retirée |
+| 2026-10-15 | Site : badges App Store / Google Play remontés et plus voyants, chiffres du héros et recherche de l'Aide retirés |
+| 2026-10-15 | Intro 3D validée (à ne plus modifier) puis retirée du site ; conservée dans `archives/intro-3d/` avec sa procédure de remise en ligne (F22d) |
+| 2026-10-15 | Intro 3D : organisateur remplacé par un avatar réaliste Rocketbox (MIT) posé assis au clavier |
+| 2026-10-15 | Nouveau nom : pistes proposées, STADION et AGORIA déjà pris (variantes STADIOS, AGORAE, AGORENA) ; modèle 3D de l'organisateur ajouté (`archives/intro-3d/assets/3d/personnage/`) |
+| 2026-10-15 | Intro 3D : HDRI, textures PBR et modèles 3D CC0 Poly Haven (`archives/intro-3d/assets/3d/`), occlusion ambiante ; correction de l'écran figé à l'arrivée sur le site |
+| 2026-10-15 | Site : intro refaite en 3D temps réel (`archives/intro-3d/intro3d.js`, Three.js), plan continu du stade vu en plongée jusqu'à l'écran du portable ; `intro.js` supprimé |
+| 2026-10-15 | Site : intro animée à la molette (`docs/intro.js`), du stade de nuit vu de haut jusqu'à l'écran du portable de l'organisateur |
+| 2026-10-15 | Nouveau site (`docs/index.html`, `site.css`, `site.js`) : même D.A. que l'app, simulateur interactif de toutes les fonctionnalités, temps réel entre onglets, FR/EN, clair/sombre |
 | 2026-10-15 | Budget du projet (`BUDGET-PROJET.md`) : dépenses faites et à venir, domaine, e-mail pro, coûts cachés ; étapes C14 et C15 ajoutées |
 | 2026-10-13 | Émulateur Android `Pixel_7` (Play Store) prêt pour les tests, SDK sans accent `C:\Android\Sdk` |
 | 2026-10-15 | Premier retour testeur : lien d'inscription introuvable dans Messenger ; conseil « ouvrir dans Chrome » et dépannage ajoutés à `store/test-ferme.md` |

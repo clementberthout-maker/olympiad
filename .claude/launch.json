@@ -10,6 +10,12 @@
       "runtimeExecutable": "npx",
       "runtimeArgs": ["expo", "start", "--web", "--port", "8082", "--offline"],
       "port": 8082
+    },
+    {
+      "name": "site-vitrine",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [".claude/serveur-site.js"],
+      "port": 5500
     }
   ]
 }

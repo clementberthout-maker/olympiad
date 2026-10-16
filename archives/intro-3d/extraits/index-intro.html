@@ -1,0 +1,15 @@
+<!-- À coller juste avant <div id="accueil"></div> (après la barre de progression) -->
+<!-- Intro 3D : vue plongeante sur le stade, puis plan continu jusqu'à l'écran du portable (intro3d.js) -->
+<div class="cinema" id="intro" aria-hidden="true">
+  <div class="cinema-3d"></div>
+  <div class="intro-vignette"></div>
+  <div class="cinema-grain"></div>
+  <div class="intro-texte">
+    <div class="intro-logo"><svg><use href="#i-marque"/></svg><span>OLYMPIAD</span></div>
+    <p data-i18n="intro.sous">Ce soir, le stade est à toi.</p>
+    <div class="intro-molette"><span class="souris"></span><span data-i18n="intro.molette">Fais défiler</span></div>
+  </div>
+  <p class="intro-legende" data-i18n="intro.legende">Au centre du terrain, l'organisateur prépare son tournoi.</p>
+</div>
+<button class="intro-passer" id="intro-passer" type="button" data-i18n="intro.passer">Passer l'intro</button>
+<div id="intro-espace" aria-hidden="true"></div>
