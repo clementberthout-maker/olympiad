@@ -10,6 +10,7 @@ import {
   estPhaseDePoule,
   genererPhaseFinaleDepuisPoules,
   genererTourSuivant,
+  qualifiesParTeteDeSerie,
   genererMatchTroisiemePlace,
   NOM_MATCH_TROISIEME_PLACE,
   resultatsAutoPourExempts,
@@ -173,6 +174,15 @@ export default function Calendrier() {
     }
   }
 
+  // Classement de chaque poule (vide pour un tournoi 100% élimination).
+  function poulesAvecClassement() {
+    return poules.map((poule) => {
+      const equipesPoule = equipes.filter((e) => e.poule_id === poule.id);
+      const matchsPoule = matchsBruts.filter((m) => m.phase === poule.nom);
+      return { classement: calculerClassement(equipesPoule, matchsPoule, resultats, tournoi.critere_departage_poule, tournoi.sport) };
+    });
+  }
+
   async function genererPhaseFinale() {
     if (equipesQualifiees < 2) {
       Alert.alert(
@@ -183,14 +193,9 @@ export default function Calendrier() {
     }
     setEnCours(true);
     try {
-      const poulesAvecClassement = poules.map((poule) => {
-        const equipesPoule = equipes.filter((e) => e.poule_id === poule.id);
-        const matchsPoule = matchsBruts.filter((m) => m.phase === poule.nom);
-        return { classement: calculerClassement(equipesPoule, matchsPoule, resultats, tournoi.critere_departage_poule, tournoi.sport) };
-      });
       const reglages = reglagesDepuisTournoi(tournoi, matchsBruts);
       const matchs = genererPhaseFinaleDepuisPoules(
-        poulesAvecClassement, tournoi.nombre_qualifies_par_poule, id, reglages
+        poulesAvecClassement(), tournoi.nombre_qualifies_par_poule, id, reglages
       );
       await insererMatchs(matchs);
       charger();
@@ -210,7 +215,8 @@ export default function Calendrier() {
         matchs = genererMatchTroisiemePlace(dernierePhaseElim.matchs, id, reglages);
         reglages = reglagesDepuisTournoi(tournoi, [...matchsBruts, ...matchs]);
       }
-      matchs = [...matchs, ...genererTourSuivant(dernierePhaseElim.matchs, id, reglages)];
+      const tetesDeSerie = qualifiesParTeteDeSerie(poulesAvecClassement(), tournoi.nombre_qualifies_par_poule);
+      matchs = [...matchs, ...genererTourSuivant(dernierePhaseElim.matchs, id, reglages, tetesDeSerie)];
       await insererMatchs(matchs);
       charger();
     } catch (e) {

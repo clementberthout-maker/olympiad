@@ -8,7 +8,7 @@
 import { donnees, MODE_DEMO } from './donnees.js';
 import {
   repartirEnPoules, genererCalendrierPoules, genererPremierTourEliminationDirecte, genererPhaseFinaleDepuisPoules,
-  genererTourSuivant, genererMatchTroisiemePlace, resultatsAutoPourExempts, idEquipeGagnante, estPhaseDePoule,
+  genererTourSuivant, qualifiesParTeteDeSerie, genererMatchTroisiemePlace, resultatsAutoPourExempts, idEquipeGagnante, estPhaseDePoule,
   grouperParPhase, grouperParTerrain, NOM_MATCH_TROISIEME_PLACE,
 } from './moteur/generation.js';
 import { calculerClassement } from './moteur/classement.js';
@@ -891,7 +891,8 @@ async function tourSuivant(bouton) {
       matchs = genererMatchTroisiemePlace(a.derniere.matchs, c.tournoi.id, reglages);
       reglages = reglagesDepuisTournoi(c.tournoi, [...c.matchs, ...matchs]);
     }
-    matchs = [...matchs, ...genererTourSuivant(a.derniere.matchs, c.tournoi.id, reglages)];
+    const tetesDeSerie = qualifiesParTeteDeSerie(classementsPoules(c), c.tournoi.nombre_qualifies_par_poule);
+    matchs = [...matchs, ...genererTourSuivant(a.derniere.matchs, c.tournoi.id, reglages, tetesDeSerie)];
     await insererMatchsAvecExempts(matchs);
     toast(tr('Tour suivant généré !', 'Next round generated!'));
     await rechargerCourant(true);

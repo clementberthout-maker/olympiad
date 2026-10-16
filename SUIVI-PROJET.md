@@ -256,6 +256,19 @@ OLYMPIAD sert à organiser des tournois sportifs amateurs. L'organisateur crée 
 - Sélecteur de nombres dans la même D.A. (terrains, poules, qualifiés, sets, durée des matchs, mi-temps, pause entre matchs) : fenêtre animée avec boutons −/+, jauge et valeurs rapides, dans les réglages et dans l'assistant de création.
 - Réglages : les horaires de la pause déjeuner sont verrouillés (grisés, avec un cadenas) tant que la pause déjeuner n'est pas activée.
 
+### Test complet du site et de l'app (16 octobre)
+- **Testé** : site vitrine (navigation, FAQ, filtres, sports, FR/EN, thèmes, mobile), simulateur (5 sports, 3 formats, limite de 12, achat simulé, phase finale, podium, QR, grand écran, co-organisateurs, PDF, spectateur, temps réel entre onglets, profil), espace organisateur en démo (tout le parcours) et connecté avec le compte démo, app en aperçu web connectée (création, saisie, tirs au but, phase finale, grand écran, QR, régénération, suppression, thème, langue). Temps réel vérifié entre l'app et le site dans les deux sens. Tournoi de test supprimé ; tournoi démo U13 non modifié.
+- **Fonctionne** : génération du calendrier, classements et départages, limite de 12 (app, site, base), tirs au but obligatoires en cas d'égalité, verrouillage des poules après la phase finale, droits des co-organisateurs, PDF, QR, suivi public en direct, suppression avec confirmation. Moteur de `docs/espace/moteur/` identique à `lib/`. Aucune erreur JavaScript.
+- **Pas testable ici** : achats et Pro dans l'app (RevenueCat désactivé sur le web), caméra, partage natif, e-mail « Signaler », vrai téléphone.
+- Défauts trouvés : voir G25 à G33.
+
+### Tirage de la phase finale corrigé (16 octobre)
+- `lib/generation.js` : les qualifiés sont rangés par tête de série (tous les 1ers de poule, puis tous les 2es…). Exempts aux meilleures têtes de série, puis la meilleure affronte la moins bonne : avec 2 poules, A1–B2 et B1–A2. Deux équipes d'une même poule ne se croisent plus au premier tour quand c'est évitable.
+- Tours suivants : les gagnants sont re-classés par tête de série (nouvelle fonction `qualifiesParTeteDeSerie`, passée à `genererTourSuivant`), donc deux 1ers de poule ne se retrouvent qu'en finale. Plus de tirage au sort à chaque tour. En élimination directe seule, le premier tour reste tiré au sort et les tours suivants gardent l'ordre des matchs.
+- Aucune modification de la base : l'ordre du tableau se recalcule à partir des classements de poule.
+- Appliqué dans l'app (`app/tournoi/[id]/calendrier.js`), dans l'espace (`docs/espace/moteur/generation.js` recopié, `espace.js`) et dans le simulateur (`docs/site.js`). Message du simulateur « Quart de finale générée » remplacé par « Tour généré : … ».
+- Vérifié : script de test (2 400 tirages, 2 à 4 poules, avec exempts, jusqu'à la finale : tout passe), simulateur et espace en démo jusqu'à la finale, app compilée et calendrier ouvert sans erreur. **À livrer dans le prochain build** pour les téléphones.
+
 ## 3. Ce qu'il reste à faire
 
 Légende : `[ ]` à faire · `[x]` fait
@@ -305,7 +318,7 @@ Légende : `[ ]` à faire · `[x]` fait
   - iOS : TestFlight avec un compte sandbox.
   - Android : piste de test interne avec des testeurs de licence. *Fait le 14/10 (version 4, testeur de licence) : les parcours d'achat fonctionnent, à recontrôler une fois. Reste iOS (TestFlight).*
   - Parcours à couvrir : Pass acheté sur un tournoi encore en brouillon, Pass sur un tournoi existant, Pro, restauration, et changement de téléphone.
-- [ ] **D16. Tester l'application entière :** chaque sport, la phase finale, les co-organisateurs, l'export PDF, le QR code, la réinitialisation du mot de passe, les deux thèmes et les deux langues, sur iPhone et sur Android.
+- [ ] **D16. Tester l'application entière :** chaque sport, la phase finale, les co-organisateurs, l'export PDF, le QR code, la réinitialisation du mot de passe, les deux thèmes et les deux langues, sur iPhone et sur Android. *Test complet dans l'aperçu web le 16/10 (défauts en G25 à G33) ; reste à refaire sur de vrais téléphones, avec les achats.*
 - [ ] **D16d. Optimisation du code Android (R8), avant février 2027 :** alerte Play Console « L'optimisation du code DEX est inférieure à notre seuil » (obscurcissement 2 %, build 5). Installer `expo-build-properties` et activer `android.enableMinifyInReleaseBuilds` (et `enableShrinkResourcesInReleaseBuilds`) dans `app.json`, puis retester toute l'app et les achats sur le build obtenu (R8 peut casser des bibliothèques). Envoyer le fichier `mapping.txt` à la Play Console pour lire les plantages. Pas bloquant pour le test fermé.
 - [ ] **D16c. Mot de passe oublié par code (prochain build) :** le lien de réinitialisation n'est valable qu'environ 5 minutes et seulement sur l'appareil qui a fait la demande (PKCE, testé le 15/10). Le remplacer par un code à 6 chiffres saisi dans l'app (`{{ .Token }}`, `verifyOtp` type `recovery`). Détails dans `supabase/emails/README.md`.
 - [ ] **D16b. Au prochain build (après les retours du test fermé) :** appliquer les mises à jour correctives signalées par Expo Doctor sur le build 5 (`npx expo install --fix` : expo 57.0.29, expo-constants 57.0.22, expo-linking 57.0.13, expo-router 57.0.27, expo-sharing 57.0.23), puis vérifier `npm ci` avec npm 10 avant de lancer le build. Avertissement seulement, le build 5 est gardé pour le test fermé.
@@ -339,6 +352,17 @@ Légende : `[ ]` à faire · `[x]` fait
 - [ ] **F23. Après la sortie :** surveiller les plantages (Sentry ou `expo-insights`, à ajouter si tu veux), les tableaux de bord RevenueCat et Supabase, et prévoir les mises à jour avec `eas update`.
 - [ ] **F24. QR codes lisibles sans l'app (amélioration) :** aujourd'hui le QR code ouvre un lien `olympiad://…` qui ne fonctionne que si l'app est installée. Le faire pointer vers une page web qui ouvre l'app ou redirige vers le bon store (liens universels / App Links).
 
+### G. Défauts trouvés au test complet (16/10)
+- [x] **G25. Tirage de la phase finale (important) :** *Corrigé le 16/10 (têtes de série croisées, tours suivants re-classés) dans l'app, l'espace et le simulateur ; à livrer au prochain build.* `genererTourAPartirDeListe` (`lib/generation.js:236`) mélange les qualifiés au hasard. Deux équipes d'une même poule se retrouvent en demi-finale (vu 4 fois sur 5, dans l'app aussi : les deux premiers de poule se sont rencontrés). Croiser A1–B2 / B1–A2 (tableau fixe), et garder le tableau pour les tours suivants (aujourd'hui retiré au sort à chaque tour). Recopier ensuite dans `docs/espace/moteur/` et `docs/site.js`.
+- [ ] **G26. Site qui promet plus que l'app :** le score « en cours » (EN DIRECT) existe dans le simulateur et sur le site, mais pas dans l'app ni dans l'espace (toujours « terminé »). Le grand écran de l'app est une simple liste, sans code d'accès ni gros caractères, contrairement à celui du site. Ajouter ces fonctions à l'app, ou corriger les textes du site.
+- [ ] **G27. Calendrier organisateur de l'app sans temps réel :** `app/tournoi/[id]/calendrier.js` ne se recharge qu'en revenant sur l'écran. Deux bénévoles ne voient pas les scores l'un de l'autre. Seul le suivi public est en direct, et le grand écran se rafraîchit à intervalle.
+- [ ] **G28. Horaires qui débordent :** avec les valeurs par défaut (1 terrain, matchs de 60 min, 15 min de pause), 12 équipes finissent leurs poules « à 22:15 », en fait le lendemain, sans alerte. Prévenir quand la fin dépasse la journée, et revoir les durées par défaut (60 min au football).
+- [ ] **G29. Équipe retirée après la phase finale :** sa demi-finale est supprimée et le tableau devient incohérent (finaliste sans demi-finale). Bloquer le retrait une fois la phase finale lancée, ou demander de régénérer.
+- [ ] **G30. Co-organisateur de son propre tournoi :** `rejoindre_comme_co_organisateur` (`supabase/schema.sql`) laisse l'organisateur principal s'ajouter à son propre tournoi. Ignorer ce cas dans la fonction.
+- [ ] **G31. Tournoi supprimé encore dans « Tournois suivis »** (app) : il s'ouvre sur « Tournoi introuvable », sans moyen de le retirer. Le retirer de la liste dans ce cas.
+- [ ] **G32. Pages légales sans retour au site :** tout s'ouvre dans la même page, mais `politique-confidentialite.html`, `conditions-utilisation.html` et `suppression-compte.html` n'ont aucun lien vers l'accueil. Ajouter un lien « Retour au site ». La politique (27/09) ne parle pas encore du site ni de l'espace organisateur.
+- [ ] **G33. Petits défauts :** titre de l'onglet du site resté en français en anglais, et « Football · 8 équipes » non traduit dans le téléphone de l'accueil ; « Bonjour » sans prénom dans l'espace (profil du compte démo vide : le remplir pour Google et Apple) ; « Quart de finale générée » (masculin) ; « fin des premier tour » (simulateur) ; tennis affiché « 1 pt nul » alors qu'il n'y a pas de nul ; code d'accès en minuscules dans l'app, en majuscules sur le site ; « Vous faites partie de quelle équipe ? » (vouvoiement) dans l'app ; doublon d'équipe ignoré sans message dans l'espace ; dates passées sélectionnables ; pas de lien « Signaler » sur le suivi public du site ; ni liens légaux dans le profil de l'espace ; « Voir un tournoi en direct » du site remplace le tournoi du simulateur sans prévenir ; match pour la 3e place activé par défaut dans le simulateur mais pas dans l'app.
+
 **Priorité conseillée :** commence par A1 à A4 (du code, sans dépendance extérieure) et, en parallèle, ouvre les comptes développeur (C9). La validation des comptes et le test fermé Google sont ce qui prend le plus de temps.
 
 ---
@@ -349,6 +373,8 @@ Une ligne par modification, la plus récente en haut.
 
 | Date | Modification |
 |------|--------------|
+| 2026-10-16 | Phase finale : tirage par têtes de série croisées (A1–B2, B1–A2), sans même poule au 1er tour (G25), dans l'app, l'espace et le simulateur |
+| 2026-10-16 | Test complet du site, de l'espace organisateur et de l'app (compte démo) : défauts notés en G25 à G33 |
 | 2026-10-16 | Espace organisateur : sélecteur de nombres (terrains, poules, durées) et horaires de pause déjeuner verrouillés si la pause est désactivée |
 | 2026-10-16 | Espace organisateur : saisie des scores et phase finale depuis le grand écran ; calendrier et sélecteur d'horaire refaits dans la D.A. |
 | 2026-10-16 | Site : plus aucun nouvel onglet (liens légaux, vue spectateur du simulateur et de l'espace) ; Redirect URL Supabase ajoutée (F22e) |

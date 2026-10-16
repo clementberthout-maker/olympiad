@@ -257,17 +257,31 @@
   const estPhaseDePoule = (nom) => nom.startsWith('Poule ');
   function prochainePuissanceDeDeux(n) { let p = 1; while (p < n) p *= 2; return p; }
   const nomTour = (n) => NOMS_TOUR[n] || `Tour à ${n} équipes`;
-  function genererTourAPartirDeListe(ordonnees, reglages) {
+  // Têtes de série : la meilleure contre la moins bonne, exempts aux premières,
+  // et pas deux équipes de la même poule au premier tour quand c'est évitable
+  function genererTourAPartirDeListe(ordonnees, reglages, pouleDe = null) {
     const taille = prochainePuissanceDeDeux(ordonnees.length);
     const nbExempts = taille - ordonnees.length;
     const nom = nomTour(taille);
     const exemptees = ordonnees.slice(0, nbExempts);
-    const joueuses = melanger(ordonnees.slice(nbExempts));
-    const rencontres = [];
-    for (let i = 0; i + 1 < joueuses.length; i += 2) rencontres.push({ equipeA: joueuses[i], equipeB: joueuses[i + 1], phase: nom });
+    const joueuses = ordonnees.slice(nbExempts);
+    const paires = [];
+    for (let i = 0; i < joueuses.length / 2; i++) paires.push([joueuses[i], joueuses[joueuses.length - 1 - i]]);
+    if (pouleDe) eviterMemePoule(paires, pouleDe);
+    const rencontres = paires.map(([equipeA, equipeB]) => ({ equipeA, equipeB, phase: nom }));
     return [...construireMatchsExempts(exemptees, nom, reglages), ...assignerCreneauxEtTerrains(rencontres, reglages)];
   }
-  function genererPhaseFinaleDepuisPoules(poulesAvecClassement, nbQualifies, reglages) {
+  function eviterMemePoule(paires, pouleDe) {
+    const memePoule = (a, b) => pouleDe.has(a.id) && pouleDe.get(a.id) === pouleDe.get(b.id);
+    for (let i = 0; i < paires.length; i++) {
+      if (!memePoule(paires[i][0], paires[i][1])) continue;
+      const autres = paires.map((_, j) => j).filter((j) => j !== i).sort((x, y) => Math.abs(x - i) - Math.abs(y - i));
+      for (const j of autres) {
+        if (!memePoule(paires[i][0], paires[j][1]) && !memePoule(paires[j][0], paires[i][1])) { [paires[i][1], paires[j][1]] = [paires[j][1], paires[i][1]]; break; }
+      }
+    }
+  }
+  function qualifiesParTeteDeSerie(poulesAvecClassement, nbQualifies) {
     const qualifies = [];
     for (let rang = 0; rang < nbQualifies; rang++) {
       const palier = poulesAvecClassement.map((p) => p.classement[rang]).filter(Boolean)
@@ -275,7 +289,19 @@
         .map((item) => item.equipe);
       qualifies.push(...palier);
     }
-    return genererTourAPartirDeListe(qualifies, reglages);
+    return qualifies;
+  }
+  function genererPhaseFinaleDepuisPoules(poulesAvecClassement, nbQualifies, reglages) {
+    const pouleDe = new Map();
+    poulesAvecClassement.forEach((p, index) => p.classement.forEach((item) => pouleDe.set(item.equipe.id, index)));
+    return genererTourAPartirDeListe(qualifiesParTeteDeSerie(poulesAvecClassement, nbQualifies), reglages, pouleDe);
+  }
+  // Gagnants d'un tour rangés par tête de série (ordre des matchs sans poules)
+  function rangerParTeteDeSerie(gagnants, tetesDeSerie) {
+    if (!tetesDeSerie.length) return gagnants;
+    const rang = new Map(tetesDeSerie.map((e, i) => [e.id, i]));
+    const rangDe = (id) => (rang.has(id) ? rang.get(id) : Infinity);
+    return gagnants.map((g, ordre) => ({ g, ordre })).sort((x, y) => rangDe(x.g.id) - rangDe(y.g.id) || x.ordre - y.ordre).map(({ g }) => g);
   }
   function idEquipeGagnante(match) {
     if (!match.equipe_b_id) return match.equipe_a_id;
@@ -1028,7 +1054,7 @@
     };
     const reg = reglagesDe(t);
     if (t.format === 'elimination_directe') {
-      t.matchs = genererTourAPartirDeListe(t.equipes, reg);
+      t.matchs = genererTourAPartirDeListe(melanger(t.equipes), reg);
     } else {
       const nbPoules = Math.min(t.nbPoules, Math.max(1, Math.floor(t.equipes.length / 2)));
       t.nbPoules = nbPoules;
@@ -1061,7 +1087,7 @@
           { equipeA: gagnants[0], equipeB: gagnants[1], phase: 'Finale' },
         ], reg);
       } else {
-        nouveaux = genererTourAPartirDeListe(gagnants, reg);
+        nouveaux = genererTourAPartirDeListe(rangerParTeteDeSerie(gagnants, qualifiesParTeteDeSerie(classementsPoules(t), t.qualifies)), reg);
       }
     }
     if (!nouveaux.length) return;
@@ -1072,7 +1098,7 @@
     decouvrir('finale');
     maj({ diffuser: true });
     vibrer(20);
-    toast(tr(`${libellePhase(nouveaux[nouveaux.length - 1].phase)} générée !`, `${libellePhase(nouveaux[nouveaux.length - 1].phase)} generated!`));
+    toast(tr(`Tour généré : ${libellePhase(nouveaux[nouveaux.length - 1].phase)}`, `Round generated: ${libellePhase(nouveaux[nouveaux.length - 1].phase)}`));
     const ecran = $('.sim-ecran:last-child', pile);
     if (ecran) ecran.scrollTo({ top: 0, behavior: mouvementReduit ? 'auto' : 'smooth' });
   }
