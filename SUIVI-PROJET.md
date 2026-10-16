@@ -275,6 +275,12 @@ OLYMPIAD sert à organiser des tournois sportifs amateurs. L'organisateur crée 
 - Vérifié dans l'aperçu web avec le compte démo : alerte à 22:15 le lendemain (12 équipes, 1 terrain, 60 min), création annulée sans rien écrire ; 8 équipes sur 2 terrains : « Fin des poules vers 16:15 », sans alerte ; score saisi puis effacé sur le site, visible aussitôt dans le calendrier de l'app. Tournoi de test supprimé. **À livrer dans le prochain build.**
 - Pas changé : les durées par défaut de l'app (60 min et 15 min de pause), ni la phase finale générée tard le soir (seules les poules et le premier tour sont estimés).
 
+### Scores « en cours » en direct (16 octobre)
+- **Saisie** : choix « En cours / Terminé » dans l'app (`app/tournoi/[id]/saisie.js`) et dans l'espace (tiroir de saisie). « Terminé » reste le choix par défaut. Un score « en cours » est enregistré avec le statut `en_cours` (colonne déjà présente, aucune migration). Il ne compte ni au classement ni pour débloquer le tour suivant, et les tirs au but ne sont demandés qu'au statut « Terminé ».
+- **Affichage** : nouveau badge « ● EN DIRECT » (`components/BadgeEnDirect.js`) avec le score provisoire sur le calendrier organisateur, le grand écran et le suivi public de l'app. Le suivi public a maintenant une section « En direct » en tête (onglets Classement, Aperçu et Calendrier). Le match en cours est retiré des « à venir », et le bandeau « Prochain match » montre le score en cours. Côté site, les cartes de match (gestion et suivi public) et le grand écran de l'espace affichent aussi le direct, matchs en cours en tête. Traductions FR/EN ajoutées.
+- **Site** : la carte « Vue grand écran » précise que la version complète passe par l'espace organisateur sur ordinateur.
+- Vérifié avec le compte démo : 1-0 « en cours » saisi dans l'app, visible en direct dans l'espace, la vue spectateur web et le grand écran, sans compter au classement. Passé à 2-0 « terminé » depuis le site : l'app se met à jour seule et le classement compte le match. 1-1 « en cours » saisi sur le site : section « En direct » dans le suivi de l'app et sur ses deux grands écrans. Tournoi de test supprimé. **À livrer dans le prochain build.**
+
 ## 3. Ce qu'il reste à faire
 
 Légende : `[ ]` à faire · `[x]` fait
@@ -360,7 +366,7 @@ Légende : `[ ]` à faire · `[x]` fait
 
 ### G. Défauts trouvés au test complet (16/10)
 - [x] **G25. Tirage de la phase finale (important) :** *Corrigé le 16/10 (têtes de série croisées, tours suivants re-classés) dans l'app, l'espace et le simulateur ; à livrer au prochain build.* `genererTourAPartirDeListe` (`lib/generation.js:236`) mélange les qualifiés au hasard. Deux équipes d'une même poule se retrouvent en demi-finale (vu 4 fois sur 5, dans l'app aussi : les deux premiers de poule se sont rencontrés). Croiser A1–B2 / B1–A2 (tableau fixe), et garder le tableau pour les tours suivants (aujourd'hui retiré au sort à chaque tour). Recopier ensuite dans `docs/espace/moteur/` et `docs/site.js`.
-- [ ] **G26. Site qui promet plus que l'app :** le score « en cours » (EN DIRECT) existe dans le simulateur et sur le site, mais pas dans l'app ni dans l'espace (toujours « terminé »). Le grand écran de l'app est une simple liste, sans code d'accès ni gros caractères, contrairement à celui du site. Ajouter ces fonctions à l'app, ou corriger les textes du site.
+- [ ] **G26. Site qui promet plus que l'app :** *Score « en cours » fait le 16/10 (app, espace, à livrer au prochain build) ; texte du grand écran précisé sur le site. Reste, après la sortie : refaire le grand écran de l'app (3 colonnes, gros caractères, code d'accès).* le score « en cours » (EN DIRECT) existe dans le simulateur et sur le site, mais pas dans l'app ni dans l'espace (toujours « terminé »). Le grand écran de l'app est une simple liste, sans code d'accès ni gros caractères, contrairement à celui du site. Ajouter ces fonctions à l'app, ou corriger les textes du site.
 - [x] **G27. Calendrier organisateur de l'app sans temps réel :** *Corrigé le 16/10 (abonnement temps réel sur l'écran) ; à livrer au prochain build.* `app/tournoi/[id]/calendrier.js` ne se recharge qu'en revenant sur l'écran. Deux bénévoles ne voient pas les scores l'un de l'autre. Seul le suivi public est en direct, et le grand écran se rafraîchit à intervalle.
 - [x] **G28. Horaires qui débordent :** *Alerte faite le 16/10 (app, espace, simulateur) ; à livrer au prochain build. Reste à décider : durées par défaut selon le sport.* avec les valeurs par défaut (1 terrain, matchs de 60 min, 15 min de pause), 12 équipes finissent leurs poules « à 22:15 », en fait le lendemain, sans alerte. Prévenir quand la fin dépasse la journée, et revoir les durées par défaut (60 min au football).
 - [ ] **G29. Équipe retirée après la phase finale :** sa demi-finale est supprimée et le tableau devient incohérent (finaliste sans demi-finale). Bloquer le retrait une fois la phase finale lancée, ou demander de régénérer.
@@ -379,6 +385,7 @@ Une ligne par modification, la plus récente en haut.
 
 | Date | Modification |
 |------|--------------|
+| 2026-10-16 | Scores « en cours » : saisie et badge EN DIRECT dans l'app et l'espace, section « En direct » du suivi public (G26, partie 1) |
 | 2026-10-16 | App : calendrier organisateur en temps réel (G27) ; heure de fin estimée et alerte si les matchs débordent sur le lendemain dans l'app, l'espace et le simulateur (G28) |
 | 2026-10-16 | Phase finale : tirage par têtes de série croisées (A1–B2, B1–A2), sans même poule au 1er tour (G25), dans l'app, l'espace et le simulateur |
 | 2026-10-16 | Test complet du site, de l'espace organisateur et de l'app (compte démo) : défauts notés en G25 à G33 |

@@ -11,6 +11,7 @@ import ClassementPoule from '../../../components/ClassementPoule';
 import BasculeVue from '../../../components/BasculeVue';
 import CarteSelectionnable from '../../../components/CarteSelectionnable';
 import Squelette from '../../../components/Squelette';
+import BadgeEnDirect from '../../../components/BadgeEnDirect';
 import { useTheme } from '../../../lib/ThemeContext';
 import { useLangue } from '../../../lib/LangueContext';
 import { libellePhase } from '../../../lib/phases';
@@ -231,8 +232,14 @@ export default function Suivi() {
     .filter((m) => m.resultat?.statut === 'termine')
     .sort((a, b) => new Date(b.horaire) - new Date(a.horaire));
 
+  // Matchs en cours (score saisi au statut "en_cours") : affichés à part,
+  // en tête, avec leur score provisoire.
+  const matchsEnDirect = matchsAvecResultat
+    .filter((m) => m.resultat?.statut === 'en_cours')
+    .sort((a, b) => new Date(a.horaire) - new Date(b.horaire));
+
   const matchsAVenirListe = matchsAvecResultat
-    .filter((m) => m.resultat?.statut !== 'termine')
+    .filter((m) => !m.resultat || !['termine', 'en_cours'].includes(m.resultat.statut))
     .sort((a, b) => new Date(a.horaire) - new Date(b.horaire));
 
   const grouper = parTerrain ? grouperParTerrain : grouperParPhase;
@@ -246,6 +253,31 @@ export default function Suivi() {
   function nomEquipe(id) {
     return equipes.find((e) => e.id === id)?.nom ?? '—';
   }
+
+  const resultatProchainMatch = prochainMatch ? resultats.find((r) => r.match_id === prochainMatch.id) : null;
+  const prochainMatchEnDirect = resultatProchainMatch?.statut === 'en_cours';
+
+  const blocEnDirect = matchsEnDirect.length > 0 && (
+    <View style={styles.carte}>
+      <Text style={styles.section}>{t('suivi.matchsEnDirect')}</Text>
+      {matchsEnDirect.map((match) => (
+        <View key={match.id} style={styles.ligneResultat}>
+          <View style={styles.infoDirect}>
+            <Text style={styles.equipesDirect}>
+              {nomEquipe(match.equipe_a_id)} · {nomEquipe(match.equipe_b_id)}
+            </Text>
+            <Text style={styles.detailDirect}>
+              {libellePhase(match.phase, t)}{match.terrain ? ` · ${t('saisie.terrain', { n: match.terrain })}` : ''}
+            </Text>
+          </View>
+          <View style={styles.scoreDirect}>
+            <BadgeEnDirect />
+            <Text style={styles.scoreResultat}>{match.resultat.score_a} – {match.resultat.score_b}</Text>
+          </View>
+        </View>
+      ))}
+    </View>
+  );
 
   function classementPourPoule(poule) {
     const equipesPoule = equipes.filter((e) => e.poule_id === poule.id);
@@ -338,6 +370,8 @@ export default function Suivi() {
 
       {ongletAffiche === 'apercu' && (
         <>
+          {blocEnDirect}
+
           {dernierResultatEquipe && (
             <View style={styles.bandeau}>
               <Text style={styles.bandeauLabel}>
@@ -361,13 +395,20 @@ export default function Suivi() {
                 <Text style={styles.bandeauEquipes}>
                   {nomEquipe(prochainMatch.equipe_a_id)} · {nomEquipe(prochainMatch.equipe_b_id)}
                 </Text>
-                <Text style={styles.bandeauTexte}>
-                  {new Date(prochainMatch.horaire).toLocaleString(locale, {
-                    weekday: 'short',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
-                </Text>
+                {prochainMatchEnDirect ? (
+                  <View style={styles.scoreDirect}>
+                    <BadgeEnDirect />
+                    <Text style={styles.bandeauTexteScore}>{resultatProchainMatch.score_a} – {resultatProchainMatch.score_b}</Text>
+                  </View>
+                ) : (
+                  <Text style={styles.bandeauTexte}>
+                    {new Date(prochainMatch.horaire).toLocaleString(locale, {
+                      weekday: 'short',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </Text>
+                )}
               </View>
             </View>
           )}
@@ -420,10 +461,17 @@ export default function Suivi() {
         </>
       )}
 
-      {ongletAffiche === 'classement' && contenuClassement}
+      {ongletAffiche === 'classement' && (
+        <>
+          {blocEnDirect}
+          {contenuClassement}
+        </>
+      )}
 
       {ongletAffiche === 'calendrier' && (
         <>
+          {blocEnDirect}
+
           {tournoi.nombre_terrains > 1 && (
             <BasculeVue
               valeur={parTerrain ? 'terrain' : 'poule'}
@@ -558,6 +606,10 @@ function creerStyles(c) {
       alignItems: 'flex-start',
       paddingVertical: 7,
     },
+    infoDirect: { flex: 1, marginRight: 8 },
+    equipesDirect: { fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 13.5, color: c.texte },
+    detailDirect: { fontFamily: POLICE_TEXTE, fontSize: 12, color: c.texteAttenue, marginTop: 2 },
+    scoreDirect: { flexShrink: 0, alignItems: 'flex-end', gap: 2 },
     equipesResultat: { flex: 1, flexShrink: 1, marginRight: 8, fontFamily: POLICE_TEXTE, fontSize: 13.5, color: c.texte },
     scoreResultat: { flexShrink: 0, textAlign: 'right', fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 13.5, color: c.texte },
     horaireAVenir: {

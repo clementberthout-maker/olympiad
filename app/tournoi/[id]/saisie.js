@@ -10,6 +10,7 @@ import { POLICE_TITRE, POLICE_TEXTE, POLICE_TEXTE_SEMIBOLD } from '../../../lib/
 import { vibrerSucces, vibrerAttention } from '../../../lib/haptique';
 import { messageErreur } from '../../../lib/erreurs';
 import CompteurScore from '../../../components/CompteurScore';
+import BasculeVue from '../../../components/BasculeVue';
 import Toast from '../../../components/Toast';
 
 // Délai avant de refermer l'écran une fois le résultat enregistré : le temps
@@ -29,6 +30,9 @@ export default function SaisieResultat() {
   const [scoreTabB, setScoreTabB] = useState(0);
   const [bonusA, setBonusA] = useState(0);
   const [bonusB, setBonusB] = useState(0);
+  // "en_cours" : score affiché en direct au public, sans compter au
+  // classement ni débloquer la phase suivante (voir lib/classement.js).
+  const [statut, setStatut] = useState('termine');
   // Tant que l'organisateur n'a touché à aucun compteur, on n'affiche pas le
   // bloc tirs au but même si 0-0 est techniquement une égalité : ça évite de
   // faire apparaître ce bloc avant même d'avoir commencé à saisir un score.
@@ -61,6 +65,7 @@ export default function SaisieResultat() {
         if (resultat.score_tab_b != null) setScoreTabB(resultat.score_tab_b);
         setBonusA(resultat.bonus_a || 0);
         setBonusB(resultat.bonus_b || 0);
+        setStatut(resultat.statut === 'en_cours' ? 'en_cours' : 'termine');
         setResultatExistant(true);
         setDebute(true);
       } else {
@@ -82,18 +87,19 @@ export default function SaisieResultat() {
 
   const estElimination = match && !estPhaseDePoule(match.phase);
   const egalite = debute && scoreA === scoreB;
+  const termine = statut === 'termine';
   // Les points bonus n'influencent que le classement de poule (voir
   // lib/classement.js) : pas d'intérêt à les saisir en élimination directe.
   const avecPointsBonus = match && match.tournoi?.points_bonus && estPhaseDePoule(match.phase);
 
   function validerResultat() {
-    if (estElimination && egalite) {
+    if (termine && estElimination && egalite) {
       if (scoreTabA === scoreTabB) {
         Alert.alert(t('saisie.matchEliminationTitre'), t('saisie.matchEliminationMessage'));
         return;
       }
     }
-    enregistrer(scoreA, scoreB, estElimination && egalite);
+    enregistrer(scoreA, scoreB, termine && estElimination && egalite);
   }
 
   async function enregistrer(a, b, avecTab) {
@@ -106,7 +112,7 @@ export default function SaisieResultat() {
       score_tab_b: avecTab ? scoreTabB : null,
       bonus_a: bonusA,
       bonus_b: bonusB,
-      statut: 'termine',
+      statut,
     });
     setEnCours(false);
 
@@ -115,7 +121,7 @@ export default function SaisieResultat() {
       return;
     }
     vibrerSucces();
-    setToast({ message: t('saisie.resultatEnregistre'), type: 'succes' });
+    setToast({ message: t(termine ? 'saisie.resultatEnregistre' : 'saisie.scoreEnDirectEnregistre'), type: 'succes' });
     minuteurRetourRef.current = setTimeout(() => router.back(), DELAI_RETOUR);
   }
 
@@ -175,7 +181,17 @@ export default function SaisieResultat() {
         <CompteurScore valeur={scoreB} onChange={changerScoreB} />
       </View>
 
-      {estElimination && egalite && (
+      <BasculeVue
+        valeur={statut}
+        onChange={setStatut}
+        options={[
+          { valeur: 'en_cours', label: t('saisie.statutEnCours') },
+          { valeur: 'termine', label: t('saisie.statutTermine') },
+        ]}
+      />
+      {!termine && <Text style={styles.aideStatut}>{t('saisie.aideStatut')}</Text>}
+
+      {termine && estElimination && egalite && (
         <View style={styles.blocTab}>
           <Text style={styles.labelTab}>{t('saisie.egaliteTirs')}</Text>
           <View style={styles.ligneEquipe}>
@@ -274,6 +290,7 @@ function creerStyles(c) {
       marginTop: 10,
     },
     texteBoutonSupprimer: { color: c.danger, fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 14 },
+    aideStatut: { fontFamily: POLICE_TEXTE, fontSize: 12, color: c.texteAttenue, marginTop: -4, marginBottom: 12 },
     note: { fontFamily: POLICE_TEXTE, fontSize: 12, color: c.texteAttenue, marginTop: 16, textAlign: 'center' },
   });
 }

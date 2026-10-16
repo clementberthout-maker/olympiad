@@ -643,14 +643,15 @@ function carteMatch(c, m, lecture) {
   const r = m.resultat;
   if (!m.equipe_b_id) return `<div class="match exempt"><span class="eq">${esc(nomEquipe(c, m.equipe_a_id))}</span><span class="sous"><span>${tr('Exempt · qualifié·e directement', 'Bye · directly qualified')}</span></span></div>`;
   const fini = r?.statut === 'termine';
+  const direct = r?.statut === 'en_cours';
   const g = fini ? idEquipeGagnante(m) : null;
   const tab = fini && r.score_a === r.score_b && r.score_tab_a != null ? `<span class="tab">${tr('t.a.b.', 'pens')} ${r.score_tab_a}-${r.score_tab_b}</span>` : '';
   const peut = !lecture && c.droits?.saisir;
-  return `<${peut ? 'button' : 'div'} class="match ${etat.majIds.has(m.id) ? 'maj' : ''}" ${peut ? `data-action="saisir" data-match="${m.id}"` : ''}>
+  return `<${peut ? 'button' : 'div'} class="match ${direct ? 'direct' : ''} ${etat.majIds.has(m.id) ? 'maj' : ''}" ${peut ? `data-action="saisir" data-match="${m.id}"` : ''}>
     <span class="eq ${g === m.equipe_a_id ? 'gagnant' : ''}">${esc(nomEquipe(c, m.equipe_a_id))}</span>
-    <span class="centre">${fini ? `<span class="score">${r.score_a} - ${r.score_b}</span>${tab}` : `<span class="heure">${formaterHeure(m.horaire)}</span>`}</span>
+    <span class="centre">${fini || direct ? `<span class="score">${r.score_a} - ${r.score_b}</span>${tab}` : `<span class="heure">${formaterHeure(m.horaire)}</span>`}</span>
     <span class="eq b ${g === m.equipe_b_id ? 'gagnant' : ''}">${esc(nomEquipe(c, m.equipe_b_id))}</span>
-    <span class="sous"><span>${m.terrain ? `${tr('Terrain', 'Field')} ${esc(m.terrain)}` : ''}</span><span>${fini ? `${formaterHeure(m.horaire)} · ${tr('Terminé', 'Finished')}` : tr('À venir', 'Upcoming')}</span></span>
+    <span class="sous"><span>${m.terrain ? `${tr('Terrain', 'Field')} ${esc(m.terrain)}` : ''}</span><span>${fini ? `${formaterHeure(m.horaire)} · ${tr('Terminé', 'Finished')}` : direct ? `<span class="badge-direct">${tr('EN DIRECT', 'LIVE')}</span>` : tr('À venir', 'Upcoming')}</span></span>
   </${peut ? 'button' : 'div'}>`;
 }
 function htmlPodium(c, a) {
@@ -806,7 +807,7 @@ function ouvrirSaisie(matchId) {
   const m = analyser(c).matchs.find((x) => x.id === matchId);
   if (!m || !c.droits.saisir) return;
   const r = m.resultat;
-  saisie = { m, a: r ? r.score_a : 0, b: r ? r.score_b : 0, tabA: r?.score_tab_a ?? 0, tabB: r?.score_tab_b ?? 0, bonusA: r?.bonus_a || 0, bonusB: r?.bonus_b || 0, existe: Boolean(r) };
+  saisie = { m, a: r ? r.score_a : 0, b: r ? r.score_b : 0, tabA: r?.score_tab_a ?? 0, tabB: r?.score_tab_b ?? 0, bonusA: r?.bonus_a || 0, bonusB: r?.bonus_b || 0, statut: r?.statut === 'en_cours' ? 'en_cours' : 'termine', existe: Boolean(r) };
   const tiroir = $('#tiroir');
   tiroir.innerHTML = htmlSaisie();
   tiroir.classList.add('ouvert');
@@ -823,7 +824,9 @@ function htmlSaisie() {
   return `<div class="tiroir-entete"><div><p class="surtitre" style="margin:0">${esc(libellePhase(m.phase))}${m.terrain ? ` · ${tr('Terrain', 'Field')} ${esc(m.terrain)}` : ''} · ${formaterHeure(m.horaire)}</p><h2>${tr('Saisir le score', 'Enter the score')}</h2><p>${tr(`En ${unite}`, `In ${unite}`)}</p></div><button class="fermer" data-action="fermer-tiroir" aria-label="${tr('Fermer', 'Close')}">${ico('croix')}</button></div>
     <div class="tiroir-corps"><form id="form-score">
       <div class="duel-saisie">${compteur('a', nomEquipe(c, m.equipe_a_id))}<span class="tiret">–</span>${compteur('b', nomEquipe(c, m.equipe_b_id))}</div>
-      <div id="zone-tab">${!poule && egalite ? htmlTab() : ''}</div>
+      <div class="segments segments-statut"><button type="button" class="${saisie.statut === 'en_cours' ? 'actif' : ''}" data-action="statut-saisie" data-valeur="en_cours">${tr('En cours', 'In progress')}</button><button type="button" class="${saisie.statut === 'termine' ? 'actif' : ''}" data-action="statut-saisie" data-valeur="termine">${tr('Terminé', 'Finished')}</button></div>
+      <p class="aide-statut" id="aide-statut" ${saisie.statut === 'en_cours' ? '' : 'hidden'}>${tr('« En cours » : le score s\'affiche en direct pour le public, sans compter au classement. Passe sur « Terminé » à la fin du match.', '“In progress”: the score is shown live to the public but does not count in the standings yet. Switch to “Finished” at the end of the match.')}</p>
+      <div id="zone-tab">${!poule && egalite && saisie.statut === 'termine' ? htmlTab() : ''}</div>
       ${t.points_bonus && poule ? `<div class="reglage"><div class="txt"><b>${tr('Point bonus', 'Bonus point')}</b><small>${esc(nomEquipe(c, m.equipe_a_id))}</small></div><button type="button" class="interrupteur" role="switch" aria-checked="${Boolean(saisie.bonusA)}" data-action="bonus" data-cle="bonusA"></button></div>
         <div class="reglage"><div class="txt"><b>${tr('Point bonus', 'Bonus point')}</b><small>${esc(nomEquipe(c, m.equipe_b_id))}</small></div><button type="button" class="interrupteur" role="switch" aria-checked="${Boolean(saisie.bonusB)}" data-action="bonus" data-cle="bonusB"></button></div>` : ''}
       <p class="erreur-form" id="erreur-score"></p>
@@ -841,7 +844,7 @@ function htmlTab() {
 function majZoneTab() {
   const zone = $('#zone-tab');
   if (!zone || !saisie) return;
-  const doit = !estPhaseDePoule(saisie.m.phase) && saisie.a === saisie.b;
+  const doit = !estPhaseDePoule(saisie.m.phase) && saisie.a === saisie.b && saisie.statut === 'termine';
   if (doit && !zone.innerHTML) zone.innerHTML = htmlTab();
   if (!doit && zone.innerHTML) zone.innerHTML = '';
 }
@@ -854,14 +857,14 @@ function fermerTiroir() {
 async function enregistrerScore(bouton) {
   const s = saisie;
   const poule = estPhaseDePoule(s.m.phase);
-  const avecTab = !poule && s.a === s.b;
+  const avecTab = !poule && s.a === s.b && s.statut === 'termine';
   if (avecTab && s.tabA === s.tabB) { $('#erreur-score').textContent = tr('Égalité : indique un départage différent pour désigner le vainqueur.', 'Draw: enter a different tiebreak score to set the winner.'); return; }
   bouton.disabled = true; bouton.innerHTML = '<span class="rotation"></span>';
   try {
-    await donnees.enregistrerResultat({ match_id: s.m.id, score_a: s.a, score_b: s.b, score_tab_a: avecTab ? s.tabA : null, score_tab_b: avecTab ? s.tabB : null, bonus_a: s.bonusA, bonus_b: s.bonusB, statut: 'termine' });
+    await donnees.enregistrerResultat({ match_id: s.m.id, score_a: s.a, score_b: s.b, score_tab_a: avecTab ? s.tabA : null, score_tab_b: avecTab ? s.tabB : null, bonus_a: s.bonusA, bonus_b: s.bonusB, statut: s.statut });
     etat.majIds.add(s.m.id);
     fermerTiroir();
-    toast(tr('Résultat enregistré, visible en direct par tous.', 'Result saved, live for everyone.'));
+    toast(s.statut === 'en_cours' ? tr('Score en direct enregistré, visible par tous.', 'Live score saved, visible to everyone.') : tr('Résultat enregistré, visible en direct par tous.', 'Result saved, live for everyone.'));
     await rechargerCourant(false);
   } catch (e) {
     $('#erreur-score').textContent = messageErreur(e);
@@ -991,9 +994,10 @@ function rendreGrandEcran() {
   const t = c.tournoi; const a = analyser(c);
   const d = new Date();
   const peutSaisir = Boolean(c.droits?.saisir);
-  const ligne = (m) => { const r = m.resultat; const fini = r?.statut === 'termine'; return `<div class="ge-match ${etat.majIds.has(m.id) ? 'maj' : ''} ${peutSaisir ? 'cliquable' : ''}" ${peutSaisir ? `data-action="saisir" data-match="${m.id}" role="button" tabindex="0" title="${tr('Saisir le score', 'Enter the score')}"` : ''}><div class="eq">${esc(nomEquipe(c, m.equipe_a_id))} · ${esc(nomEquipe(c, m.equipe_b_id))}<small>${esc(libellePhase(m.phase))}${m.terrain ? ` · ${tr('terrain', 'field')} ${esc(m.terrain)}` : ''} · ${formaterHeure(m.horaire)}</small></div><span class="sc">${fini ? `${r.score_a}-${r.score_b}` : `<small style="font-family:var(--corps);font-size:15px">${tr('À venir', 'Upcoming')}</small>`}</span></div>`; };
+  const ligne = (m) => { const r = m.resultat; const fini = r?.statut === 'termine'; const direct = r?.statut === 'en_cours'; return `<div class="ge-match ${direct ? 'live' : ''} ${etat.majIds.has(m.id) ? 'maj' : ''} ${peutSaisir ? 'cliquable' : ''}" ${peutSaisir ? `data-action="saisir" data-match="${m.id}" role="button" tabindex="0" title="${tr('Saisir le score', 'Enter the score')}"` : ''}><div class="eq">${esc(nomEquipe(c, m.equipe_a_id))} · ${esc(nomEquipe(c, m.equipe_b_id))}<small>${direct ? `<span class="badge-direct">${tr('EN DIRECT', 'LIVE')}</span> · ` : ''}${esc(libellePhase(m.phase))}${m.terrain ? ` · ${tr('terrain', 'field')} ${esc(m.terrain)}` : ''} · ${formaterHeure(m.horaire)}</small></div><span class="sc">${fini || direct ? `${r.score_a}-${r.score_b}` : `<small style="font-family:var(--corps);font-size:15px">${tr('À venir', 'Upcoming')}</small>`}</span></div>`; };
   const jouables = a.matchs.filter((m) => m.equipe_b_id);
-  const avenir = jouables.filter((m) => m.resultat?.statut !== 'termine').sort((x, y) => new Date(x.horaire) - new Date(y.horaire)).slice(0, 7);
+  const enDirect = (m) => (m.resultat?.statut === 'en_cours' ? 0 : 1);
+  const avenir = jouables.filter((m) => m.resultat?.statut !== 'termine').sort((x, y) => enDirect(x) - enDirect(y) || new Date(x.horaire) - new Date(y.horaire)).slice(0, 7);
   const derniers = jouables.filter((m) => m.resultat?.statut === 'termine').sort((x, y) => new Date(y.horaire) - new Date(x.horaire)).slice(0, 8);
   const cp = classementsPoules(c);
   const [bp, bc] = (ABREV[t.sport] || ABREV.football)[langue === 'en' ? 1 : 0];
@@ -1247,6 +1251,13 @@ document.addEventListener('click', async (e) => {
       if (cle === 'a' || cle === 'b') majZoneTab();
       break;
     }
+    case 'statut-saisie':
+      saisie.statut = cible.dataset.valeur;
+      $('[data-action="statut-saisie"]').forEach((b) => b.classList.toggle('actif', b === cible));
+      $('#aide-statut').hidden = saisie.statut !== 'en_cours';
+      $('#erreur-score').textContent = '';
+      majZoneTab();
+      break;
     case 'bonus': saisie[cible.dataset.cle] = saisie[cible.dataset.cle] ? 0 : 1; cible.setAttribute('aria-checked', String(Boolean(saisie[cible.dataset.cle]))); break;
     case 'effacer-score':
       if (await confirmer({ titre: tr('Effacer le résultat ?', 'Clear the result?'), texte: tr('Le match repassera « à venir », pour tout le monde.', 'The match will go back to “upcoming”, for everyone.'), bouton: tr('Effacer', 'Clear'), danger: true })) {

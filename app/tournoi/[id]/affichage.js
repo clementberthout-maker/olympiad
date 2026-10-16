@@ -9,6 +9,7 @@ import {
 import ClassementPoule from '../../../components/ClassementPoule';
 import BasculeVue from '../../../components/BasculeVue';
 import Squelette from '../../../components/Squelette';
+import BadgeEnDirect from '../../../components/BadgeEnDirect';
 import { useTheme } from '../../../lib/ThemeContext';
 import { useLangue } from '../../../lib/LangueContext';
 import { libellePhase } from '../../../lib/phases';
@@ -173,6 +174,7 @@ export default function VueGrandEcran() {
               );
             }
             const termine = match.resultat?.statut === 'termine';
+            const enDirect = match.resultat?.statut === 'en_cours';
             return (
               <View key={match.id} style={styles.ligneMatch}>
                 <View style={styles.infoMatch}>
@@ -186,8 +188,9 @@ export default function VueGrandEcran() {
                     {parTerrain ? ` · ${libellePhase(match.phase, t)}` : match.terrain ? ` · ${t('saisie.terrain', { n: match.terrain })}` : ''}
                   </Text>
                 </View>
-                <Text style={termine ? styles.score : styles.aVenir}>
-                  {termine ? `${match.resultat.score_a} – ${match.resultat.score_b}` : t('calendrier.aVenir')}
+                {enDirect && <View style={styles.badgeDirect}><BadgeEnDirect grand /></View>}
+                <Text style={termine || enDirect ? styles.score : styles.aVenir}>
+                  {termine || enDirect ? `${match.resultat.score_a} – ${match.resultat.score_b}` : t('calendrier.aVenir')}
                 </Text>
               </View>
             );
@@ -239,6 +242,7 @@ function creerStyles(c) {
     horaire: { fontFamily: POLICE_TEXTE, fontSize: 14, color: c.texteAttenue, marginTop: 3 },
     score: { fontFamily: POLICE_TITRE, fontSize: 26, color: c.texte },
     aVenir: { fontFamily: POLICE_TEXTE, fontSize: 14, color: c.texteAttenue },
+    badgeDirect: { marginRight: 10 },
     ligneExempt: {
       flexDirection: 'row',
       justifyContent: 'space-between',

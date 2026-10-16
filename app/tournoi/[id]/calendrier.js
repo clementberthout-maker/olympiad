@@ -22,6 +22,7 @@ import { messageErreur } from '../../../lib/erreurs';
 import ClassementPoule from '../../../components/ClassementPoule';
 import BasculeVue from '../../../components/BasculeVue';
 import BoutonRetour from '../../../components/BoutonRetour';
+import BadgeEnDirect from '../../../components/BadgeEnDirect';
 import { useTheme } from '../../../lib/ThemeContext';
 import { useLangue } from '../../../lib/LangueContext';
 import { libellePhase } from '../../../lib/phases';
@@ -363,6 +364,7 @@ export default function Calendrier() {
               );
             }
             const termine = match.resultat?.statut === 'termine';
+            const enDirect = match.resultat?.statut === 'en_cours';
             return (
               <Pressable
                 key={match.id}
@@ -387,6 +389,11 @@ export default function Calendrier() {
                       ? ` ${t('calendrier.scoreTab', { a: match.resultat.score_tab_a, b: match.resultat.score_tab_b })}`
                       : ''}
                   </Text>
+                ) : enDirect ? (
+                  <View style={styles.scoreDirect}>
+                    <BadgeEnDirect />
+                    <Text style={styles.score}>{match.resultat.score_a} – {match.resultat.score_b}</Text>
+                  </View>
                 ) : (
                   <Text style={styles.aVenir}>{t('calendrier.aVenir')}</Text>
                 )}
@@ -552,6 +559,7 @@ function creerStyles(c) {
     horaire: { fontFamily: POLICE_TEXTE, fontSize: 12, color: c.texteAttenue, marginTop: 2 },
     score: { fontFamily: POLICE_TITRE, fontSize: 17, color: c.texte },
     aVenir: { fontFamily: POLICE_TEXTE, fontSize: 12, color: c.texteAttenue },
+    scoreDirect: { alignItems: 'flex-end', gap: 2 },
     ligneExempt: {
       flexDirection: 'row',
       justifyContent: 'space-between',
