@@ -218,6 +218,7 @@ OLYMPIAD sert à organiser des tournois sportifs amateurs. L'organisateur crée 
 ### Nouveau nom de l'application (15 octobre)
 - Pistes étudiées pour remplacer OLYMPIAD (racine « olymp- » à éviter, art. L141-5 du Code du sport) : PODIAD, TOURNIAD, STADION, AGORIA…
 - Premières vérifications sur STADION et AGORIA : les deux sont déjà pris. STADION est le nom d'une agence numérique sportive londonienne. AGORIA est celui de la fédération belge de la technologie, et aussi d'un DJ. Leurs domaines .app, .fr et .com sont enregistrés. Variantes proposées : STADIOS, AGORAE, AGORENA.
+- Le 16/10, vérification de STADIOS, STADIONA et AGORAE (recherche web et registres des domaines). Aucune entreprise ni appli trouvée à ces noms exacts. **STADIONA** est la seule dont `stadiona.app` et `stadiona.fr` sont libres (`.com` pris). Les domaines .app, .fr et .com de STADIOS et d'AGORAE sont tous pris. Une agence londonienne s'appelle déjà « Stadion », donc STADIONA lui ressemble un peu. Marques INPI et EUIPO pas encore vérifiées.
 
 ### Intro 3D validée, puis retirée du site (15 octobre)
 - **Validée** par Clément le 15 octobre dans sa dernière version (avatar Rocketbox). **Consigne : ne plus modifier l'animation 3D.**
@@ -239,7 +240,7 @@ OLYMPIAD sert à organiser des tournois sportifs amateurs. L'organisateur crée 
 - **Offres** : l'abonnement Pro est lu dans `abonnements_pro`. Le déblocage est lu dans `tournois.debloque`. Les achats restent dans l'app mobile, et l'espace l'explique (limite de 12 équipes, PDF, co-organisateurs).
 - **Mode démo** : `espace.html?demo=1`, avec des données fictives dans le navigateur et le temps réel entre onglets. Il sert de découverte pour les visiteurs (bouton « Découvrir en démo » sur le site) et de banc d'essai.
 - **Site** : bouton « Espace organisateur » dans l'en-tête, section « Ton tournoi, aussi sur ordinateur » (ouvrir, se connecter, démo), bouton dans la section finale.
-- **Vérifié en local** : en mode démo, tout le parcours (création d'un tournoi de rugby à 8 équipes, saisie, phase finale, finale, podium, onglets, QR code, grand écran, suivi public mis à jour en direct dans un autre onglet, mobile) ; en mode réel, la page de connexion et une requête publique à la base. **Pas testé avec un vrai compte** (connexion et écritures réelles) : à faire par Clément.
+- **Vérifié en local** : en mode démo, tout le parcours (création d'un tournoi de rugby à 8 équipes, saisie, phase finale, finale, podium, onglets, QR code, grand écran, suivi public mis à jour en direct dans un autre onglet, mobile) ; en mode réel, la page de connexion et une requête publique à la base. **Testé avec un vrai compte par Clément le 16/10 (en ligne) : tout fonctionne.**
 
 ## 3. Ce qu'il reste à faire
 
@@ -318,7 +319,7 @@ Légende : `[ ]` à faire · `[x]` fait
 - [ ] **F22d. Remettre l'intro 3D en ligne** (quand Clément le décidera) : suivre `archives/intro-3d/README.md`, sans modifier l'animation. Penser au poids (≈ 14 Mo de ressources chargées après l'accueil) et la retester sur ordinateur et téléphone.
 - [ ] **F22e. Espace organisateur : finaliser.**
   - [ ] Supabase > Authentication > URL Configuration > Redirect URLs : ajouter `https://clementberthout-maker.github.io/olympiad/espace.html**` (et `http://localhost:5500/olympiad/espace.html**` pour les tests), sinon le lien « Mot de passe oublié » demandé depuis le site ne revient pas sur l'espace.
-  - [ ] Tester avec un vrai compte : connexion, création d'un tournoi, scores vus en direct dans l'app sur un téléphone (et inversement), phase finale, co-organisateurs (avec un tournoi débloqué ou un compte Pro), export PDF, profil et photo, déconnexion.
+  - [x] Tester avec un vrai compte : *fait par Clément le 16/10, tout fonctionne.* Connexion, création d'un tournoi, scores vus en direct dans l'app sur un téléphone (et inversement), phase finale, co-organisateurs (avec un tournoi débloqué ou un compte Pro), export PDF, profil et photo, déconnexion.
   - [ ] Garder `docs/espace/moteur/` identique à `lib/generation.js`, `lib/classement.js` et `lib/sports.js`.
 - [ ] **F22c. Site : relire et publier.** Relire les textes du nouveau site (FR et EN), tester sur un vrai téléphone, puis pousser pour le mettre en ligne sur GitHub Pages. Le QR code du simulateur pointe vers la page elle-même (`#suivi/code`), pas vers l'app.
 - [ ] **F23. Après la sortie :** surveiller les plantages (Sentry ou `expo-insights`, à ajouter si tu veux), les tableaux de bord RevenueCat et Supabase, et prévoir les mises à jour avec `eas update`.
@@ -334,6 +335,8 @@ Une ligne par modification, la plus récente en haut.
 
 | Date | Modification |
 |------|--------------|
+| 2026-10-16 | Espace organisateur testé en ligne avec un vrai compte par Clément : tout fonctionne (F22e) |
+| 2026-10-16 | Nom : STADIOS, STADIONA et AGORAE vérifiés ; seul STADIONA a ses domaines .app et .fr libres |
 | 2026-10-16 | Commits poussés : nouveau site, espace organisateur (`docs/espace.html`) et archive de l'intro 3D en ligne sur GitHub Pages |
 | 2026-10-15 | Espace organisateur propre au site (`docs/espace.html`, `docs/espace/`) : même D.A., animations, branché sur Supabase, moteur de l'app copié, suivi public, mode démo ; version web compilée de l'app abandonnée et retirée |
 | 2026-10-15 | Site : badges App Store / Google Play remontés et plus voyants, chiffres du héros et recherche de l'Aide retirés |
