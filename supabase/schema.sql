@@ -622,3 +622,230 @@ drop trigger if exists limiter_equipes on equipes;
 create trigger limiter_equipes
   before insert or update of tournoi_id on equipes
   for each row execute function limiter_equipes();
+
+-- ============================================================
+-- MIGRATION — Suppression automatique des comptes inactifs (3 ans)
+-- ============================================================
+-- Promise par la politique de confidentialité du 20/10/2026 (section 4) :
+-- un compte sans aucune connexion pendant 3 ans est supprimé avec ses
+-- tournois, son profil et sa photo, après un e-mail d'avertissement envoyé
+-- au moins 30 jours avant.
+--
+-- Chaque nuit, pg_cron appelle l'Edge Function "comptes-inactifs"
+-- (supabase/functions/), qui :
+--   1. supprime les comptes avertis depuis au moins 30 jours et toujours
+--      inactifs depuis 3 ans (supprimer_compte_inactif, puis la photo via
+--      l'API Storage : le SQL ne peut pas toucher au stockage) ;
+--   2. envoie l'e-mail d'avertissement aux comptes inactifs depuis 3 ans
+--      moins 30 jours (comptes_a_avertir), par le SMTP Gmail, puis le note
+--      (noter_avertissement) pour ne pas le renvoyer.
+--
+-- Dernière activité d'un compte : la plus récente de la création, de la
+-- dernière connexion (auth.users.last_sign_in_at) et du dernier
+-- renouvellement de session. last_sign_in_at seul ne suffit pas : l'app
+-- garde la session ouverte et la renouvelle sans nouvelle connexion, donc
+-- un utilisateur qui s'en sert chaque semaine peut avoir un
+-- last_sign_in_at vieux de plusieurs années.
+
+create extension if not exists pg_cron;
+create extension if not exists pg_net;
+
+-- Avertissements envoyés. derniere_activite = activité du compte au moment
+-- de l'avertissement : si l'utilisateur revient, son activité devient plus
+-- récente, l'avertissement ne compte plus, et un nouveau sera envoyé s'il
+-- redevient inactif. Supprimé avec le compte (cascade).
+create table if not exists avertissements_inactivite (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  averti_le timestamptz not null default now(),
+  derniere_activite timestamptz not null
+);
+
+-- RLS sans policy : seule l'Edge Function (service_role) y accède.
+alter table avertissements_inactivite enable row level security;
+
+create or replace function activite_comptes()
+returns table (user_id uuid, email text, prenom text, derniere_activite timestamptz)
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select
+    u.id,
+    u.email::text,
+    u.raw_user_meta_data ->> 'prenom',
+    greatest(
+      u.created_at,
+      u.last_sign_in_at,
+      (select max(s.updated_at) from auth.sessions s where s.user_id = u.id),
+      (select max(r.updated_at) from auth.refresh_tokens r where r.user_id = u.id::text)
+    )
+  from auth.users u;
+$$;
+
+-- Comptes à avertir : inactifs depuis 3 ans moins 30 jours, avec une
+-- adresse e-mail, pas encore avertis pour cette période d'inactivité.
+-- date_suppression : date à partir de laquelle le compte sera supprimé.
+create or replace function comptes_a_avertir(p_limite int default 50)
+returns table (user_id uuid, email text, prenom text, date_suppression timestamptz)
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select
+    a.user_id,
+    a.email,
+    a.prenom,
+    greatest(a.derniere_activite + interval '3 years', now() + interval '31 days')
+  from activite_comptes() a
+  where a.derniere_activite < now() - (interval '3 years' - interval '30 days')
+    and coalesce(a.email, '') <> ''
+    and not exists (
+      select 1 from avertissements_inactivite av
+      where av.user_id = a.user_id and av.derniere_activite >= a.derniere_activite
+    )
+  order by a.derniere_activite
+  limit p_limite;
+$$;
+
+-- Note l'avertissement, une fois l'e-mail envoyé. Ne note rien (renvoie
+-- false) si le compte est redevenu actif entre-temps.
+create or replace function noter_avertissement(p_uid uuid)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_activite timestamptz;
+begin
+  select a.derniere_activite into v_activite from activite_comptes() a where a.user_id = p_uid;
+  if v_activite is null
+     or v_activite >= now() - (interval '3 years' - interval '30 days') then
+    return false;
+  end if;
+
+  insert into avertissements_inactivite (user_id, averti_le, derniere_activite)
+  values (p_uid, now(), v_activite)
+  on conflict (user_id) do update
+    set averti_le = excluded.averti_le,
+        derniere_activite = excluded.derniere_activite;
+  return true;
+end;
+$$;
+
+-- Comptes à supprimer : inactifs depuis 3 ans, avertis depuis au moins
+-- 30 jours, sans aucune activité depuis l'avertissement.
+create or replace function comptes_a_supprimer(p_limite int default 100)
+returns table (user_id uuid)
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select a.user_id
+  from activite_comptes() a
+  join avertissements_inactivite av on av.user_id = a.user_id
+  where a.derniere_activite < now() - interval '3 years'
+    and av.averti_le <= now() - interval '30 days'
+    and av.derniere_activite >= a.derniere_activite
+  order by a.derniere_activite
+  limit p_limite;
+$$;
+
+-- Données supprimées avec un compte, communes à supprimer_mon_compte et à
+-- supprimer_compte_inactif (détail dans la migration « Suppression du
+-- compte par l'utilisateur »). Jamais appelable depuis l'app.
+create or replace function supprimer_donnees_compte(p_uid uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  delete from tournoi_organisateurs where user_id = p_uid;
+  delete from tournois where organisateur_id = p_uid;
+  delete from profils where id = p_uid;
+  delete from auth.users where id = p_uid;
+end;
+$$;
+
+-- Même comportement qu'avant, désormais via supprimer_donnees_compte.
+create or replace function supprimer_mon_compte()
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_uid uuid := auth.uid();
+begin
+  if v_uid is null then
+    raise exception 'Non authentifié' using errcode = '42501';
+  end if;
+
+  perform supprimer_donnees_compte(v_uid);
+end;
+$$;
+
+-- Supprime un compte inactif après avoir revérifié, au dernier moment, les
+-- conditions de comptes_a_supprimer (renvoie false si elles ne sont plus
+-- remplies).
+create or replace function supprimer_compte_inactif(p_uid uuid)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not exists (
+    select 1
+    from activite_comptes() a
+    join avertissements_inactivite av on av.user_id = a.user_id
+    where a.user_id = p_uid
+      and a.derniere_activite < now() - interval '3 years'
+      and av.averti_le <= now() - interval '30 days'
+      and av.derniere_activite >= a.derniere_activite
+  ) then
+    return false;
+  end if;
+
+  perform supprimer_donnees_compte(p_uid);
+  return true;
+end;
+$$;
+
+-- Réservées à l'Edge Function (clé service_role).
+revoke execute on function activite_comptes() from public, anon, authenticated;
+revoke execute on function comptes_a_avertir(int) from public, anon, authenticated;
+revoke execute on function noter_avertissement(uuid) from public, anon, authenticated;
+revoke execute on function comptes_a_supprimer(int) from public, anon, authenticated;
+revoke execute on function supprimer_donnees_compte(uuid) from public, anon, authenticated;
+revoke execute on function supprimer_compte_inactif(uuid) from public, anon, authenticated;
+grant execute on function comptes_a_avertir(int) to service_role;
+grant execute on function noter_avertissement(uuid) to service_role;
+grant execute on function comptes_a_supprimer(int) to service_role;
+grant execute on function supprimer_compte_inactif(uuid) to service_role;
+
+-- Tâche quotidienne à 3 h (UTC). L'adresse du projet et le secret partagé
+-- avec l'Edge Function sont lus dans Vault (secrets "olympiad_url_projet"
+-- et "olympiad_secret_cron", à créer une fois : voir
+-- supabase/functions/comptes-inactifs/index.ts). cron.schedule remplace la
+-- tâche si elle existe déjà.
+select cron.schedule(
+  'comptes-inactifs-quotidien',
+  '0 3 * * *',
+  $cron$
+  select net.http_post(
+    url := (select decrypted_secret from vault.decrypted_secrets where name = 'olympiad_url_projet')
+           || '/functions/v1/comptes-inactifs',
+    headers := jsonb_build_object(
+      'Content-Type', 'application/json',
+      'x-cron-secret', (select decrypted_secret from vault.decrypted_secrets where name = 'olympiad_secret_cron')
+    ),
+    body := '{}'::jsonb,
+    timeout_milliseconds := 120000
+  );
+  $cron$
+);

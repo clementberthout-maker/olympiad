@@ -309,7 +309,6 @@ OLYMPIAD sert à organiser des tournois sportifs amateurs. L'organisateur crée 
 - Notes de version FR/EN du build 6 ajoutées à `store/test-ferme.md`.
 - **Build 6 réussi sur EAS le 16/10** (`versionCode` 6, clé `gqma_0PWKl` / SHA1 `58:99…` comme le build 5, clé RevenueCat chargée depuis l'environnement production) : https://expo.dev/accounts/clementberth/projects/olympiad/builds/ad4cb98f-9c60-4227-bcfc-2f289842406d. **Reste** : importer le `.aab` dans la Play Console (test fermé, piste Alpha), coller les notes de version et envoyer en examen.
 
-m=>m
 ### Conformité légale du site (20 octobre)
 - Audit : pas de cookie publicitaire ni de statistiques, seulement du stockage strictement nécessaire (connexion, thème, langue, démo), donc **pas de bandeau cookies à prévoir**. Règles d'accès (RLS) déjà sur toutes les tables.
 - **Polices hébergées sur le site** (`docs/polices/`, Bebas Neue et Work Sans en TTF, licences OFL jointes) : plus aucun appel à Google Fonts, y compris pour l'export PDF de l'espace.
@@ -317,6 +316,16 @@ m=>m
 - **Politique de confidentialité** (HTML et `POLITIQUE-CONFIDENTIALITE.md`, au 20/10) : section cookies précisée, Google Fonts retiré, durées de conservation détaillées (comptes inactifs supprimés après 3 ans avec avertissement 30 jours avant, e-mails gardés 1 an au plus, journaux techniques, achats, stockage du navigateur).
 - **CGU** (au 20/10) : droit de rétractation (perte du délai de 14 jours pour un contenu numérique fourni immédiatement, art. L221-28 13°) et lien vers les mentions légales.
 - Vérifié dans le navigateur : polices chargées depuis le site (aucune requête Google), page des mentions légales, liens dans le pied du site et le profil de l'espace.
+
+### Suppression automatique des comptes inactifs (20 octobre)
+- Migration « Suppression automatique des comptes inactifs » dans `supabase/schema.sql` : table `avertissements_inactivite` (date de l'avertissement, pour ne pas le renvoyer), fonctions réservées à la clé `service_role` (`comptes_a_avertir`, `noter_avertissement`, `comptes_a_supprimer`, `supprimer_compte_inactif`) et tâche `pg_cron` quotidienne à 3 h UTC qui appelle l'Edge Function par `pg_net`.
+- Inactivité mesurée sur la plus récente de la création, de la dernière connexion et du dernier renouvellement de session : l'app garde la session ouverte, donc `last_sign_in_at` seul aurait fait supprimer des utilisateurs actifs.
+- Avertissement à 3 ans moins 30 jours ; suppression à 3 ans, au plus tôt 30 jours après l'avertissement, et seulement sans aucune activité depuis. Une connexion annule l'avertissement.
+- Suppression commune avec « Supprimer mon compte » (`supprimer_donnees_compte`, même comportement) ; la photo est retirée du bucket `avatars` par l'Edge Function.
+- Nouvelle Edge Function `supabase/functions/comptes-inactifs` : supprime puis avertit (au plus 50 e-mails par nuit), e-mail FR/EN aux couleurs de l'app (`modele.ts`) envoyé par Gmail (port 465), mode `simulation` pour compter sans agir. Protégée par un secret partagé avec `pg_cron` (Vault).
+- Relu : syntaxe de la fonction et rendu de l'e-mail vérifiés avec Node ; pas de test contre la vraie base (ni `deno` ni la CLI Supabase sur la machine).
+- **Mis en place sur Supabase le 20/10** avec l'utilisateur : mot de passe d'application Gmail dédié, secrets `SMTP_USER`, `SMTP_PASSWORD`, `CRON_SECRET`, secrets Vault, migration exécutée (tâche `comptes-inactifs-quotidien` créée). Testé : simulation (0 compte à avertir ou supprimer) et appel réel par `pg_net` avec le secret de Vault (réponse 200, rien supprimé ni envoyé).
+- Déploiement par la CLI impossible sur ce PC (`TransportError`) : l'antivirus inspecte les connexions HTTPS avec son propre certificat. Fonction déployée depuis l'éditeur du tableau de bord, en un seul fichier (`index.ts` + `modele.ts` + partie utile de `_shared/commun.ts`), vérification JWT désactivée. Pour Node, ajouter `--use-system-ca`.
 
 ## 3. Ce qu'il reste à faire
 
@@ -360,7 +369,12 @@ Légende : `[ ]` à faire · `[x]` fait
 - [ ] **C14b. Choisir le nouveau nom (avant C14) :** vérifier les marques sur INPI et TMview (classes 9 et 41), les stores, les domaines et les réseaux sociaux. Ensuite, renommer l'app (nom affiché, logo, textes, fiches des stores, site). L'identifiant `com.clement.olympiad` peut rester.
 - [ ] **C15. Avant la sortie publique :** passer Supabase en Pro (un projet gratuit se met en pause après 7 jours sans activité, sans sauvegarde) ; s'inscrire à l'App Store Small Business Program (commission 15 % au lieu de 30 %) ; choisir l'adresse publique de développeur (affichée par Apple et Google) ; créer une micro-entreprise dès les premières ventes régulières.
 - [ ] **C16. Conformité légale, à finir avant la sortie publique :**
-  - [ ] Supprimer automatiquement les comptes inactifs depuis 3 ans (promis dans la politique du 20/10) : tâche planifiée Supabase (`pg_cron`) qui envoie l'e-mail d'avertissement 30 jours avant, puis appelle la suppression.
+  - [x] Supprimer automatiquement les comptes inactifs depuis 3 ans (promis dans la politique du 20/10) : tâche planifiée Supabase (`pg_cron`) qui envoie l'e-mail d'avertissement 30 jours avant, puis appelle la suppression. *Fait le 20/10 : migration exécutée, Edge Function `comptes-inactifs` déployée, secrets et Vault configurés, simulation et appel par `pg_net` testés.*
+    - [x] Créer un mot de passe d'application Gmail dédié, puis les secrets d'Edge Function `SMTP_USER`, `SMTP_PASSWORD` et `CRON_SECRET`.
+    - [x] Déployer la fonction (depuis le tableau de bord, vérification JWT désactivée).
+    - [x] Créer les secrets Vault `olympiad_url_projet` et `olympiad_secret_cron` (même valeur que `CRON_SECRET`), puis exécuter la migration.
+    - [x] Tester en mode simulation, puis l'appel réel par `pg_net`.
+    - [ ] Le 21/10 : vérifier le premier passage de nuit (`select status, start_time from cron.job_run_details order by start_time desc limit 3;`). Le compte démo des stores doit rester actif (connexion au moins une fois tous les 3 ans). Un vrai envoi d'e-mail n'a pas encore été testé (aucun compte assez ancien).
   - [ ] Dès la micro-entreprise créée : compléter les mentions légales, les CGU et la politique (statut, adresse ou domiciliation, SIRET) et adhérer à un **médiateur de la consommation** (obligatoire pour vendre à des particuliers), à citer dans les CGU.
   - [ ] Supabase : passer l'onglet *Security Advisor*, activer la protection contre les mots de passe compromis, et prévoir des sauvegardes (C15).
   - [ ] Facultatif : ajouter « Mentions légales » aux liens légaux de l'app (`components/LiensLegaux.js`) au prochain build.
@@ -427,6 +441,8 @@ Une ligne par modification, la plus récente en haut.
 
 | Date | Modification |
 |------|--------------|
+| 2026-10-20 | Comptes inactifs mis en place sur Supabase : secrets, Vault, Edge Function `comptes-inactifs` déployée, migration exécutée, tests réussis (C16) |
+| 2026-10-20 | Suppression automatique des comptes inactifs depuis 3 ans : migration `pg_cron`, Edge Function `comptes-inactifs` et e-mail d'avertissement FR/EN (pas encore exécuté sur Supabase) |
 | 2026-10-20 | Site : polices hébergées sur le site, page Mentions légales, politique (cookies, durées de conservation) et CGU (rétractation) complétées |
 | 2026-10-20 | Profil du compte démo complété (nom et prénom) : E20 et G33 à jour |
 | 2026-10-16 | Build 6 Android réussi sur EAS (`versionCode` 6), à importer dans la Play Console |

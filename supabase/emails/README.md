@@ -60,6 +60,12 @@ Sans `olympiad://**`, Supabase ignore le lien de l'app et renvoie vers la Site U
 
 Les modèles sont en français puis en anglais : Supabase ne sait pas dans quelle langue l'utilisateur a l'app.
 
+### Avertissement avant suppression d'un compte inactif
+
+Cet e-mail n'est pas envoyé par Supabase Auth mais par l'Edge Function `comptes-inactifs`, lancée chaque nuit par `pg_cron` (migration « Suppression automatique des comptes inactifs » dans `supabase/schema.sql`). Son modèle est dans `supabase/functions/comptes-inactifs/modele.ts`, avec la même présentation.
+
+Elle envoie par le même compte Gmail, avec ses propres secrets (*Edge Functions → Secrets*) : `SMTP_USER`, `SMTP_PASSWORD` (créer un second mot de passe d'application, nom `Supabase OLYMPIAD comptes inactifs`, pour pouvoir le retirer séparément) et `CRON_SECRET`. Mise en place complète : en-tête de `supabase/functions/comptes-inactifs/index.ts`.
+
 ## 5. Vérifier
 
 1. *SMTP Settings* : envoyer un e-mail de test, s'il est proposé.
