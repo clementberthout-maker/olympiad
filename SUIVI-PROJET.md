@@ -481,7 +481,7 @@ Une ligne par modification, la plus récente en haut.
 
 | Date | Modification |
 |------|--------------|
-| 2026-10-20 | Play Console : Pass Tournoi à 9,99 € (France), autres pays convertis depuis 8,33 € HT (C10b) |
+| 2026-10-20 | Play Console : prix de lancement saisis (Pass 9,99 €, Pro 14,99 € et 59,99 € pour la France ; autres pays convertis depuis les prix HT) (C10b) |
 | 2026-10-20 | Prix de lancement : Pass 9,99 €, Pro 14,99 €/mois ou 59,99 €/an « Saison » (écran d'achat, site, CGU, budget) ; prix des stores à saisir (C10b) |
 | 2026-10-20 | Migration « Pass Tournoi limité dans le temps » exécutée, `valider-pass-tournoi` redéployée (B9) |
 | 2026-10-20 | Site : fenêtre des offres à la limite de 12 équipes dans l'espace, offres cliquables sur l'accueil (achat dans l'app) |
