@@ -121,11 +121,11 @@ In-progress scores shown live with a LIVE badge. Schedule updated in real time f
 
 ## Notes de version (build 7)
 
-Nom de la release : `7 (1.0.0)`. À coller dans la Play Console (500 caractères maximum par langue). Si le build 6 n'a jamais été envoyé aux testeurs, ajouter au début la première phrase des notes du build 6.
+Nom de la release : `7 (1.0.0)`. À coller dans la Play Console (500 caractères maximum par langue). Le build 6 n'a jamais été envoyé : ces notes reprennent aussi son contenu, les testeurs passant directement du build 5 au build 7.
 
 `<fr-FR>`
-Plusieurs terrains mieux utilisés : les matchs de poule remplissent tous les terrains, et la finale se joue en même temps que le match pour la 3e place. Écran des offres revu : l'abonnement annuel « Saison » est mis en avant, avec son prix par mois. Le Pass Tournoi est valable jusqu'à 5 jours après la date du tournoi ; une fois le Pass appliqué, la date ne peut plus être modifiée. Corrections diverses.
+Scores « en cours » et calendrier mis à jour en direct pour tous. Phase finale plus juste, heure de fin estimée. Plusieurs terrains mieux utilisés : les poules remplissent tous les terrains, et la finale se joue en même temps que la 3e place. Écran des offres revu, avec l'abonnement annuel « Saison ». Le Pass Tournoi vaut jusqu'à 5 jours après le tournoi, dont la date ne peut alors plus changer. Corrections diverses.
 `</fr-FR>`
 `<en-US>`
-Better use of multiple fields: group matches fill every field, and the final is played at the same time as the third-place match. Redesigned plans screen: the yearly "Season" subscription is highlighted, with its monthly price. The Tournament Pass is valid until 5 days after the tournament date; once the Pass is applied, the date can no longer be changed. Various fixes.
+In-progress scores and schedule updated live for everyone. Fairer knockout draw, estimated end time. Better use of multiple fields: group matches fill every field, and the final is played at the same time as the third-place match. Redesigned plans screen, with the yearly "Season" subscription. The Tournament Pass is valid until 5 days after the tournament, whose date can then no longer change. Various fixes.
 `</en-US>`

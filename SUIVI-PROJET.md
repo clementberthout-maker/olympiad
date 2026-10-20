@@ -3,7 +3,7 @@
 > Fichier tenu à jour automatiquement par Claude à chaque modification du projet
 > (voir `CLAUDE.md` et le hook `.claude/hooks/verifier-suivi.sh`).
 
-**Dernière mise à jour :** 20 octobre 2026
+**Dernière mise à jour :** 21 octobre 2026
 
 ---
 
@@ -363,7 +363,7 @@ OLYMPIAD sert à organiser des tournois sportifs amateurs. L'organisateur crée 
 ### Build 7 pour le test fermé (20 octobre)
 - expo-doctor 21/21. Build Android lancé sur EAS (`versionCode` 7, profil production) : https://expo.dev/accounts/clementberth/projects/olympiad/builds/c94dd81a-0cdc-470f-9195-5970f6b080bf
 - Contenu : terrains mieux utilisés (G34), Pass Tournoi limité dans le temps (B9, D16e), écran d'achat avec l'offre « Saison » et les prix de lancement (C10b).
-- Notes de version FR/EN du build 7 ajoutées à `store/test-ferme.md`.
+- Le build 6 n'a jamais été importé dans la Play Console : remplacé par le build 7, qui contient tout son contenu. Notes de version FR/EN du build 7 (contenu des builds 6 et 7) dans `store/test-ferme.md`.
 
 ## 3. Ce qu'il reste à faire
 
@@ -486,6 +486,7 @@ Une ligne par modification, la plus récente en haut.
 
 | Date | Modification |
 |------|--------------|
+| 2026-10-21 | Build 6 jamais importé, remplacé par le build 7 ; notes du build 7 complétées avec le contenu du build 6 |
 | 2026-10-20 | Build 7 Android lancé sur EAS (`versionCode` 7) pour le test fermé ; notes de version ajoutées |
 | 2026-10-20 | Play Console : prix de lancement saisis (Pass 9,99 €, Pro 14,99 € et 59,99 € pour la France ; autres pays convertis depuis les prix HT) ; RevenueCat vérifié (C10b) |
 | 2026-10-20 | Prix de lancement : Pass 9,99 €, Pro 14,99 €/mois ou 59,99 €/an « Saison » (écran d'achat, site, CGU, budget) ; prix des stores à saisir (C10b) |
