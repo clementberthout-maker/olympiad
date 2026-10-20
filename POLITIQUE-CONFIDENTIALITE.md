@@ -1,6 +1,6 @@
 # Politique de confidentialité — OLYMPIAD
 
-Dernière mise à jour : 16 octobre 2026
+Dernière mise à jour : 20 octobre 2026
 
 Cette politique explique quelles données l'application OLYMPIAD et son site internet (y compris l'espace organisateur) collectent, pourquoi, et comment exercer tes droits dessus.
 
@@ -35,10 +35,10 @@ Nous ne collectons **aucune donnée de localisation précise, aucun identifiant 
 
 - **Espace organisateur :** il utilise le même compte que l'application. Les données saisies (compte, profil, tournois, équipes, scores) sont exactement celles décrites ci-dessus, enregistrées au même endroit (Supabase). Ta session de connexion est gardée dans le stockage de ton navigateur jusqu'à ta déconnexion.
 - **Stockage du navigateur :** le site y garde ta langue, ton thème, ainsi que les données du simulateur et du mode démo (« Découvrir en démo »). Ces données restent dans ton navigateur et ne nous sont jamais envoyées ; tu peux les effacer avec les données de navigation.
-- **Pas de mesure d'audience ni de cookie publicitaire :** le site n'utilise aucun outil de statistiques ni de publicité.
+- **Cookies :** le site ne dépose aucun cookie publicitaire ni de mesure d'audience, et n'utilise aucun outil de statistiques. Le stockage du navigateur décrit ci-dessus sert uniquement au fonctionnement du site (connexion, préférences, démo) : il est strictement nécessaire et ne demande donc pas de consentement, c'est pourquoi le site n'affiche pas de bandeau cookies.
+- **Polices de caractères :** elles sont hébergées directement sur le site ; aucun appel n'est fait aux serveurs de Google.
 - **Services techniques chargés par le site :** comme pour tout site web, ces services reçoivent ton adresse IP et les informations techniques de ton navigateur pour t'envoyer leurs fichiers :
   - GitHub Pages (hébergement du site), qui peut conserver des journaux techniques ;
-  - Google Fonts (polices de caractères) ;
   - jsDelivr et cdnjs (bibliothèques de connexion à la base et de création des QR codes).
 - **Signalement :** le lien « Signaler ce tournoi » ouvre un e-mail prérempli dans ta messagerie ; nous ne recevons que ce que tu choisis d'envoyer.
 
@@ -59,13 +59,19 @@ Aucune donnée n'est vendue. Elle est partagée uniquement avec les prestataires
 - **Supabase** — hébergement de la base de données et de l'authentification
 - **RevenueCat** — gestion des abonnements et achats intégrés
 - **Apple (App Store) / Google (Play Store)** — traitement des paiements des achats intégrés
-- **GitHub (GitHub Pages), Google Fonts, jsDelivr et cdnjs** — hébergement et fichiers techniques du site internet (voir 1 bis)
+- **GitHub (GitHub Pages), jsDelivr et cdnjs** — hébergement et fichiers techniques du site internet (voir 1 bis)
 
 Ces prestataires n'ont accès qu'aux données nécessaires à leur fonction et sont eux-mêmes soumis à leurs propres obligations de confidentialité.
 
 ## 4. Durée de conservation
 
-Tes données sont conservées tant que ton compte existe. Tu peux supprimer ton compte à tout moment directement dans l'application (**Mon profil > Supprimer mon compte**) : ton compte, ton profil, ta photo et tous les tournois que tu as créés sont alors supprimés immédiatement et définitivement. Tu peux aussi en faire la demande par e-mail (voir Contact ci-dessous) ; la suppression est alors effective sous 30 jours. Un abonnement Pro n'est pas résilié par la suppression du compte : il doit être annulé depuis les réglages de l'App Store ou du Google Play Store.
+- **Compte, profil et tournois :** conservés tant que ton compte est actif. Un compte sans aucune connexion pendant **3 ans** est supprimé avec ses tournois, après un e-mail d'avertissement envoyé au moins 30 jours avant.
+- **Suppression à ta demande :** depuis **Mon profil > Supprimer mon compte** (dans l'application ou l'espace organisateur), ton compte, ton profil, ta photo et tous les tournois que tu as créés sont supprimés immédiatement et définitivement. Par e-mail (voir Contact ci-dessous), la suppression est effective sous 30 jours.
+- **Tournois :** l'organisateur peut supprimer un tournoi à tout moment ; ses équipes, matchs et résultats sont alors supprimés pour tout le monde.
+- **Achats :** les justificatifs d'achat sont conservés par Apple, Google et RevenueCat selon leurs propres obligations légales (comptables notamment). Un abonnement Pro n'est pas résilié par la suppression du compte : il doit être annulé depuis les réglages de l'App Store ou du Google Play Store.
+- **Journaux techniques :** les hébergeurs (Supabase, GitHub) conservent des journaux de connexion pendant une courte durée, pour la sécurité et le bon fonctionnement du service.
+- **E-mails que tu nous envoies** (questions, signalements, demandes d'exercice de tes droits) : conservés le temps de traiter la demande, puis au plus 1 an.
+- **Stockage du navigateur :** reste sur ton appareil jusqu'à ta déconnexion ou jusqu'à ce que tu effaces les données de navigation.
 
 ## 5. Tes droits (RGPD)
 

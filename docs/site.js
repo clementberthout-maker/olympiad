@@ -81,7 +81,7 @@
     'a.q9': 'Does this site’s simulator store my data?', 'a.r9': 'No. The tournament you create here stays in your browser (local storage) and is sent nowhere. For a real tournament shared with your teams, use the app.',
     'a.contactT': 'A question, a problem?', 'a.contactP': 'Email us, with the name of your tournament if your question is about it.', 'a.contactB': 'Contact support',
     'fin.titre': 'Ready for kick-off?', 'fin.p': 'OLYMPIAD is coming soon to iPhone and Android. Meanwhile, prepare your tournament right here.', 'fin.cta': 'Try the simulator',
-    'pied.conf': 'Privacy policy', 'pied.cgu': 'Terms of use', 'pied.supp': 'Delete my account', 'pied.contact': 'Contact',
+    'pied.conf': 'Privacy policy', 'pied.cgu': 'Terms of use', 'pied.ml': 'Legal notice', 'pied.supp': 'Delete my account', 'pied.contact': 'Contact',
   };
   const FR = {};
   $$('[data-i18n]').forEach((el) => { FR[el.dataset.i18n] = el.innerHTML; });
@@ -966,6 +966,7 @@
         <div class="s-bloc">
           <a class="s-interrupteur" style="text-decoration:none;color:inherit" href="politique-confidentialite.html"><span>${tr('Politique de confidentialité', 'Privacy policy')}</span>${ico('droite', '')}</a>
           <a class="s-interrupteur" style="text-decoration:none;color:inherit" href="conditions-utilisation.html"><span>${tr('Conditions d\'utilisation', 'Terms of use')}</span>${ico('droite', '')}</a>
+          <a class="s-interrupteur" style="text-decoration:none;color:inherit" href="mentions-legales.html"><span>${tr('Mentions légales', 'Legal notice')}</span>${ico('droite', '')}</a>
         </div>
         ${S.connecte ? `<button class="s-btn sec" style="margin-top:20px" data-a="deconnexion">${tr('Se déconnecter', 'Sign out')}</button>` : `<button class="s-btn sec" style="margin-top:20px" data-a="connexion">${tr('Se connecter', 'Sign in')}</button>`}
         <button class="s-lien rouge" style="margin-top:12px" data-a="supprimer-compte">${tr('Supprimer mon compte', 'Delete my account')}</button>`;

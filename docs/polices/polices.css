@@ -1,0 +1,8 @@
+/* Polices hébergées sur le site (aucun appel aux serveurs de Google).
+   Bebas Neue et Work Sans, licence SIL Open Font License (voir OFL-*.txt). */
+@font-face { font-family: 'Bebas Neue'; font-style: normal; font-weight: 400; font-display: swap; src: url('BebasNeue_400Regular.ttf') format('truetype'); }
+@font-face { font-family: 'Work Sans'; font-style: normal; font-weight: 400; font-display: swap; src: url('WorkSans_400Regular.ttf') format('truetype'); }
+@font-face { font-family: 'Work Sans'; font-style: normal; font-weight: 500; font-display: swap; src: url('WorkSans_500Medium.ttf') format('truetype'); }
+@font-face { font-family: 'Work Sans'; font-style: normal; font-weight: 600; font-display: swap; src: url('WorkSans_600SemiBold.ttf') format('truetype'); }
+@font-face { font-family: 'Work Sans'; font-style: normal; font-weight: 700; font-display: swap; src: url('WorkSans_700Bold.ttf') format('truetype'); }
+@font-face { font-family: 'Work Sans'; font-style: normal; font-weight: 800; font-display: swap; src: url('WorkSans_800ExtraBold.ttf') format('truetype'); }

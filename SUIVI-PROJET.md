@@ -309,8 +309,14 @@ OLYMPIAD sert à organiser des tournois sportifs amateurs. L'organisateur crée 
 - Notes de version FR/EN du build 6 ajoutées à `store/test-ferme.md`.
 - **Build 6 réussi sur EAS le 16/10** (`versionCode` 6, clé `gqma_0PWKl` / SHA1 `58:99…` comme le build 5, clé RevenueCat chargée depuis l'environnement production) : https://expo.dev/accounts/clementberth/projects/olympiad/builds/ad4cb98f-9c60-4227-bcfc-2f289842406d. **Reste** : importer le `.aab` dans la Play Console (test fermé, piste Alpha), coller les notes de version et envoyer en examen.
 
-### Compte démo (20 octobre)
-- Nom et prénom du profil du compte démo remplis par Clément : l'espace organisateur affiche maintenant « Bonjour » suivi du prénom, et les équipes de validation Google et Apple voient un profil complet.
+m=>m
+### Conformité légale du site (20 octobre)
+- Audit : pas de cookie publicitaire ni de statistiques, seulement du stockage strictement nécessaire (connexion, thème, langue, démo), donc **pas de bandeau cookies à prévoir**. Règles d'accès (RLS) déjà sur toutes les tables.
+- **Polices hébergées sur le site** (`docs/polices/`, Bebas Neue et Work Sans en TTF, licences OFL jointes) : plus aucun appel à Google Fonts, y compris pour l'export PDF de l'espace.
+- **Nouvelle page `docs/mentions-legales.html`** : éditeur (personne physique, non professionnel, adresse non publiée selon l'art. 6-III-2 LCEN), directeur de la publication, hébergeurs (GitHub, Supabase), propriété intellectuelle, cookies, signalement. Liée depuis le pied du site (FR/EN), le profil du simulateur et de l'espace, la politique, les CGU et la page de suppression. L'app n'avait que les liens CGU et politique (« Informations légales » du profil).
+- **Politique de confidentialité** (HTML et `POLITIQUE-CONFIDENTIALITE.md`, au 20/10) : section cookies précisée, Google Fonts retiré, durées de conservation détaillées (comptes inactifs supprimés après 3 ans avec avertissement 30 jours avant, e-mails gardés 1 an au plus, journaux techniques, achats, stockage du navigateur).
+- **CGU** (au 20/10) : droit de rétractation (perte du délai de 14 jours pour un contenu numérique fourni immédiatement, art. L221-28 13°) et lien vers les mentions légales.
+- Vérifié dans le navigateur : polices chargées depuis le site (aucune requête Google), page des mentions légales, liens dans le pied du site et le profil de l'espace.
 
 ## 3. Ce qu'il reste à faire
 
@@ -353,6 +359,11 @@ Légende : `[ ]` à faire · `[x]` fait
 - [ ] **C14. Nom de domaine et e-mail pro :** *Budget et options détaillés le 15/10 dans `BUDGET-PROJET.md`.* Vérifier d'abord le risque sur le nom (« olympiade » protégé par le CNOSF, art. L141-5 du Code du sport). Puis acheter `olympiad-app.com`, créer `support@olympiad-app.com` (Zoho Mail conseillé), configurer SPF/DKIM/DMARC, brancher le domaine sur GitHub Pages et mettre à jour `lib/liensLegaux.js` et l'URL de support. Facultatif : e-mails Supabase envoyés depuis le domaine (Brevo ou Resend).
 - [ ] **C14b. Choisir le nouveau nom (avant C14) :** vérifier les marques sur INPI et TMview (classes 9 et 41), les stores, les domaines et les réseaux sociaux. Ensuite, renommer l'app (nom affiché, logo, textes, fiches des stores, site). L'identifiant `com.clement.olympiad` peut rester.
 - [ ] **C15. Avant la sortie publique :** passer Supabase en Pro (un projet gratuit se met en pause après 7 jours sans activité, sans sauvegarde) ; s'inscrire à l'App Store Small Business Program (commission 15 % au lieu de 30 %) ; choisir l'adresse publique de développeur (affichée par Apple et Google) ; créer une micro-entreprise dès les premières ventes régulières.
+- [ ] **C16. Conformité légale, à finir avant la sortie publique :**
+  - [ ] Supprimer automatiquement les comptes inactifs depuis 3 ans (promis dans la politique du 20/10) : tâche planifiée Supabase (`pg_cron`) qui envoie l'e-mail d'avertissement 30 jours avant, puis appelle la suppression.
+  - [ ] Dès la micro-entreprise créée : compléter les mentions légales, les CGU et la politique (statut, adresse ou domiciliation, SIRET) et adhérer à un **médiateur de la consommation** (obligatoire pour vendre à des particuliers), à citer dans les CGU.
+  - [ ] Supabase : passer l'onglet *Security Advisor*, activer la protection contre les mots de passe compromis, et prévoir des sauvegardes (C15).
+  - [ ] Facultatif : ajouter « Mentions légales » aux liens légaux de l'app (`components/LiensLegaux.js`) au prochain build.
 - [x] **C13. Publier la politique de confidentialité :** activer GitHub Pages sur le dossier `/docs` (le dépôt doit être public, ou la page hébergée ailleurs) et noter l'adresse obtenue. *Fait : les pages sont en ligne sur https://clementberthout-maker.github.io/olympiad/ (`politique-confidentialite.html`, `conditions-utilisation.html`, `suppression-compte.html`). Le lien de suppression à déclarer à Google est `suppression-compte.html`.*
 
 ### D. Builds et tests
@@ -416,6 +427,7 @@ Une ligne par modification, la plus récente en haut.
 
 | Date | Modification |
 |------|--------------|
+| 2026-10-20 | Site : polices hébergées sur le site, page Mentions légales, politique (cookies, durées de conservation) et CGU (rétractation) complétées |
 | 2026-10-20 | Profil du compte démo complété (nom et prénom) : E20 et G33 à jour |
 | 2026-10-16 | Build 6 Android réussi sur EAS (`versionCode` 6), à importer dans la Play Console |
 | 2026-10-16 | Build 6 préparé : mises à jour Expo (D16b), expo-doctor 21/21, `npm ci` npm 10 et bundle Android vérifiés, notes de version ; rappel de remplir le profil du compte démo (E20) |
