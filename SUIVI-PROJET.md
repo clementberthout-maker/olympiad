@@ -333,6 +333,12 @@ OLYMPIAD sert à organiser des tournois sportifs amateurs. L'organisateur crée 
 - **Retirer la photo** : la fonction n'existait ni dans l'app ni dans l'espace (ce n'était pas un effet de la migration). Ajoutée dans le profil de l'espace (lien sous le nom, confirmation, fichier supprimé du bucket et `photo_url` vidé), vérifiée en mode démo.
 - Laissés volontairement, avec la raison notée dans le fichier : `a_le_droit` (évaluée par les policies pendant la lecture des spectateurs), fonctions voulues pour les connectés, `pg_net` dans `public`, table `avertissements_inactivite` sans policy, mots de passe piratés (plan Pro).
 
+### Plusieurs terrains mieux utilisés (20 octobre)
+- Constat : le moteur faisait déjà jouer un match par terrain en même temps, mais attendait la fin de chaque journée de poule avant la suivante, ce qui laissait des terrains vides (10 équipes, 2 poules, 3 terrains : 10 créneaux au lieu de 7). Et la finale passait après le match pour la 3e place, même avec 2 terrains.
+- **Poules** (`lib/generation.js`, copie `docs/espace/moteur/generation.js` et démo `docs/site.js`) : chaque créneau est rempli avec autant de matchs que de terrains, en piochant dans l'ordre des journées. Les équipes qui se sont reposées passent d'abord ; une équipe peut enchaîner 2 matchs pour ne pas laisser un terrain vide, mais pas 3 si c'est évitable. 200 essais comparés à l'ancien plan, le moins coûteux gardé (durée d'abord, puis enchaînements). Exemples : 8 équipes / 2 poules / 3 terrains 6 → 5 créneaux, 9 équipes / 3 poules / 2 terrains 6 → 5, 12 équipes / 2 poules / 4 terrains 10 → 8. Avec une seule grande poule et beaucoup de terrains (5 équipes sur 2 terrains, 7 sur 3), le plan peut être un peu plus long qu'avant, pour éviter qu'une équipe joue 3 matchs ou plus d'affilée.
+- **Finale et 3e place** : nouvelle fonction `genererFinaleEtTroisiemePlace`, au même horaire sur 2 terrains (sinon 3e place puis finale), utilisée par l'app (`calendrier.js`) et l'espace. La démo du site le faisait déjà.
+- Vérifié : calendriers simulés avec Node (jamais une équipe sur 2 terrains en même temps, chaque rencontre une seule fois, pause déjeuner respectée), moteur de l'espace et page d'accueil chargés dans le navigateur sans erreur. App : à livrer au prochain build.
+
 ## 3. Ce qu'il reste à faire
 
 Légende : `[ ]` à faire · `[x]` fait
@@ -437,6 +443,7 @@ Légende : `[ ]` à faire · `[x]` fait
 - [x] **G31. Tournoi supprimé encore dans « Tournois suivis »** *Corrigé le 16/10 ; à livrer au prochain build.* (app) : il s'ouvre sur « Tournoi introuvable », sans moyen de le retirer. Le retirer de la liste dans ce cas.
 - [x] **G32. Pages légales sans retour au site :** *Fait le 16/10 (liens de retour, politique de confidentialité complétée pour le site et l'espace).* tout s'ouvre dans la même page, mais `politique-confidentialite.html`, `conditions-utilisation.html` et `suppression-compte.html` n'ont aucun lien vers l'accueil. Ajouter un lien « Retour au site ». La politique (27/09) ne parle pas encore du site ni de l'espace organisateur.
 - [x] **G33. Petits défauts :** *Fait le 16/10 pour l'app, le site et l'espace (« Bonjour » sans prénom vient du profil vide). Profil du compte démo complété le 20/10.* titre de l'onglet du site resté en français en anglais, et « Football · 8 équipes » non traduit dans le téléphone de l'accueil ; « Bonjour » sans prénom dans l'espace (profil du compte démo vide : le remplir pour Google et Apple) ; « Quart de finale générée » (masculin) ; « fin des premier tour » (simulateur) ; tennis affiché « 1 pt nul » alors qu'il n'y a pas de nul ; code d'accès en minuscules dans l'app, en majuscules sur le site ; « Vous faites partie de quelle équipe ? » (vouvoiement) dans l'app ; doublon d'équipe ignoré sans message dans l'espace ; dates passées sélectionnables ; pas de lien « Signaler » sur le suivi public du site ; ni liens légaux dans le profil de l'espace ; « Voir un tournoi en direct » du site remplace le tournoi du simulateur sans prévenir ; match pour la 3e place activé par défaut dans le simulateur mais pas dans l'app.
+- [x] **G34. Plusieurs terrains mal utilisés :** *Corrigé le 20/10 (app, espace, site) ; à livrer au prochain build.* des terrains restaient vides entre deux journées de poule, et la finale se jouait après la 3e place même avec 2 terrains.
 
 **Priorité conseillée :** commence par A1 à A4 (du code, sans dépendance extérieure) et, en parallèle, ouvre les comptes développeur (C9). La validation des comptes et le test fermé Google sont ce qui prend le plus de temps.
 
@@ -448,6 +455,7 @@ Une ligne par modification, la plus récente en haut.
 
 | Date | Modification |
 |------|--------------|
+| 2026-10-20 | Plusieurs terrains mieux utilisés : poules sans terrain vide entre les journées, finale et 3e place en même temps (G34) |
 | 2026-10-20 | Security Advisor relancé : 6 avertissements et 1 info restants, tous voulus |
 | 2026-10-20 | Migration Security Advisor exécutée ; « Retirer la photo » ajouté au profil de l'espace organisateur |
 | 2026-10-20 | Security Advisor de Supabase passé (0 erreur) : migration de correctifs ajoutée à `schema.sql`, à exécuter (C16) |

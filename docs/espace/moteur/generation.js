@@ -149,56 +149,126 @@ export function resultatsAutoPourExempts(matchsInseres) {
     .map((m) => ({ match_id: m.id, score_a: 1, score_b: 0, statut: 'termine' }));
 }
 
-// Génère les matchs pour toutes les poules, journée par journée (méthode du
-// cercle, voir journeesRoundRobin) : toutes les poules jouent leur journée N
-// en même temps (matchs répartis sur les terrains disponibles), et la
-// journée N+1 ne démarre qu'une fois la journée N entièrement placée sur le
-// calendrier — une équipe ne joue donc jamais deux fois dans la même
-// journée. En prime, les rencontres impliquant une équipe qui vient de
-// jouer le tout dernier créneau sont repoussées en fin de journée suivante
-// autant que possible, pour limiter les enchaînements au moment où deux
-// journées se touchent. Un enchaînement ne reste possible que si le nombre
-// de terrains ne permet pas de faire patienter suffisamment d'équipes
-// (dans ce cas, inévitable).
-export function genererCalendrierPoules(poulesAvecEquipes, tournoiId, reglages) {
-  const journeesParPoule = poulesAvecEquipes.map(({ nom, equipes }) => journeesRoundRobin(equipes, nom));
+// Un "plan" = la liste des créneaux, chacun étant la liste des rencontres
+// jouées en même temps (au plus une par terrain).
+
+// Plan "journée par journée" : la journée N+1 ne démarre qu'une fois la
+// journée N entièrement placée ; les rencontres d'une équipe qui vient de
+// jouer le dernier créneau sont repoussées en fin de journée suivante. Les
+// terrains peuvent rester vides en fin de journée.
+function planParJournees(journeesParPoule, nombreTerrains) {
   const nombreJournees = Math.max(0, ...journeesParPoule.map((j) => j.length));
-
-  let matchs = [];
-  let reglagesCourants = reglages;
+  const plan = [];
   let equipesDernierCreneau = new Set();
-
   for (let j = 0; j < nombreJournees; j++) {
-    let rencontresDeLaJournee = [];
-    for (const journees of journeesParPoule) {
-      if (journees[j]) rencontresDeLaJournee.push(...journees[j]);
+    const rencontres = journeesParPoule.flatMap((journees) => journees[j] || []);
+    if (rencontres.length === 0) continue;
+    const enConflit = (r) => equipesDernierCreneau.has(r.equipeA.id) || equipesDernierCreneau.has(r.equipeB.id);
+    const ordonnees = [...rencontres.filter((r) => !enConflit(r)), ...rencontres.filter(enConflit)];
+    for (let i = 0; i < ordonnees.length; i += nombreTerrains) {
+      plan.push(ordonnees.slice(i, i + nombreTerrains));
     }
-    if (rencontresDeLaJournee.length === 0) continue;
+    equipesDernierCreneau = new Set(plan[plan.length - 1].flatMap((r) => [r.equipeA.id, r.equipeB.id]));
+  }
+  return plan;
+}
 
-    const sansConflit = rencontresDeLaJournee.filter(
-      (r) => !equipesDernierCreneau.has(r.equipeA.id) && !equipesDernierCreneau.has(r.equipeB.id)
-    );
-    const avecConflit = rencontresDeLaJournee.filter(
-      (r) => equipesDernierCreneau.has(r.equipeA.id) || equipesDernierCreneau.has(r.equipeB.id)
-    );
-    rencontresDeLaJournee = [...sansConflit, ...avecConflit];
-
-    const matchsDeLaJournee = assignerCreneauxEtTerrains(rencontresDeLaJournee, tournoiId, reglagesCourants);
-    matchs = matchs.concat(matchsDeLaJournee);
-
-    const dernierHoraireMs = Math.max(...matchsDeLaJournee.map((m) => new Date(m.horaire).getTime()));
-    equipesDernierCreneau = new Set(
-      matchsDeLaJournee
-        .filter((m) => new Date(m.horaire).getTime() === dernierHoraireMs)
-        .flatMap((m) => [m.equipe_a_id, m.equipe_b_id])
-    );
-    reglagesCourants = {
-      ...reglagesCourants,
-      horaireDepart: new Date(dernierHoraireMs + reglagesCourants.dureeCreneauMinutes * 60000).toISOString(),
+// Plan "au plus tôt" : chaque créneau est rempli avec autant de rencontres
+// que de terrains, en piochant dans l'ordre des journées (avec un peu de
+// hasard) des rencontres dont les deux équipes sont libres. D'abord des
+// équipes qui se sont reposées au créneau précédent ; puis, si `remplir`,
+// des équipes qui enchaînent (mais pas un 3e match d'affilée) pour ne pas
+// laisser un terrain vide.
+function planAuPlusTot(rencontres, nombreTerrains, remplir) {
+  const restantes = rencontres
+    .map((r) => ({ r, cle: r.journee + Math.random() * 0.9 }))
+    .sort((x, y) => x.cle - y.cle)
+    .map(({ r }) => r);
+  const plan = [];
+  let precedent = new Set();
+  let avantPrecedent = new Set();
+  while (restantes.length) {
+    const occupees = new Set();
+    const creneau = [];
+    const piocher = (accepte) => {
+      for (let i = 0; i < restantes.length && creneau.length < nombreTerrains; i++) {
+        const r = restantes[i];
+        if (occupees.has(r.equipeA.id) || occupees.has(r.equipeB.id) || !accepte(r)) continue;
+        creneau.push(r);
+        occupees.add(r.equipeA.id);
+        occupees.add(r.equipeB.id);
+        restantes.splice(i, 1);
+        i--;
+      }
     };
+    const reposee = (id) => !precedent.has(id);
+    const pasTroisDeSuite = (id) => !(precedent.has(id) && avantPrecedent.has(id));
+    piocher((r) => reposee(r.equipeA.id) && reposee(r.equipeB.id));
+    if (remplir || creneau.length === 0) piocher((r) => pasTroisDeSuite(r.equipeA.id) && pasTroisDeSuite(r.equipeB.id));
+    if (creneau.length === 0) piocher(() => true);
+    plan.push(creneau);
+    avantPrecedent = precedent;
+    precedent = occupees;
+  }
+  return plan;
+}
+
+// Coût d'un plan : chaque créneau (durée du tournoi) et chaque 3e match
+// d'affilée d'une équipe pèsent autant que 10 enchaînements de 2 matchs.
+function coutPlan(plan) {
+  let enchainements = 0;
+  let troisDeSuite = 0;
+  const equipes = (creneau) => new Set(creneau.flatMap((r) => [r.equipeA.id, r.equipeB.id]));
+  for (let i = 1; i < plan.length; i++) {
+    const precedent = equipes(plan[i - 1]);
+    const avantPrecedent = i > 1 ? equipes(plan[i - 2]) : new Set();
+    for (const id of equipes(plan[i])) {
+      if (!precedent.has(id)) continue;
+      enchainements++;
+      if (avantPrecedent.has(id)) troisDeSuite++;
+    }
+  }
+  return (plan.length + troisDeSuite) * 10 + enchainements;
+}
+
+const ESSAIS_PLANIFICATION = 200;
+
+// Génère les matchs de toutes les poules (méthode du cercle, voir
+// journeesRoundRobin), en faisant jouer en même temps autant de matchs
+// qu'il y a de terrains. Compare le plan journée par journée et plusieurs
+// plans "au plus tôt", et garde le moins coûteux (voir coutPlan) : le
+// tournoi le plus court possible, en évitant qu'une équipe enchaîne ses
+// matchs quand le nombre de terrains le permet.
+export function genererCalendrierPoules(poulesAvecEquipes, tournoiId, reglages) {
+  const { nombreTerrains } = reglages;
+  const journeesParPoule = poulesAvecEquipes.map(({ nom, equipes }) => journeesRoundRobin(equipes, nom));
+  const rencontres = journeesParPoule.flatMap((journees) =>
+    journees.flatMap((rencontresDuJour, journee) => rencontresDuJour.map((r) => ({ ...r, journee })))
+  );
+  if (rencontres.length === 0) return [];
+
+  let meilleurPlan = planParJournees(journeesParPoule, nombreTerrains);
+  let meilleurCout = coutPlan(meilleurPlan);
+  if (nombreTerrains > 1) {
+    for (let essai = 0; essai < ESSAIS_PLANIFICATION; essai++) {
+      const plan = planAuPlusTot(rencontres, nombreTerrains, essai % 2 === 0);
+      const cout = coutPlan(plan);
+      if (cout < meilleurCout) {
+        meilleurPlan = plan;
+        meilleurCout = cout;
+      }
+    }
   }
 
-  return matchs;
+  const creneaux = calculerCreneaux(meilleurPlan.length, reglages);
+  return meilleurPlan.flatMap((creneau, index) => creneau.map((r, terrain) => ({
+    tournoi_id: tournoiId,
+    equipe_a_id: r.equipeA.id,
+    equipe_b_id: r.equipeB.id,
+    phase: r.phase,
+    terrain: String(terrain + 1),
+    horaire: creneaux[index].toISOString(),
+  })));
 }
 
 // Heure de fin estimée de la première phase (poules, ou premier tour d'un
@@ -380,6 +450,17 @@ export function genererMatchTroisiemePlace(matchsDemiFinale, tournoiId, reglages
   }));
   const rencontre = { equipeA: perdants[0], equipeB: perdants[1], phase: NOM_MATCH_TROISIEME_PLACE };
   return assignerCreneauxEtTerrains([rencontre], tournoiId, reglages);
+}
+
+// Finale et match pour la 3e place générés ensemble à partir des deux
+// demi-finales terminées : joués en même temps s'il y a au moins 2
+// terrains (3e place sur le terrain 1, finale sur le terrain 2), sinon le
+// match pour la 3e place d'abord et la finale en dernier.
+export function genererFinaleEtTroisiemePlace(matchsDemiFinale, tournoiId, reglages, tetesDeSerie = null) {
+  const [troisieme] = genererMatchTroisiemePlace(matchsDemiFinale, tournoiId, reglages);
+  const [finale] = genererTourSuivant(matchsDemiFinale, tournoiId, reglages, tetesDeSerie);
+  const enRencontre = (m) => ({ equipeA: { id: m.equipe_a_id }, equipeB: { id: m.equipe_b_id }, phase: m.phase });
+  return assignerCreneauxEtTerrains([enRencontre(troisieme), enRencontre(finale)], tournoiId, reglages);
 }
 
 // Regroupe une liste de matchs par phase (poule ou tour à élimination

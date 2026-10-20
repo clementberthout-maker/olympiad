@@ -11,7 +11,7 @@ import {
   genererPhaseFinaleDepuisPoules,
   genererTourSuivant,
   qualifiesParTeteDeSerie,
-  genererMatchTroisiemePlace,
+  genererFinaleEtTroisiemePlace,
   NOM_MATCH_TROISIEME_PLACE,
   resultatsAutoPourExempts,
   idEquipeGagnante,
@@ -233,14 +233,12 @@ export default function Calendrier() {
   async function genererProchainTour() {
     setEnCours(true);
     try {
-      let reglages = reglagesDepuisTournoi(tournoi, matchsBruts);
-      let matchs = [];
-      if (peutGenererTroisiemePlace) {
-        matchs = genererMatchTroisiemePlace(dernierePhaseElim.matchs, id, reglages);
-        reglages = reglagesDepuisTournoi(tournoi, [...matchsBruts, ...matchs]);
-      }
+      const reglages = reglagesDepuisTournoi(tournoi, matchsBruts);
       const tetesDeSerie = qualifiesParTeteDeSerie(poulesAvecClassement(), tournoi.nombre_qualifies_par_poule);
-      matchs = [...matchs, ...genererTourSuivant(dernierePhaseElim.matchs, id, reglages, tetesDeSerie)];
+      // Avec 2 terrains ou plus, la 3e place et la finale se jouent en même temps.
+      const matchs = peutGenererTroisiemePlace
+        ? genererFinaleEtTroisiemePlace(dernierePhaseElim.matchs, id, reglages, tetesDeSerie)
+        : genererTourSuivant(dernierePhaseElim.matchs, id, reglages, tetesDeSerie);
       await insererMatchs(matchs);
       charger();
     } catch (e) {

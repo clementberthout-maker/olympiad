@@ -8,7 +8,7 @@
 import { donnees, MODE_DEMO } from './donnees.js';
 import {
   repartirEnPoules, genererCalendrierPoules, genererPremierTourEliminationDirecte, genererPhaseFinaleDepuisPoules,
-  genererTourSuivant, qualifiesParTeteDeSerie, joursApresDebut, genererMatchTroisiemePlace, resultatsAutoPourExempts, idEquipeGagnante, estPhaseDePoule,
+  genererTourSuivant, qualifiesParTeteDeSerie, joursApresDebut, genererFinaleEtTroisiemePlace, resultatsAutoPourExempts, idEquipeGagnante, estPhaseDePoule,
   grouperParPhase, grouperParTerrain, NOM_MATCH_TROISIEME_PLACE,
 } from './moteur/generation.js';
 import { calculerClassement } from './moteur/classement.js';
@@ -890,14 +890,12 @@ async function tourSuivant(bouton) {
   const c = etat.courant; const a = analyser(c);
   bouton.disabled = true;
   try {
-    let reglages = reglagesDepuisTournoi(c.tournoi, c.matchs);
-    let matchs = [];
-    if (a.peutTroisieme) {
-      matchs = genererMatchTroisiemePlace(a.derniere.matchs, c.tournoi.id, reglages);
-      reglages = reglagesDepuisTournoi(c.tournoi, [...c.matchs, ...matchs]);
-    }
+    const reglages = reglagesDepuisTournoi(c.tournoi, c.matchs);
     const tetesDeSerie = qualifiesParTeteDeSerie(classementsPoules(c), c.tournoi.nombre_qualifies_par_poule);
-    matchs = [...matchs, ...genererTourSuivant(a.derniere.matchs, c.tournoi.id, reglages, tetesDeSerie)];
+    // Avec 2 terrains ou plus, la 3e place et la finale se jouent en même temps.
+    const matchs = a.peutTroisieme
+      ? genererFinaleEtTroisiemePlace(a.derniere.matchs, c.tournoi.id, reglages, tetesDeSerie)
+      : genererTourSuivant(a.derniere.matchs, c.tournoi.id, reglages, tetesDeSerie);
     await insererMatchsAvecExempts(matchs);
     toast(tr('Tour suivant généré !', 'Next round generated!'));
     await rechargerCourant(true);
