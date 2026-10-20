@@ -676,6 +676,37 @@ h2 { font-size: clamp(40px, 6vw, 68px); line-height: 0.95; margin: 0 0 14px; }
 .offre li { padding: 7px 0 7px 28px; position: relative; font-size: 15px; }
 .offre li::before { content: ""; position: absolute; left: 3px; top: 13px; width: 12px; height: 7px; border-left: 2px solid var(--accent); border-bottom: 2px solid var(--accent); transform: rotate(-45deg); }
 .offre li.non { color: var(--texte-attenue); }
+.offre ul { flex: 1; }
+.offre:has([data-offre]) { cursor: pointer; }
+.offre-cta { margin-top: 22px; width: 100%; justify-content: center; }
+/* Fenêtre « souscrire » : l'achat se fait dans l'app */
+.voile-offre { position: fixed; inset: 0; z-index: 90; background: rgba(5, 7, 12, 0.6); backdrop-filter: blur(4px); opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+.voile-offre.ouvert { opacity: 1; pointer-events: auto; }
+.fenetre-offre {
+  position: fixed; left: 50%; top: 50%; z-index: 91; width: min(520px, calc(100% - 32px)); max-height: calc(100vh - 32px); overflow-y: auto;
+  padding: 30px 26px 24px; border-radius: 24px; background: var(--fond); border: 1px solid var(--bordure); box-shadow: var(--ombre);
+  transform: translate(-50%, -46%) scale(0.96); opacity: 0; pointer-events: none; transition: transform 0.45s var(--ease), opacity 0.25s;
+}
+.fenetre-offre.ouvert { transform: translate(-50%, -50%); opacity: 1; pointer-events: auto; }
+.fenetre-offre .surtitre { margin: 0 0 4px; }
+.fenetre-offre h2 { font-size: 46px; margin: 0; line-height: 1; }
+.fenetre-offre .sous { color: var(--texte-attenue); margin: 8px 0 18px; }
+.fermer-offre { position: absolute; right: 14px; top: 14px; width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--bordure); background: var(--surface-2); color: var(--texte); cursor: pointer; display: grid; place-items: center; }
+.fermer-offre svg { width: 16px; height: 16px; }
+.fermer-offre:hover { border-color: var(--accent); }
+.encart-offre { padding: 18px 20px; border-radius: 18px; background: var(--surface); border: 1px solid var(--bordure); }
+.encart-offre h3 { font-size: 26px; margin: 0 0 6px; }
+.encart-offre ol { margin: 0 0 10px; padding-left: 20px; font-size: 15px; line-height: 1.5; }
+.encart-offre li + li { margin-top: 4px; }
+.encart-offre p { margin: 0; color: var(--texte-attenue); font-size: 14px; }
+.stores-offre { display: flex; gap: 12px; margin-top: 18px; }
+.store-offre { position: relative; flex: 1 1 0; padding: 10px 14px; border-radius: 12px; background: var(--texte); color: var(--fond); font-weight: 700; font-size: 18px; line-height: 1.15; }
+.store-offre small { display: block; font-size: 11px; font-weight: 500; opacity: 0.75; }
+.store-offre .bientot { position: absolute; top: -9px; right: -6px; padding: 2px 8px; border-radius: 999px; background: var(--accent); color: var(--accent-encre); font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.fenetre-offre .mention { margin-top: 14px; font-size: 12px; }
+.actions-offre { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+.actions-offre .bouton { flex: 1 1 auto; justify-content: center; }
+body.fenetre-offre-ouverte { overflow: hidden; }
 .offre li.non::before { border: 0; width: 12px; height: 2px; background: var(--texte-attenue); top: 18px; transform: none; }
 .mention { font-size: 13px; color: var(--texte-attenue); margin-top: 22px; }
 

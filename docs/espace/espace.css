@@ -335,6 +335,31 @@ body.page-espace { min-height: 100vh; display: flex; flex-direction: column; }
 .qr-grand img, .qr-grand canvas { width: 100% !important; height: auto !important; }
 .code-grand { text-align: center; font-family: var(--titre); font-size: 52px; letter-spacing: 0.24em; color: var(--accent); padding-left: 0.24em; margin: 0; }
 .actions-fenetre { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 16px; }
+/* Offres (limite gratuite atteinte) : l'achat se fait dans l'app */
+.cartes-offres { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px; }
+.carte-offre { position: relative; display: flex; flex-direction: column; gap: 4px; text-align: left; padding: 20px 16px 16px; border-radius: 18px; background: var(--surface); border: 1px solid var(--bordure); color: var(--texte); font: inherit; cursor: pointer; transition: transform 0.3s var(--ease), border-color 0.2s, box-shadow 0.3s; animation: cascade 0.5s var(--ease) both; }
+.carte-offre + .carte-offre { animation-delay: 0.08s; }
+.carte-offre:hover { transform: translateY(-3px); border-color: var(--accent); box-shadow: 0 14px 34px var(--lueur); }
+.carte-offre:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--lueur); border-color: var(--accent); }
+.carte-offre.vedette { border: 2px solid var(--accent); }
+.carte-offre.actif { background: color-mix(in srgb, var(--accent) 12%, var(--surface)); border-color: var(--accent); }
+.carte-offre .ruban { position: absolute; top: -11px; left: 14px; background: var(--accent); color: var(--accent-encre); font-weight: 700; font-size: 11px; padding: 3px 10px; border-radius: 99px; letter-spacing: 0.04em; }
+.carte-offre b { font-family: var(--titre); font-weight: 400; font-size: 28px; line-height: 1; }
+.carte-offre .prix-offre { color: var(--lien); font-weight: 600; font-size: 14px; }
+.carte-offre .desc { color: var(--texte-attenue); font-size: 13px; line-height: 1.45; flex: 1; }
+.carte-offre .choisir { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; font-family: var(--titre); font-size: 19px; color: var(--accent); }
+.carte-offre .choisir svg { width: 16px; height: 16px; transition: transform 0.25s var(--ease); }
+.carte-offre:hover .choisir svg { transform: translateX(4px); }
+.etapes-offre { margin-top: 14px; }
+.etapes-offre.apparait { animation: cascade 0.45s var(--ease) both; }
+.etapes-offre ol { margin: 4px 0 12px; padding-left: 20px; font-size: 14px; line-height: 1.5; }
+.etapes-offre li + li { margin-top: 4px; }
+.etapes-offre p { margin: 0 0 12px; }
+.stores-offre { display: flex; gap: 8px; flex-wrap: wrap; }
+.store-offre { flex: 1 1 0; min-width: 120px; padding: 8px 12px; border-radius: 12px; background: var(--texte); color: var(--fond); font-weight: 700; font-size: 16px; line-height: 1.15; }
+.store-offre small { display: block; font-size: 11px; font-weight: 500; opacity: 0.7; }
+.mention-offres { font-size: 12px; color: var(--texte-attenue); text-align: center; margin: 14px 0 0; }
+@media (max-width: 520px) { .cartes-offres { grid-template-columns: 1fr; } }
 .co-org { display: flex; align-items: center; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--bordure); flex-wrap: wrap; }
 .co-org .ini { width: 42px; height: 42px; border-radius: 50%; background: var(--surface-2); border: 1px solid var(--bordure); display: grid; place-items: center; font-weight: 700; color: var(--accent); overflow: hidden; }
 .co-org .ini img { width: 100%; height: 100%; object-fit: cover; }

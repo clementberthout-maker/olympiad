@@ -302,6 +302,7 @@
             <li class="non" data-i18n="o.g5">Export PDF</li>
             <li class="non" data-i18n="o.g6">Co-organisateurs</li>
           </ul>
+          <a class="bouton secondaire offre-cta" href="#essayer"><span data-i18n="o.gcta">Commencer</span><svg aria-hidden="true"><use href="#i-fleche"/></svg></a>
         </div>
         <div class="offre reveler" style="--delai:0.1s">
           <h3 data-i18n="o.p">Pass Tournoi</h3>
@@ -312,6 +313,7 @@
             <li data-i18n="o.p3">Co-organisateurs</li>
             <li data-i18n="o.p4">Sans abonnement</li>
           </ul>
+          <button class="bouton offre-cta" type="button" data-offre="pass"><span data-i18n="o.pcta">Choisir le Pass</span><svg aria-hidden="true"><use href="#i-fleche"/></svg></button>
         </div>
         <div class="offre vedette reveler" style="--delai:0.2s">
           <span class="ruban" data-i18n="o.ruban">Pour les clubs</span>
@@ -323,6 +325,7 @@
             <li data-i18n="o.pro3">Idéal pour les clubs qui organisent souvent</li>
             <li data-i18n="o.pro4">Résiliable à tout moment</li>
           </ul>
+          <button class="bouton offre-cta" type="button" data-offre="pro"><span data-i18n="o.procta">Passer à Pro</span><svg aria-hidden="true"><use href="#i-fleche"/></svg></button>
         </div>
       </div>
       <p class="mention" data-i18n-html="o.mention">Les prix sont affichés dans l'application avant tout achat. Paiement via l'App Store ou Google Play ; l'abonnement Pro se renouvelle automatiquement sauf résiliation au moins 24 h avant la fin de la période. Voir les <a href="conditions-utilisation.html">conditions d'utilisation</a>.</p>
@@ -413,6 +416,10 @@
 
 <!-- Vue grand écran (télé, vidéoprojecteur) -->
 <div class="grand-ecran" id="grand-ecran" role="dialog" aria-modal="true" aria-label="Vue grand écran"></div>
+
+<!-- Souscrire à une offre : l'achat se fait dans l'app (App Store, Google Play) -->
+<div class="voile-offre" id="voile-offre"></div>
+<div class="fenetre-offre" id="fenetre-offre" role="dialog" aria-modal="true" aria-labelledby="titre-fenetre-offre"></div>
 
 <!-- Programme imprimable (export PDF) -->
 <div class="impression" id="impression"></div>

@@ -68,6 +68,7 @@
     'o.g': 'Free', 'o.g1': 'Up to 12 teams per tournament', 'o.g2': 'Schedule, scores and live tracking', 'o.g3': 'QR code and big screen view', 'o.g4': '5 sports, knockout stages and podium', 'o.g5': 'PDF export', 'o.g6': 'Co-organizers',
     'o.p': 'Tournament Pass', 'o.pprix': 'One-time purchase, for one tournament', 'o.p1': 'Unlimited teams', 'o.p2': 'PDF export of the schedule', 'o.p3': 'Co-organizers', 'o.p4': 'No subscription',
     'o.ruban': 'For clubs', 'o.proprix': 'Monthly or yearly subscription', 'o.pro1': 'Every premium feature', 'o.pro2': 'On all your tournaments', 'o.pro3': 'Ideal for clubs that organize often', 'o.pro4': 'Cancel anytime',
+    'o.gcta': 'Get started', 'o.pcta': 'Choose the Pass', 'o.procta': 'Go Pro',
     'o.mention': 'Prices are shown in the app before any purchase. Payment through the App Store or Google Play; the Pro subscription renews automatically unless cancelled at least 24 hours before the end of the period. See the <a href="conditions-utilisation.html">terms of use</a>.',
     'a.sur': 'Support', 'a.titre': 'Help', 'a.intro': 'Answers to the most frequent questions.',
     'a.q1': 'Do I need an account to follow a tournament?', 'a.r1': 'No. Teams and spectators join the tournament by scanning its QR code or typing its access code in the app. Only the organizer needs an account.',
@@ -1869,6 +1870,61 @@
   }
   window.addEventListener('scroll', () => { if (!tickDefil) { tickDefil = true; requestAnimationFrame(auDefilement); } }, { passive: true });
   window.addEventListener('resize', () => { $$('.s-onglets').forEach(placerCurseur); });
+
+  // ---------------------------------------------------------------------
+  // Offres : le site n'encaisse rien. Pass Tournoi et Pro s'achètent dans
+  // l'app (App Store, Google Play via RevenueCat) puis valent aussi dans
+  // l'espace organisateur web, avec le même compte.
+  // ---------------------------------------------------------------------
+  const fenetreOffre = $('#fenetre-offre');
+  const voileOffre = $('#voile-offre');
+  let declencheurOffre = null;
+  function ouvrirOffre(id) {
+    const pass = id === 'pass';
+    const etapes = pass
+      ? [tr('Installe l\'application OLYMPIAD et connecte-toi (ou crée ton compte).', 'Install the OLYMPIAD app and sign in (or create your account).'),
+        tr('Ouvre ton tournoi, onglet Équipes, et ajoute une 13e équipe : l\'écran des offres s\'ouvre.', 'Open your tournament, Teams tab, and add a 13th team: the plans screen opens.'),
+        tr('Choisis « Pass Tournoi » et valide l\'achat.', 'Pick “Tournament Pass” and confirm the purchase.')]
+      : [tr('Installe l\'application OLYMPIAD et connecte-toi (ou crée ton compte).', 'Install the OLYMPIAD app and sign in (or create your account).'),
+        tr('Va dans Mon profil, puis « Découvrir les offres ».', 'Go to My profile, then “See the offers”.'),
+        tr('Choisis OLYMPIAD Pro, mensuel ou annuel, et valide l\'achat.', 'Pick OLYMPIAD Pro, monthly or yearly, and confirm the purchase.')];
+    fenetreOffre.innerHTML = `<button class="fermer-offre" type="button" data-offre-action="fermer" aria-label="${tr('Fermer', 'Close')}">${ico('croix')}</button>
+      <p class="surtitre">${pass ? tr('Achat unique', 'One-time purchase') : tr('Abonnement mensuel ou annuel', 'Monthly or yearly subscription')}</p>
+      <h2 id="titre-fenetre-offre">${pass ? tr('Pass Tournoi', 'Tournament Pass') : 'OLYMPIAD Pro'}</h2>
+      <p class="sous">${pass ? tr('Équipes illimitées, export PDF et co-organisateurs pour un tournoi, jusqu\'à 5 jours après sa date.', 'Unlimited teams, PDF export and co-organizers for one tournament, until 5 days after its date.') : tr('Toutes les fonctions premium, sur tous tes tournois. Résiliable à tout moment.', 'Every premium feature, on all your tournaments. Cancel anytime.')}</p>
+      <div class="encart-offre">
+        <h3>${tr('Ça se passe dans l\'app', 'It happens in the app')}</h3>
+        <ol>${etapes.map((e) => `<li>${esc(e)}</li>`).join('')}</ol>
+        <p>${tr('Ton offre s\'applique ensuite partout avec le même compte : dans l\'app et dans l\'espace organisateur web.', 'Your plan then applies everywhere with the same account: in the app and in the web organizer area.')}</p>
+      </div>
+      <div class="stores-offre">
+        <span class="store-offre"><span class="bientot">${tr('Bientôt', 'Soon')}</span><small>${tr('Bientôt disponible sur', 'Coming soon on')}</small>App Store</span>
+        <span class="store-offre"><span class="bientot">${tr('Bientôt', 'Soon')}</span><small>${tr('Bientôt disponible sur', 'Coming soon on')}</small>Google Play</span>
+      </div>
+      <p class="mention">${tr('Prix affichés dans l\'application avant tout achat. Paiement via l\'App Store ou Google Play.', 'Prices are shown in the app before any purchase. Payment through the App Store or Google Play.')}</p>
+      <div class="actions-offre">
+        <a class="bouton secondaire" href="espace.html?demo=1" data-offre-action="fermer">${tr('Découvrir l\'espace en démo', 'Try the organizer area demo')}</a>
+        <a class="bouton" href="#essayer" data-offre-action="fermer"><span>${tr('Essayer gratuitement', 'Try it for free')}</span>${ico('fleche')}</a>
+      </div>`;
+    fenetreOffre.classList.add('ouvert'); voileOffre.classList.add('ouvert');
+    document.body.classList.add('fenetre-offre-ouverte');
+    $('.fermer-offre', fenetreOffre).focus();
+  }
+  function fermerOffre() {
+    if (!fenetreOffre.classList.contains('ouvert')) return;
+    fenetreOffre.classList.remove('ouvert'); voileOffre.classList.remove('ouvert');
+    document.body.classList.remove('fenetre-offre-ouverte');
+    if (declencheurOffre) { declencheurOffre.focus({ preventScroll: true }); declencheurOffre = null; }
+  }
+  $('#offres').addEventListener('click', (e) => {
+    const carte = e.target.closest('.offre');
+    if (!carte || e.target.closest('a[href]')) return;
+    const bouton = $('[data-offre]', carte);
+    if (bouton) { declencheurOffre = bouton; vibrer(); ouvrirOffre(bouton.dataset.offre); }
+  });
+  fenetreOffre.addEventListener('click', (e) => { const a = e.target.closest('[data-offre-action="fermer"]'); if (a) { if (a.tagName === 'A') declencheurOffre = null; fermerOffre(); } });
+  voileOffre.addEventListener('click', fermerOffre);
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') fermerOffre(); });
 
   // Boutons de l'en-tête
   $('#bouton-langue').addEventListener('click', () => changerLangue());

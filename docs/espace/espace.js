@@ -1303,8 +1303,11 @@ document.addEventListener('click', async (e) => {
       ouvrirFenetre(`<h2>${tr('Coller une liste', 'Paste a list')}</h2><p class="sous">${tr('Un nom par ligne (copié depuis un tableur, un e-mail…).', 'One name per line (from a spreadsheet, an email…).')}</p><div class="champ"><textarea id="liste-collee" placeholder="Racing Vallée&#10;FC Rivière&#10;…"></textarea></div><div class="actions-fenetre" style="justify-content:flex-end"><button class="bouton petit" data-action="valider-liste">${tr('Ajouter', 'Add')}</button></div>`, (f) => $('#liste-collee', f).focus());
       break;
     case 'valider-liste': {
-      const n = ajouterEquipesBrouillon($('#liste-collee').value.split(/\r?\n|;/));
-      fermerFenetre(); rafraichirAssistant(); if (n) toast(tr(`${n} ajouté${n > 1 ? 's' : ''}`, `${n} added`)); break;
+      if ($('#erreur-assistant')) $('#erreur-assistant').textContent = '';
+      const n =ajouterEquipesBrouillon($('#liste-collee').value.split(/\r?\n|;/));
+      const message = $('#erreur-assistant')?.textContent; // garde le message rouge de la limite
+      fermerFenetre(); rafraichirAssistant(); if (message) $('#erreur-assistant').textContent = message;
+      if (n) toast(tr(`${n} ajouté${n > 1 ? 's' : ''}`, `${n} added`)); break;
     }
     case 'creer-tournoi': creerTournoi(cible); break;
     case 'choisir-offre': etapesOffre(cible.dataset.offre); break;
