@@ -364,6 +364,7 @@ OLYMPIAD sert à organiser des tournois sportifs amateurs. L'organisateur crée 
 - expo-doctor 21/21. **Build 7 réussi sur EAS le 21/10** (`versionCode` 7, profil production, clé RevenueCat chargée depuis l'environnement production, même keystore `gqma_0PWKl`) : https://expo.dev/accounts/clementberth/projects/olympiad/builds/c94dd81a-0cdc-470f-9195-5970f6b080bf
 - Contenu : terrains mieux utilisés (G34), Pass Tournoi limité dans le temps (B9, D16e), écran d'achat avec l'offre « Saison » et les prix de lancement (C10b).
 - Le build 6 n'a jamais été importé dans la Play Console : remplacé par le build 7, qui contient tout son contenu. Notes de version FR/EN du build 7 (contenu des builds 6 et 7) dans `store/test-ferme.md`.
+- **Importé dans la piste de test fermé (Alpha) et envoyé en examen le 21/10** (release `7 (1.0.0)`, notes FR/EN collées). Après validation : tester sur téléphone l'écran d'achat (9,99 €, 14,99 €, 59,99 €, badge « Saison ») et les points de D16e.
 
 ## 3. Ce qu'il reste à faire
 
@@ -446,7 +447,7 @@ Légende : `[ ]` à faire · `[x]` fait
 
 ### F. Mise en ligne
 - [ ] **F21.** `eas build --profile production --platform all`, puis `eas submit`.
-- [ ] **F22.** Envoyer en validation. Apple répond en 1 à 3 jours en général. Chez Google, prévoir le test fermé de 14 jours si ton compte est concerné. *Google, prochaine étape : test fermé (canal Alpha) avec le build 5 (`olympiad-com.clement-5.aab`), au moins 12 testeurs pendant 14 jours.* *Étapes dans `store/test-ferme.md`.*
+- [ ] **F22.** Envoyer en validation. Apple répond en 1 à 3 jours en général. Chez Google, prévoir le test fermé de 14 jours si ton compte est concerné. *Build 7 importé dans le test fermé (Alpha) et envoyé en examen le 21/10 (remplace le build 5 ; le build 6 n'a jamais été envoyé). Avant : test fermé (canal Alpha) avec le build 5 (`olympiad-com.clement-5.aab`), au moins 12 testeurs pendant 14 jours.* *Étapes dans `store/test-ferme.md`.*
   - [ ] Recruter 15 à 20 testeurs sur Android (liste d'e-mails « TEST FERMÉ » créée le 15/10 avec 3 testeurs ; pistes dans `store/test-ferme.md`, section 2 bis).
   - [x] Refaire la classification du contenu (« Oui » au signalement, B8b). *Envoyée le 15/10 à 12 h 47 : classification inchangée (PEGI « ! », USK 12, ESRB Teen, IARC 12+, 14 au Brésil), cohérente avec les comptes dès 15 ans.*
   - [ ] Ajouter les testeurs comme testeurs de licence (sinon leurs achats sont réels).
@@ -486,6 +487,7 @@ Une ligne par modification, la plus récente en haut.
 
 | Date | Modification |
 |------|--------------|
+| 2026-10-21 | Build 7 importé dans le test fermé (Alpha) et envoyé en examen |
 | 2026-10-21 | Build 7 Android réussi sur EAS (`versionCode` 7), à importer dans la piste du test fermé |
 | 2026-10-21 | Build 6 jamais importé, remplacé par le build 7 ; notes du build 7 complétées avec le contenu du build 6 |
 | 2026-10-20 | Build 7 Android lancé sur EAS (`versionCode` 7) pour le test fermé ; notes de version ajoutées |
