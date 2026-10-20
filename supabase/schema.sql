@@ -891,3 +891,84 @@ using (bucket_id = 'avatars' and auth.uid()::text = split_part(name, '.', 1));
 -- - avertissements_inactivite sans policy (Info) : voulu, seule l'Edge
 --   Function (service_role) y accède.
 -- - Protection contre les mots de passe piratés : option du plan Pro.
+
+-- ============================================================
+-- MIGRATION — Pass Tournoi limité dans le temps (20/10/2026)
+-- ============================================================
+-- Avant : un tournoi débloqué le restait pour toujours, et l'organisateur
+-- pouvait changer sa date pour le refaire l'année suivante avec le même
+-- Pass. Désormais :
+--   1. le Pass est valable jusqu'à 5 jours après la date du tournoi
+--      (inclus) : au-delà, la 13e équipe est refusée comme en gratuit ;
+--   2. la date d'un tournoi débloqué ne peut plus être modifiée.
+-- Même règle dans l'app (lib/achats.js, passActif) et dans l'Edge Function
+-- "valider-pass-tournoi". Un abonnement Pro actif n'est pas concerné.
+
+create or replace function limiter_equipes()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_tournoi tournois%rowtype;
+  v_nombre int;
+begin
+  -- La clé service_role et l'éditeur SQL ne sont pas limités.
+  if coalesce(auth.role(), '') not in ('anon', 'authenticated') then
+    return new;
+  end if;
+
+  -- "for update" : deux ajouts simultanés ne peuvent pas dépasser la limite.
+  select * into v_tournoi from tournois where id = new.tournoi_id for update;
+  if not found then
+    return new;
+  end if;
+
+  -- Pass Tournoi encore valable (date du tournoi + 5 jours, inclus).
+  if v_tournoi.debloque and v_tournoi.date_debut + 5 >= current_date then
+    return new;
+  end if;
+
+  if exists (
+    select 1 from abonnements_pro
+    where user_id = v_tournoi.organisateur_id
+      and (expire_le is null or expire_le > now())
+  ) then
+    return new;
+  end if;
+
+  select count(*) into v_nombre from equipes where tournoi_id = new.tournoi_id;
+  if v_nombre >= 12 then
+    raise exception 'Limite de 12 équipes atteinte pour ce tournoi (version gratuite)'
+      using errcode = 'OLY01';
+  end if;
+  return new;
+end;
+$$;
+
+-- Refuse le changement de date d'un tournoi débloqué par un Pass Tournoi.
+-- La clé service_role et l'éditeur SQL ne sont pas concernés (correction
+-- manuelle possible depuis le tableau de bord).
+create or replace function proteger_date_tournoi()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+begin
+  if coalesce(auth.role(), '') in ('anon', 'authenticated')
+     and old.debloque
+     and new.date_debut is distinct from old.date_debut then
+    raise exception 'La date d''un tournoi débloqué par un Pass Tournoi ne peut plus être modifiée'
+      using errcode = 'OLY02';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists proteger_date_tournoi on tournois;
+create trigger proteger_date_tournoi
+  before update of date_debut on tournois
+  for each row execute function proteger_date_tournoi();
+
+revoke execute on function proteger_date_tournoi() from public, anon, authenticated;

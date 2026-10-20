@@ -1,8 +1,9 @@
 import { View, Text, StyleSheet, Pressable, ScrollView, Alert } from 'react-native';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import Purchases from 'react-native-purchases';
-import { useAchats } from '../lib/achats';
+import { useAchats, passExpire } from '../lib/achats';
+import { supabase } from '../lib/supabase';
 import { messageErreur } from '../lib/erreurs';
 import { useTheme } from '../lib/ThemeContext';
 import { useLangue } from '../lib/LangueContext';
@@ -24,6 +25,15 @@ export default function Paywall() {
   const [enCoursId, setEnCoursId] = useState(null);
   const [restaurationEnCours, setRestaurationEnCours] = useState(false);
   const [utilisationPassEnCours, setUtilisationPassEnCours] = useState(false);
+  // Tournoi passé depuis plus de 5 jours : un Pass ne pourrait plus s'y
+  // appliquer (voir lib/achats.js, passActif), on ne le propose donc pas.
+  const [passImpossible, setPassImpossible] = useState(false);
+
+  useEffect(() => {
+    if (!tournoiId) return;
+    supabase.from('tournois').select('date_debut').eq('id', tournoiId).maybeSingle()
+      .then(({ data }) => setPassImpossible(passExpire(data?.date_debut)));
+  }, [tournoiId]);
 
   async function acheter(pkg) {
     setEnCoursId(pkg.identifier);
@@ -91,12 +101,15 @@ export default function Paywall() {
 
       {!offres && <Text style={styles.aide}>{t('paywall.offresIndisponibles')}</Text>}
 
+      {passImpossible && <Text style={styles.aide}>{t('paywall.passImpossible')}</Text>}
+
       {offres?.availablePackages?.map((pkg) => {
         // Voir lib/achats.js : on identifie l'offre par packageType
         // (LIFETIME/ANNUAL/MONTHLY, attribué par RevenueCat), pas par
         // l'identifiant du produit — indépendant du store (iOS vs Android).
         const estPass = pkg.packageType === Purchases.PACKAGE_TYPE.LIFETIME;
         const estAnnuel = pkg.packageType === Purchases.PACKAGE_TYPE.ANNUAL;
+        if (estPass && passImpossible) return null;
         return (
           <View key={pkg.identifier} style={styles.carteOffre}>
             <Text style={styles.nomOffre}>
@@ -127,7 +140,7 @@ export default function Paywall() {
         </Text>
       </Pressable>
 
-      {tournoiId && (
+      {tournoiId && !passImpossible && (
         <Pressable style={styles.lienRestaurer} onPress={utiliserPassExistant} disabled={utilisationPassEnCours} hitSlop={8}>
           <Text style={styles.texteLienRestaurer}>
             {utilisationPassEnCours ? t('paywall.utilisationPassEnCours') : t('paywall.utiliserPassExistant')}

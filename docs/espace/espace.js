@@ -69,6 +69,7 @@ function statutTournoi(t) {
 // Messages d'erreur lisibles (voir aussi lib/erreurs.js de l'app)
 function messageErreur(e) {
   const m = (e && e.message) || '';
+  if (e && e.code === 'OLY02') return tr('La date d\'un tournoi débloqué avec un Pass Tournoi ne peut plus être modifiée.', 'The date of a tournament unlocked with a Tournament Pass can no longer be changed.');
   if (e && e.code === 'OLY01') return tr(`La version gratuite est limitée à ${LIMITE_GRATUITE} équipes par tournoi. Débloque ce tournoi (Pass Tournoi) ou passe à OLYMPIAD Pro dans l'application mobile.`, `The free plan is limited to ${LIMITE_GRATUITE} teams per tournament. Unlock this tournament (Tournament Pass) or go Pro in the mobile app.`);
   if (/Invalid login credentials/i.test(m)) return tr('E-mail ou mot de passe incorrect.', 'Wrong email or password.');
   if (/Email not confirmed/i.test(m)) return tr('Confirme d\'abord ton adresse e-mail grâce au lien reçu.', 'Please confirm your email address first with the link you received.');
@@ -326,7 +327,7 @@ async function vueTableau() {
       <div class="haut"><span class="ico-sport">${ico(t.sport || 'football')}</span><span class="pastille-statut ${cls}">${lib}</span></div>
       <h3>${esc(t.nom)}</h3>
       <div class="meta">${nomSport(t.sport)} · ${formaterDate(t.date_debut, true)}</div>
-      <div class="bas"><span class="pastille-statut role">${t.role === 'co' ? tr('Co-organisateur', 'Co-organizer') : tr('Organisateur', 'Organizer')}</span><span class="pastille-statut">${tr('Code', 'Code')} ${esc(String(t.code_acces).toUpperCase())}</span>${t.debloque ? `<span class="pastille-statut avenir">${tr('Débloqué', 'Unlocked')}</span>` : ''}</div>
+      <div class="bas"><span class="pastille-statut role">${t.role === 'co' ? tr('Co-organisateur', 'Co-organizer') : tr('Organisateur', 'Organizer')}</span><span class="pastille-statut">${tr('Code', 'Code')} ${esc(String(t.code_acces).toUpperCase())}</span>${passActif(t) ? `<span class="pastille-statut avenir">${tr('Débloqué', 'Unlocked')}</span>` : ''}</div>
     </a>`;
   }).join('');
   return afficher(`<div class="page">
@@ -475,15 +476,18 @@ function reglagesBrouillon(b) {
 }
 function ajouterEquipesBrouillon(noms) {
   const b = etat.brouillon;
-  let ajoutees = 0;
+  let ajoutees = 0; let limiteAtteinte = false;
   for (const nom of noms.map((x) => x.trim()).filter(Boolean)) {
     if (b.equipes.some((e) => e.toLowerCase() === nom.toLowerCase())) continue;
     if (b.equipes.length >= LIMITE_GRATUITE && !etat.pro) {
       $('#erreur-assistant').textContent = messageErreur({ code: 'OLY01' });
+      limiteAtteinte = true;
       break;
     }
     b.equipes.push(nom.slice(0, 60)); ajoutees++;
   }
+  // Après coup : « Coller une liste » ferme sa propre fenêtre juste après
+  if (limiteAtteinte) setTimeout(() => fenetreOffres({ enCreation: true }), 0);
   return ajoutees;
 }
 
@@ -550,6 +554,7 @@ async function creerTournoi(bouton) {
     location.hash = `#/tournoi/${tournoi.id}`;
   } catch (e) {
     erreur.textContent = messageErreur(e);
+    if (e.code === 'OLY01') fenetreOffres({ enCreation: true });
     bouton.disabled = false; bouton.innerHTML = `${tr('Créer le tournoi', 'Create the tournament')}${ico('fleche')}`;
   }
 }
@@ -565,7 +570,20 @@ async function chargerCourant(id) {
   c.droits = { principal, saisir: principal || Boolean(ligne?.peut_saisir_scores), gerer: principal || Boolean(ligne?.peut_gerer_le_tournoi), supprimer: principal || Boolean(ligne?.peut_supprimer_le_tournoi) };
   return c;
 }
-const debloque = (t) => etat.pro || Boolean(t?.debloque);
+// Pass Tournoi valable jusqu'à 5 jours après la date du tournoi, inclus
+// (même règle que lib/achats.js de l'app et limiter_equipes dans la base).
+const JOURS_VALIDITE_PASS = 5;
+function finDuPass(dateDebut) {
+  const d = new Date(`${String(dateDebut).slice(0, 10)}T00:00:00`);
+  d.setDate(d.getDate() + JOURS_VALIDITE_PASS);
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+function passActif(t) {
+  if (!t?.debloque) return false;
+  const a = new Date();
+  return `${a.getFullYear()}-${pad(a.getMonth() + 1)}-${pad(a.getDate())}` <= finDuPass(t.date_debut);
+}
+const debloque = (t) => etat.pro || passActif(t);
 
 // Progression du tableau (même logique que calendrier.js)
 function analyser(c) {
@@ -741,7 +759,8 @@ function htmlReglages() {
   return `<form id="form-reglages" class="grille-reglages"><div>
       <div class="titre-bloc" style="margin-top:0">${tr('Informations', 'Details')}</div>
       ${champ('nom', tr('Nom du tournoi', 'Tournament name'), 'text', t.nom, 'maxlength="80"')}
-      ${champ('date_debut', tr('Date', 'Date'), 'date', String(t.date_debut).slice(0, 10))}
+      ${verrouiller(champ('date_debut', tr('Date', 'Date'), 'date', String(t.date_debut).slice(0, 10)), Boolean(t.debloque))}
+      ${t.debloque ? `<p class="mention">${tr(`Date figée par le Pass Tournoi, valable jusqu'au ${formaterDate(finDuPass(t.date_debut))} inclus.`, `Date locked by the Tournament Pass, valid until ${formaterDate(finDuPass(t.date_debut))} inclusive.`)}</p>` : ''}
       <div class="titre-bloc">${tr('Organisation', 'Organization')}</div>
       <div class="champs-2">${champ('nombre_terrains', tr('Terrains', 'Fields'), 'nombre', t.nombre_terrains, { min: 1, max: 20, titre: tr('Terrains', 'Fields'), icone: 'terrain' })}${t.format === 'mixte' ? champ('nombre_qualifies_par_poule', tr('Qualifiés par poule', 'Qualifiers per group'), 'nombre', t.nombre_qualifies_par_poule, { min: 1, max: 16, titre: tr('Qualifiés', 'Qualifiers'), icone: 'coupe' }) : ''}</div>
       ${t.format !== 'poules' ? `<div class="reglage"><div class="txt"><b>${tr('Match pour la 3e place', 'Third-place match')}</b></div><button type="button" class="interrupteur" role="switch" aria-checked="${Boolean(t.match_troisieme_place)}" data-action="basculer-reglage" data-reglage="match_troisieme_place"></button></div>` : ''}
@@ -921,6 +940,46 @@ function messagePremium(raison) {
   ouvrirFenetre(`<h2>${tr('Fonction premium', 'Premium feature')}</h2><p class="sous">${raison === 'pdf' ? tr('L\'export PDF du programme', 'PDF export of the schedule') : tr('Les co-organisateurs', 'Co-organizers')} ${tr('font partie du Pass Tournoi et d\'OLYMPIAD Pro.', 'are part of the Tournament Pass and OLYMPIAD Pro.')}</p>
     <div class="encart"><p style="margin:0">${tr('Les achats se font dans l\'application OLYMPIAD sur iPhone ou Android. Une fois le tournoi débloqué (ou ton abonnement Pro actif), la fonction est disponible ici aussi, avec le même compte.', 'Purchases are made in the OLYMPIAD app on iPhone or Android. Once the tournament is unlocked (or your Pro subscription is active), the feature is available here too, with the same account.')}</p></div>
     <div class="actions-fenetre"><a class="bouton secondaire petit" href="index.html#offres">${tr('Voir les offres', 'See plans')}</a><button class="bouton petit" data-action="fermer-fenetre">OK</button></div>`);
+}
+// Limite gratuite atteinte : présente les offres. Les achats passent par l'App Store
+// ou Google Play (RevenueCat) dans l'app ; le site ne peut rien encaisser lui-même.
+// enCreation : le tournoi n'existe pas encore (assistant), un Pass ne peut pas s'y appliquer.
+function fenetreOffres({ enCreation = false } = {}) {
+  const offre = (id, nom, prix, desc, vedette) => `<button type="button" class="carte-offre ${vedette ? 'vedette' : ''}" data-action="choisir-offre" data-offre="${id}" aria-pressed="false">
+    ${vedette ? `<span class="ruban">${tr('Pour les clubs', 'For clubs')}</span>` : ''}<b>${nom}</b><span class="prix-offre">${prix}</span><span class="desc">${desc}</span><span class="choisir">${tr('Choisir', 'Choose')}${ico('fleche')}</span></button>`;
+  ouvrirFenetre(`<h2>${tr('Passe à la vitesse supérieure', 'Go further')}</h2>
+    <p class="sous">${tr(`La version gratuite s'arrête à ${LIMITE_GRATUITE} équipes par tournoi. Choisis une offre pour en ajouter autant que tu veux.`, `The free plan stops at ${LIMITE_GRATUITE} teams per tournament. Pick a plan to add as many as you like.`)}</p>
+    <div class="cartes-offres">
+      ${offre('pass', tr('Pass Tournoi', 'Tournament Pass'), tr('Achat unique', 'One-time purchase'), tr('Équipes illimitées, export PDF et co-organisateurs pour ce tournoi, jusqu\'à 5 jours après sa date.', 'Unlimited teams, PDF export and co-organizers for this tournament, until 5 days after its date.'))}
+      ${offre('pro', 'OLYMPIAD Pro', tr('Mensuel ou annuel', 'Monthly or yearly'), tr('Toutes les fonctions premium, sur tous tes tournois. Résiliable à tout moment.', 'Every premium feature, on all your tournaments. Cancel anytime.'), true)}
+    </div>
+    <div id="etapes-offre" class="encart etapes-offre" hidden></div>
+    <p class="mention-offres">${tr('Prix affichés dans l\'application avant tout achat. Paiement via l\'App Store ou Google Play.', 'Prices are shown in the app before any purchase. Payment through the App Store or Google Play.')}</p>
+    <div class="actions-fenetre"><button class="bouton secondaire petit" data-action="fermer-fenetre">${tr('Plus tard', 'Later')}</button></div>`, (f) => {
+    f.dataset.enCreation = enCreation ? '1' : '';
+  });
+}
+function etapesOffre(id) {
+  const f = $('#fenetre');
+  $$('.carte-offre', f).forEach((c) => { const actif = c.dataset.offre === id; c.classList.toggle('actif', actif); c.setAttribute('aria-pressed', String(actif)); });
+  const etapes = id === 'pass'
+    ? [
+      ...(f.dataset.enCreation ? [tr(`Crée d'abord ce tournoi avec ${LIMITE_GRATUITE} équipes : un Pass s'applique à un tournoi déjà créé.`, `First create this tournament with ${LIMITE_GRATUITE} teams: a Pass applies to an existing tournament.`)] : []),
+      tr('Ouvre l\'application OLYMPIAD avec le même compte.', 'Open the OLYMPIAD app with the same account.'),
+      tr('Va sur ce tournoi, onglet Équipes, et ajoute une équipe : l\'écran des offres s\'ouvre.', 'Go to this tournament, Teams tab, and add a team: the plans screen opens.'),
+      tr('Choisis « Pass Tournoi » et valide l\'achat.', 'Pick “Tournament Pass” and confirm the purchase.'),
+    ]
+    : [
+      tr('Ouvre l\'application OLYMPIAD avec le même compte.', 'Open the OLYMPIAD app with the same account.'),
+      tr('Va dans Mon profil, puis « Découvrir les offres ».', 'Go to My profile, then “See the offers”.'),
+      tr('Choisis OLYMPIAD Pro, mensuel ou annuel, et valide l\'achat.', 'Pick OLYMPIAD Pro, monthly or yearly, and confirm the purchase.'),
+    ];
+  const zone = $('#etapes-offre', f);
+  zone.innerHTML = `<h3>${tr('Ça se passe dans l\'app', 'It happens in the app')}</h3><ol>${etapes.map((e) => `<li>${esc(e)}</li>`).join('')}</ol>
+    <p>${tr('Dès l\'achat validé, la limite saute ici aussi : recharge simplement cette page.', 'As soon as the purchase goes through, the limit is lifted here too: just reload this page.')}</p>
+    <div class="stores-offre"><span class="store-offre"><small>${tr('Bientôt sur', 'Soon on')}</small>App Store</span><span class="store-offre"><small>${tr('Bientôt sur', 'Soon on')}</small>Google Play</span></div>`;
+  zone.hidden = false;
+  zone.classList.remove('apparait'); void zone.offsetWidth; zone.classList.add('apparait');
 }
 async function ouvrirCoOrganisateurs() {
   const t = etat.courant.tournoi;
@@ -1248,6 +1307,7 @@ document.addEventListener('click', async (e) => {
       fermerFenetre(); rafraichirAssistant(); if (n) toast(tr(`${n} ajouté${n > 1 ? 's' : ''}`, `${n} added`)); break;
     }
     case 'creer-tournoi': creerTournoi(cible); break;
+    case 'choisir-offre': etapesOffre(cible.dataset.offre); break;
     // Tournoi
     case 'vue-matchs': etat.vueMatchs = cible.dataset.valeur; rendreOnglet(); break;
     case 'saisir': ouvrirSaisie(cible.dataset.match); break;
@@ -1365,8 +1425,8 @@ document.addEventListener('submit', async (e) => {
     const c = etat.courant; const champ = $('#ajout-equipe'); const nom = champ.value.trim();
     if (!nom) return;
     if (c.equipes.some((e) => e.nom.toLowerCase() === nom.toLowerCase())) { toast(tr(`« ${nom} » est déjà dans le tournoi.`, `“${nom}” is already in the tournament.`), 'erreur'); champ.select(); return; }
-    if (c.equipes.length >= LIMITE_GRATUITE && !debloque(c.tournoi)) { toast(messageErreur({ code: 'OLY01' }), 'erreur'); return; }
-    try { await donnees.insererEquipes([{ tournoi_id: c.tournoi.id, nom }]); champ.value = ''; await rechargerCourant(false); $('#ajout-equipe')?.focus(); toast(tr(`${nom} ajouté`, `${nom} added`)); } catch (er) { toast(messageErreur(er), 'erreur'); }
+    if (c.equipes.length >= LIMITE_GRATUITE && !debloque(c.tournoi)) { toast(messageErreur({ code: 'OLY01' }), 'erreur'); fenetreOffres(); return; }
+    try { await donnees.insererEquipes([{ tournoi_id: c.tournoi.id, nom }]); champ.value = ''; await rechargerCourant(false); $('#ajout-equipe')?.focus(); toast(tr(`${nom} ajouté`, `${nom} added`)); } catch (er) { toast(messageErreur(er), 'erreur'); if (er.code === 'OLY01') fenetreOffres(); }
     return;
   }
   if (f.id === 'form-reglages') {

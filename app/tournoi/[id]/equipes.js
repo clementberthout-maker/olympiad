@@ -23,7 +23,7 @@ import SelecteurDate from '../../../components/SelecteurDate';
 import IndicateurEtapes from '../../../components/IndicateurEtapes';
 import { useTheme } from '../../../lib/ThemeContext';
 import { useLangue } from '../../../lib/LangueContext';
-import { useAchats, tournoiEstDebloque } from '../../../lib/achats';
+import { useAchats, tournoiEstDebloque, finDuPass } from '../../../lib/achats';
 import { POLICE_TITRE, POLICE_TEXTE, POLICE_TEXTE_SEMIBOLD } from '../../../lib/theme';
 
 // Limite d'équipes/joueurs par tournoi en version gratuite — voir
@@ -648,7 +648,21 @@ export default function GestionEquipes() {
             <Text style={styles.carteLabel}>{t('equipes.nomDuTournoi')}</Text>
             <TextInput style={styles.input} value={nomEdit} onChangeText={setNomEdit} returnKeyType="done" />
             <Text style={[styles.carteLabel, { marginTop: 14 }]}>{t('equipes.date')}</Text>
-            <SelecteurDate value={dateEdit} onChange={setDateEdit} />
+            {/* Date figée une fois un Pass Tournoi appliqué (voir lib/achats.js, passActif). */}
+            {!estBrouillon && tournoi?.debloque ? (
+              <>
+                <Text style={styles.input}>
+                  {new Date(`${dateEdit}T00:00:00`).toLocaleDateString(langue === 'en' ? 'en-US' : 'fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                </Text>
+                <Text style={[styles.avertissement, { textAlign: 'left' }]}>
+                  {t('equipes.dateVerrouillee', {
+                    fin: new Date(`${finDuPass(dateEdit)}T00:00:00`).toLocaleDateString(langue === 'en' ? 'en-US' : 'fr-FR', { day: 'numeric', month: 'long' }),
+                  })}
+                </Text>
+              </>
+            ) : (
+              <SelecteurDate value={dateEdit} onChange={setDateEdit} />
+            )}
           </View>
         )}
 

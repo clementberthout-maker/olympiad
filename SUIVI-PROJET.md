@@ -339,6 +339,16 @@ OLYMPIAD sert à organiser des tournois sportifs amateurs. L'organisateur crée 
 - **Finale et 3e place** : nouvelle fonction `genererFinaleEtTroisiemePlace`, au même horaire sur 2 terrains (sinon 3e place puis finale), utilisée par l'app (`calendrier.js`) et l'espace. La démo du site le faisait déjà.
 - Vérifié : calendriers simulés avec Node (jamais une équipe sur 2 terrains en même temps, chaque rencontre une seule fois, pause déjeuner respectée), moteur de l'espace et page d'accueil chargés dans le navigateur sans erreur. App : à livrer au prochain build.
 
+### Pass Tournoi limité dans le temps (20 octobre)
+- Constat : un tournoi débloqué le restait pour toujours, et sa date restait modifiable. Un club pouvait donc renommer, redater et régénérer le même tournoi chaque année avec un seul Pass.
+- **Nouvelle règle :** le Pass est valable jusqu'à 5 jours après la date du tournoi (inclus), et la date d'un tournoi débloqué ne peut plus changer. Le Pro n'est pas concerné.
+- **Base** (`supabase/schema.sql`, migration « Pass Tournoi limité dans le temps », **à exécuter**) : `limiter_equipes` ne laisse passer la 13e équipe que si le Pass est encore valable ; nouveau déclencheur `proteger_date_tournoi` (code `OLY02`).
+- **Edge Function** `valider-pass-tournoi` (**à redéployer**) : refuse d'appliquer un Pass à un tournoi passé depuis plus de 5 jours (`pass_expire`), sans consommer l'achat.
+- **App** : `passActif`, `passExpire`, `finDuPass` dans `lib/achats.js` ; date figée dans « Modifier le nom et la date » ; l'écran d'achat masque le Pass sur un tournoi trop ancien ; nouveaux messages d'erreur ; textes du Pass et mentions d'achat complétés.
+- **Espace web** : même règle (cadenas après expiration, badge « Débloqué » seulement si le Pass est valable, date verrouillée avec la date de fin du Pass), vérifié en mode démo.
+- **Conditions d'utilisation** (article 3) complétées et publiées sur GitHub Pages avec le site le 20/10.
+- **À livrer dans le prochain build** (noté en D16e).
+
 ## 3. Ce qu'il reste à faire
 
 Légende : `[ ]` à faire · `[x]` fait
@@ -362,6 +372,8 @@ Légende : `[ ]` à faire · `[x]` fait
   - En anglais, les horaires « Sat 12:45 PM » passent sur deux lignes dans « Matchs à venir » du suivi public.
   - Badge de langue « FR » de l'accueil presque illisible en thème sombre (texte foncé sur fond foncé).
 - [x] **B8b. Signaler un contenu (règle Google sur le contenu généré par les utilisateurs).** *Le 15/10 : libellé spectateur « Supprimer ce tournoi » remplacé par « Retirer de mes tournois suivis » (il ne retirait que le tournoi de la liste du téléphone). Lien « Signaler ce tournoi » ajouté le 15/10 sur le suivi public (e-mail prérempli avec le nom et le code du tournoi, `signalerTournoi` dans `lib/liensLegaux.js`), et mentionné à l'article 4 des conditions d'utilisation (`docs/conditions-utilisation.html`, à publier sur GitHub Pages). **Après la mise à jour de l'app**, refaire le questionnaire de classification Google en répondant « Oui » à « possibilité de signaler ».* Dans le questionnaire de classification, le contenu partagé (nom du tournoi, équipes, scores saisis par l'organisateur) est déclaré comme source principale du contenu, et il n'existe pas de fonction pour bloquer ou signaler. Ajouter un lien « Signaler ce tournoi » sur l'écran de suivi public, qui ouvre un email vers l'adresse de contact avec le code du tournoi (et le mentionner dans les conditions d'utilisation). À livrer dans la version envoyée en test fermé.
+
+- [ ] **B9. Pass Tournoi limité dans le temps (20/10).** *Code fait le 20/10.* Reste : exécuter la migration SQL « Pass Tournoi limité dans le temps », redéployer l'Edge Function `valider-pass-tournoi` depuis le tableau de bord, livrer l'app au prochain build (D16e). Conditions d'utilisation publiées le 20/10.
 
 ### C. Comptes et configuration externes
 - [ ] **C9. Comptes développeur :** *Google Play Console : fait et vérifié le 11/10. Reste Apple.* Apple Developer (99 $/an) et Google Play Console (25 $ une seule fois). Google impose aux nouveaux comptes personnels un test fermé d'au moins 12 testeurs pendant 14 jours avant la production.
@@ -401,6 +413,7 @@ Légende : `[ ]` à faire · `[x]` fait
   - Parcours à couvrir : Pass acheté sur un tournoi encore en brouillon, Pass sur un tournoi existant, Pro, restauration, et changement de téléphone.
 - [ ] **D16. Tester l'application entière :** chaque sport, la phase finale, les co-organisateurs, l'export PDF, le QR code, la réinitialisation du mot de passe, les deux thèmes et les deux langues, sur iPhone et sur Android. *Test complet dans l'aperçu web le 16/10 (défauts en G25 à G33) ; reste à refaire sur de vrais téléphones, avec les achats.*
 - [ ] **D16d. Optimisation du code Android (R8), avant février 2027 :** alerte Play Console « L'optimisation du code DEX est inférieure à notre seuil » (obscurcissement 2 %, build 5). Installer `expo-build-properties` et activer `android.enableMinifyInReleaseBuilds` (et `enableShrinkResourcesInReleaseBuilds`) dans `app.json`, puis retester toute l'app et les achats sur le build obtenu (R8 peut casser des bibliothèques). Envoyer le fichier `mapping.txt` à la Play Console pour lire les plantages. Pas bloquant pour le test fermé.
+- [ ] **D16e. Prochain build : Pass Tournoi limité dans le temps (B9).** Avant le build, vérifier que la migration SQL et la nouvelle Edge Function `valider-pass-tournoi` sont en place. À tester sur le build : date en lecture seule sur un tournoi débloqué (« Modifier le nom et la date »), Pass masqué sur l'écran d'achat d'un tournoi passé depuis plus de 5 jours, cadenas revenus après expiration, Pass acheté en brouillon toujours appliqué. Ajouter la règle aux notes de version (« Le Pass Tournoi est valable jusqu'à 5 jours après le tournoi »).
 - [ ] **D16c. Mot de passe oublié par code (prochain build) :** le lien de réinitialisation n'est valable qu'environ 5 minutes et seulement sur l'appareil qui a fait la demande (PKCE, testé le 15/10). Le remplacer par un code à 6 chiffres saisi dans l'app (`{{ .Token }}`, `verifyOtp` type `recovery`). Détails dans `supabase/emails/README.md`.
 - [x] **D16b. Au prochain build (après les retours du test fermé) :** appliquer les mises à jour correctives signalées par Expo Doctor sur le build 5 (`npx expo install --fix` : expo 57.0.29, expo-constants 57.0.22, expo-linking 57.0.13, expo-router 57.0.27, expo-sharing 57.0.23), puis vérifier `npm ci` avec npm 10 avant de lancer le build. Avertissement seulement, le build 5 est gardé pour le test fermé. *Fait le 16/10 pour le build 6 (expo-doctor 21/21, `npm ci` OK avec npm 10).*
 
@@ -455,6 +468,8 @@ Une ligne par modification, la plus récente en haut.
 
 | Date | Modification |
 |------|--------------|
+| 2026-10-20 | Conditions d'utilisation publiées (Pass Tournoi limité) ; Pass noté pour le prochain build (D16e) |
+| 2026-10-20 | Pass Tournoi valable jusqu'à 5 jours après le tournoi, date figée une fois débloqué (B9) |
 | 2026-10-20 | Plusieurs terrains mieux utilisés : poules sans terrain vide entre les journées, finale et 3e place en même temps (G34) |
 | 2026-10-20 | Security Advisor relancé : 6 avertissements et 1 info restants, tous voulus |
 | 2026-10-20 | Migration Security Advisor exécutée ; « Retirer la photo » ajouté au profil de l'espace organisateur |
