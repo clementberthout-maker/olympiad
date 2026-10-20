@@ -3,7 +3,7 @@
 > Fichier tenu à jour automatiquement par Claude à chaque modification du projet
 > (voir `CLAUDE.md` et le hook `.claude/hooks/verifier-suivi.sh`).
 
-**Dernière mise à jour :** 16 octobre 2026
+**Dernière mise à jour :** 20 octobre 2026
 
 ---
 
@@ -309,6 +309,9 @@ OLYMPIAD sert à organiser des tournois sportifs amateurs. L'organisateur crée 
 - Notes de version FR/EN du build 6 ajoutées à `store/test-ferme.md`.
 - **Build 6 réussi sur EAS le 16/10** (`versionCode` 6, clé `gqma_0PWKl` / SHA1 `58:99…` comme le build 5, clé RevenueCat chargée depuis l'environnement production) : https://expo.dev/accounts/clementberth/projects/olympiad/builds/ad4cb98f-9c60-4227-bcfc-2f289842406d. **Reste** : importer le `.aab` dans la Play Console (test fermé, piste Alpha), coller les notes de version et envoyer en examen.
 
+### Compte démo (20 octobre)
+- Nom et prénom du profil du compte démo remplis par Clément : l'espace organisateur affiche maintenant « Bonjour » suivi du prénom, et les équipes de validation Google et Apple voient un profil complet.
+
 ## 3. Ce qu'il reste à faire
 
 Légende : `[ ]` à faire · `[x]` fait
@@ -371,7 +374,7 @@ Légende : `[ ]` à faire · `[x]` fait
   - Classification d'âge : répondre au questionnaire d'Apple et à celui de Google (IARC) selon le contenu réel (pas de violence, pas de contenu choquant ; noms d'équipes saisis par les utilisateurs et visibles avec le code du tournoi).
   - Public cible sur Google Play : 13-15 ans, 16-17 ans et 18 ans et plus (comptes dès 15 ans). Ne pas cocher de tranche de moins de 13 ans, pour ne pas relever du programme « Familles ».
   - Adresse de la politique de confidentialité et adresse de support. *Support : https://clementberthout-maker.github.io/olympiad/#aide ; marketing : https://clementberthout-maker.github.io/olympiad/*
-- [ ] **E20. Compte de démonstration** **Rappel (16/10) : remplir le nom et le prénom du profil du compte démo (« Mon profil », dans l'app ou sur le site), aujourd'hui vides.** *Google : créé le 14/10, Pro offert par RevenueCat (entitlement promotionnel `pro`), tournoi de démonstration, identifiants déclarés dans « Informations de connexion ». À réutiliser pour Apple.* pour les équipes de validation Apple et Google, avec un tournoi déjà rempli.
+- [ ] **E20. Compte de démonstration** *Profil du compte démo complété (nom et prénom) par Clément le 20/10.* *Google : créé le 14/10, Pro offert par RevenueCat (entitlement promotionnel `pro`), tournoi de démonstration, identifiants déclarés dans « Informations de connexion ». À réutiliser pour Apple.* pour les équipes de validation Apple et Google, avec un tournoi déjà rempli.
 
 ### F. Mise en ligne
 - [ ] **F21.** `eas build --profile production --platform all`, puis `eas submit`.
@@ -401,7 +404,7 @@ Légende : `[ ]` à faire · `[x]` fait
 - [x] **G30. Co-organisateur de son propre tournoi :** *Corrigé le 16/10 dans `schema.sql` et la démo ; migration exécutée dans Supabase par Clément le 16/10.* `rejoindre_comme_co_organisateur` (`supabase/schema.sql`) laisse l'organisateur principal s'ajouter à son propre tournoi. Ignorer ce cas dans la fonction.
 - [x] **G31. Tournoi supprimé encore dans « Tournois suivis »** *Corrigé le 16/10 ; à livrer au prochain build.* (app) : il s'ouvre sur « Tournoi introuvable », sans moyen de le retirer. Le retirer de la liste dans ce cas.
 - [x] **G32. Pages légales sans retour au site :** *Fait le 16/10 (liens de retour, politique de confidentialité complétée pour le site et l'espace).* tout s'ouvre dans la même page, mais `politique-confidentialite.html`, `conditions-utilisation.html` et `suppression-compte.html` n'ont aucun lien vers l'accueil. Ajouter un lien « Retour au site ». La politique (27/09) ne parle pas encore du site ni de l'espace organisateur.
-- [ ] **G33. Petits défauts :** *Fait le 16/10 pour l'app, le site et l'espace (« Bonjour » sans prénom vient du profil vide). Reste : remplir le nom et le prénom du compte démo.* titre de l'onglet du site resté en français en anglais, et « Football · 8 équipes » non traduit dans le téléphone de l'accueil ; « Bonjour » sans prénom dans l'espace (profil du compte démo vide : le remplir pour Google et Apple) ; « Quart de finale générée » (masculin) ; « fin des premier tour » (simulateur) ; tennis affiché « 1 pt nul » alors qu'il n'y a pas de nul ; code d'accès en minuscules dans l'app, en majuscules sur le site ; « Vous faites partie de quelle équipe ? » (vouvoiement) dans l'app ; doublon d'équipe ignoré sans message dans l'espace ; dates passées sélectionnables ; pas de lien « Signaler » sur le suivi public du site ; ni liens légaux dans le profil de l'espace ; « Voir un tournoi en direct » du site remplace le tournoi du simulateur sans prévenir ; match pour la 3e place activé par défaut dans le simulateur mais pas dans l'app.
+- [x] **G33. Petits défauts :** *Fait le 16/10 pour l'app, le site et l'espace (« Bonjour » sans prénom vient du profil vide). Profil du compte démo complété le 20/10.* titre de l'onglet du site resté en français en anglais, et « Football · 8 équipes » non traduit dans le téléphone de l'accueil ; « Bonjour » sans prénom dans l'espace (profil du compte démo vide : le remplir pour Google et Apple) ; « Quart de finale générée » (masculin) ; « fin des premier tour » (simulateur) ; tennis affiché « 1 pt nul » alors qu'il n'y a pas de nul ; code d'accès en minuscules dans l'app, en majuscules sur le site ; « Vous faites partie de quelle équipe ? » (vouvoiement) dans l'app ; doublon d'équipe ignoré sans message dans l'espace ; dates passées sélectionnables ; pas de lien « Signaler » sur le suivi public du site ; ni liens légaux dans le profil de l'espace ; « Voir un tournoi en direct » du site remplace le tournoi du simulateur sans prévenir ; match pour la 3e place activé par défaut dans le simulateur mais pas dans l'app.
 
 **Priorité conseillée :** commence par A1 à A4 (du code, sans dépendance extérieure) et, en parallèle, ouvre les comptes développeur (C9). La validation des comptes et le test fermé Google sont ce qui prend le plus de temps.
 
@@ -413,6 +416,7 @@ Une ligne par modification, la plus récente en haut.
 
 | Date | Modification |
 |------|--------------|
+| 2026-10-20 | Profil du compte démo complété (nom et prénom) : E20 et G33 à jour |
 | 2026-10-16 | Build 6 Android réussi sur EAS (`versionCode` 6), à importer dans la Play Console |
 | 2026-10-16 | Build 6 préparé : mises à jour Expo (D16b), expo-doctor 21/21, `npm ci` npm 10 et bundle Android vérifiés, notes de version ; rappel de remplir le profil du compte démo (E20) |
 | 2026-10-16 | Site et espace : traductions, tennis, confirmation de la démo, doublons, dates passées, liens légaux, « Signaler » (G33) ; pages légales avec retour au site et politique de confidentialité complétée (G32) ; correction de `$$(` |
