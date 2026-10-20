@@ -391,7 +391,7 @@ Légende : `[ ]` à faire · `[x]` fait
 - [ ] **C10. Produits à créer dans les deux stores :** *Google : profil de paiement (particulier) créé le 11/10 ; produits créés et actifs le 11/10 : `pass_tournoi` (option d'achat `achat`, rétrocompatible, contenu numérique) et `pro` (formules `mensuel` et `annuel`). Reste Apple.*
   - Pass Tournoi : achat unique **consommable** (un Pass par tournoi, rachetable ; RevenueCat consomme l'achat sur Android). Sur iOS : type « Consommable », pas « Non consommable ».
   - Pro : abonnement mensuel et annuel. Sur iOS, il faut un groupe d'abonnements ; sur Android, un seul produit avec deux formules.
-- [ ] **C10b. Appliquer les prix de lancement (validés le 20/10) :** Play Console : `pass_tournoi` 9,99 €, `pro` formule `mensuel` 14,99 €, formule `annuel` 59,99 € (prix en euros, puis conversion automatique pour les autres pays). App Store Connect, à la création des produits : Pass consommable 9,99 €, groupe d'abonnements avec mensuel 14,99 € et annuel 59,99 € (pays de référence France). Rien à changer dans RevenueCat (il lit les prix des stores) ; vérifier ensuite l'écran d'achat sur le build.
+- [ ] **C10b. Appliquer les prix de lancement (validés le 20/10) :** *Google : Pass à 9,99 € fait le 20/10 (conversion de tous les pays depuis le prix HT 8,33 €, car la conversion groupée ajoute la TVA ; France vérifiée à 9,99 €). Reste le Pro mensuel (12,49 € HT) et annuel (49,99 € HT), puis Apple.* Play Console : `pass_tournoi` 9,99 €, `pro` formule `mensuel` 14,99 €, formule `annuel` 59,99 € (prix en euros, puis conversion automatique pour les autres pays). App Store Connect, à la création des produits : Pass consommable 9,99 €, groupe d'abonnements avec mensuel 14,99 € et annuel 59,99 € (pays de référence France). Rien à changer dans RevenueCat (il lit les prix des stores) ; vérifier ensuite l'écran d'achat sur le build.
 - [ ] **C11. RevenueCat :** *Android fait le 12/10 : compte de service Google relié (2 vérifications sur 3 au vert, la validation des achats d'abonnement attend la propagation chez Google), entitlement `pro` (`pro:mensuel`, `pro:annuel`), offre `default` avec `$rc_monthly` → `pro:mensuel`, `$rc_annual` → `pro:annuel`, `$rc_lifetime` → `pass_tournoi` (consommable), clé `goog_…` dans `.env` et dans EAS (production, preview, development). Clé secrète `REVENUECAT_SECRET_KEY` (API v1) enregistrée dans Supabase le 12/10. Reste iOS.*
   - Relier les deux stores (clé API App Store Connect, compte de service Google).
   - Créer l'entitlement `pro` et une offre « current » avec trois packages : Lifetime, Monthly et Annual.
@@ -481,6 +481,7 @@ Une ligne par modification, la plus récente en haut.
 
 | Date | Modification |
 |------|--------------|
+| 2026-10-20 | Play Console : Pass Tournoi à 9,99 € (France), autres pays convertis depuis 8,33 € HT (C10b) |
 | 2026-10-20 | Prix de lancement : Pass 9,99 €, Pro 14,99 €/mois ou 59,99 €/an « Saison » (écran d'achat, site, CGU, budget) ; prix des stores à saisir (C10b) |
 | 2026-10-20 | Migration « Pass Tournoi limité dans le temps » exécutée, `valider-pass-tournoi` redéployée (B9) |
 | 2026-10-20 | Site : fenêtre des offres à la limite de 12 équipes dans l'espace, offres cliquables sur l'accueil (achat dans l'app) |
