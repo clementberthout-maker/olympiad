@@ -86,6 +86,18 @@ Tout le reste tourne aujourd'hui sur des offres gratuites : Supabase, EAS (Expo)
 | Cotisations sociales (micro-entreprise) | ≈ 21 à 26 % du chiffre d'affaires | Taux selon la catégorie d'activité retenue par l'URSSAF (vente d'app : à faire confirmer). Payées seulement s'il y a des revenus. |
 | Impôt sur le revenu | Variable | Option « versement libératoire » possible (1 à 2,2 % du chiffre d'affaires) selon tes revenus. |
 
+### Prix de lancement et revenu par vente (validés le 20 octobre)
+
+Calcul : prix TTC / 1,20 (TVA) × 0,85 (commission de 15 %). Avant cotisations et impôt.
+
+| Offre | Prix TTC (France) | HT | Commission 15 % | Net par vente |
+|---|---|---|---|---|
+| Pass Tournoi (un tournoi, jusqu'à 5 jours après sa date) | 9,99 € | 8,33 € | 1,25 € | **7,08 €** |
+| Pro mensuel | 14,99 € / mois | 12,49 € | 1,87 € | **10,62 €** |
+| Pro annuel « Saison » (≈ 5 € / mois, -67 %) | 59,99 € / an | 49,99 € | 7,50 € | **42,49 €** |
+
+Le Pro mensuel coûte plus qu'un Pass, pour qu'on ne prenne pas un mois de Pro le temps d'un seul tournoi. Pack de Pass, Grand Pass et offre structures : à étudier plus tard, avec les chiffres de RevenueCat.
+
 ### Statut et administratif
 
 | Poste | Coût | Remarque |

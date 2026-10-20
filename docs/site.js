@@ -66,10 +66,10 @@
     's.sur': '5 sports', 's.titre': 'Every sport has its rules', 's.intro': 'Scoring, wording and tiebreakers adapt automatically to the chosen sport.',
     'o.sur': 'Plans', 'o.titre': 'Free to get started', 'o.intro': 'Unlock one tournament or all of them, only when you need it.',
     'o.g': 'Free', 'o.g1': 'Up to 12 teams per tournament', 'o.g2': 'Schedule, scores and live tracking', 'o.g3': 'QR code and big screen view', 'o.g4': '5 sports, knockout stages and podium', 'o.g5': 'PDF export', 'o.g6': 'Co-organizers',
-    'o.p': 'Tournament Pass', 'o.pprix': 'One-time purchase, for one tournament', 'o.p1': 'Unlimited teams', 'o.p2': 'PDF export of the schedule', 'o.p3': 'Co-organizers', 'o.p4': 'No subscription',
-    'o.ruban': 'For clubs', 'o.proprix': 'Monthly or yearly subscription', 'o.pro1': 'Every premium feature', 'o.pro2': 'On all your tournaments', 'o.pro3': 'Ideal for clubs that organize often', 'o.pro4': 'Cancel anytime',
+    'o.p': 'Tournament Pass', 'o.pprix': '€9.99 · one-time purchase, for one tournament', 'o.p1': 'Unlimited teams', 'o.p2': 'PDF export of the schedule', 'o.p3': 'Co-organizers', 'o.p4': 'No subscription', 'o.p5': 'Valid until 5 days after the tournament date',
+    'o.ruban': 'For clubs', 'o.proprix': '€59.99 / year (Season) or €14.99 / month', 'o.pro1': 'Every premium feature', 'o.pro2': 'On all your tournaments', 'o.pro3': 'Ideal for clubs that organize often', 'o.pro4': 'Cancel anytime', 'o.pro5': 'Season: just €5 / month, 67% less than monthly',
     'o.gcta': 'Get started', 'o.pcta': 'Choose the Pass', 'o.procta': 'Go Pro',
-    'o.mention': 'Prices are shown in the app before any purchase. Payment through the App Store or Google Play; the Pro subscription renews automatically unless cancelled at least 24 hours before the end of the period. See the <a href="conditions-utilisation.html">terms of use</a>.',
+    'o.mention': 'Prices include VAT for France; the exact price in your country is shown in the app before any purchase. Payment through the App Store or Google Play; the Pro subscription renews automatically unless cancelled at least 24 hours before the end of the period. See the <a href="conditions-utilisation.html">terms of use</a>.',
     'a.sur': 'Support', 'a.titre': 'Help', 'a.intro': 'Answers to the most frequent questions.',
     'a.q1': 'Do I need an account to follow a tournament?', 'a.r1': 'No. Teams and spectators join the tournament by scanning its QR code or typing its access code in the app. Only the organizer needs an account.',
     'a.q2': 'How do I join a tournament?', 'a.r2': 'In the app, tap “Join a tournament”, then scan the QR code shown by the organizer or type the access code they gave you.',
@@ -967,9 +967,9 @@
       return `${barreNav()}
         <h2 class="s-titre">${tr('Passe au niveau supérieur', 'Level up')}</h2>
         <p class="s-sous">${accroches[raison] || accroches.defaut}</p>
-        ${offre('pass', tr('Pass Tournoi', 'Tournament Pass'), tr('Débloque équipes illimitées, export PDF et co-organisateurs pour ce tournoi.', 'Unlocks unlimited teams, PDF export and co-organizers for this tournament.'), tr('Achat unique · prix affiché dans l\'app', 'One-time purchase · price shown in the app'))}
-        ${offre('pro-mois', tr('OLYMPIAD Pro (mensuel)', 'OLYMPIAD Pro (monthly)'), tr('Débloque toutes les fonctionnalités premium, pour tous tes tournois.', 'Unlocks every premium feature, for all your tournaments.'), tr('/ mois · prix affiché dans l\'app', '/ month · price shown in the app'), true)}
-        ${offre('pro-an', tr('OLYMPIAD Pro (annuel)', 'OLYMPIAD Pro (yearly)'), tr('Le même abonnement, payé une fois par an.', 'The same subscription, paid once a year.'), tr('/ an · prix affiché dans l\'app', '/ year · price shown in the app'))}
+        ${offre('pass', tr('Pass Tournoi', 'Tournament Pass'), tr('Débloque équipes illimitées, export PDF et co-organisateurs pour ce tournoi, jusqu\'à 5 jours après sa date.', 'Unlocks unlimited teams, PDF export and co-organizers for this tournament, until 5 days after its date.'), tr('9,99 € · achat unique', '€9.99 · one-time purchase'))}
+        ${offre('pro-an', tr('OLYMPIAD Pro (annuel) · Saison', 'OLYMPIAD Pro (yearly) · Season'), tr('Toutes les fonctionnalités premium, pour tous tes tournois. Le plus avantageux.', 'Every premium feature, for all your tournaments. Best value.'), tr('59,99 € / an · soit 5 € / mois, 67 % de moins', '€59.99 / year · just €5 / month, 67% less'), true)}
+        ${offre('pro-mois', tr('OLYMPIAD Pro (mensuel)', 'OLYMPIAD Pro (monthly)'), tr('Le même abonnement, payé chaque mois.', 'The same subscription, paid every month.'), tr('14,99 € / mois', '€14.99 / month'))}
         <button class="s-lien" data-a="restaurer">${tr('Restaurer mes achats', 'Restore purchases')}</button>
         ${S.passEnAttente ? `<button class="s-lien" data-a="utiliser-pass">${tr('J\'ai déjà un Pass Tournoi non utilisé', 'I already have an unused Tournament Pass')}</button>` : ''}
         <p class="s-aide" style="margin-top:10px">${tr('Simulation : aucun paiement n\'est effectué. Dans l\'app, l\'abonnement Pro se renouvelle automatiquement sauf résiliation au moins 24 h avant la fin de la période.', 'Simulation: no payment is made. In the app, Pro renews automatically unless cancelled at least 24 hours before the end of the period.')}</p>`;

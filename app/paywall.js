@@ -35,6 +35,32 @@ export default function Paywall() {
       .then(({ data }) => setPassImpossible(passExpire(data?.date_debut)));
   }, [tournoiId]);
 
+  // Ordre d'affichage : Pass, puis Pro annuel (mis en avant), puis mensuel.
+  const packagesTries = useMemo(() => {
+    const rang = {
+      [Purchases.PACKAGE_TYPE.LIFETIME]: 0,
+      [Purchases.PACKAGE_TYPE.ANNUAL]: 1,
+      [Purchases.PACKAGE_TYPE.MONTHLY]: 2,
+    };
+    return [...(offres?.availablePackages || [])]
+      .sort((a, b) => (rang[a.packageType] ?? 3) - (rang[b.packageType] ?? 3));
+  }, [offres]);
+
+  // Équivalent par mois et économie du Pro annuel, calculés à partir des
+  // prix du store (aucun montant écrit en dur).
+  const detailAnnuel = useMemo(() => {
+    const paquets = offres?.availablePackages || [];
+    const annuel = paquets.find((p) => p.packageType === Purchases.PACKAGE_TYPE.ANNUAL)?.product;
+    const mensuel = paquets.find((p) => p.packageType === Purchases.PACKAGE_TYPE.MONTHLY)?.product;
+    if (!annuel?.pricePerMonthString) return null;
+    const economie = mensuel?.price > 0 && mensuel.currencyCode === annuel.currencyCode
+      ? Math.round((1 - annuel.price / (mensuel.price * 12)) * 100)
+      : 0;
+    return economie > 0
+      ? t('paywall.annuelParMoisEconomie', { prix: annuel.pricePerMonthString, economie })
+      : t('paywall.annuelParMois', { prix: annuel.pricePerMonthString });
+  }, [offres, t]);
+
   async function acheter(pkg) {
     setEnCoursId(pkg.identifier);
     let estPassTournoi;
@@ -103,7 +129,7 @@ export default function Paywall() {
 
       {passImpossible && <Text style={styles.aide}>{t('paywall.passImpossible')}</Text>}
 
-      {offres?.availablePackages?.map((pkg) => {
+      {packagesTries.map((pkg) => {
         // Voir lib/achats.js : on identifie l'offre par packageType
         // (LIFETIME/ANNUAL/MONTHLY, attribué par RevenueCat), pas par
         // l'identifiant du produit — indépendant du store (iOS vs Android).
@@ -111,7 +137,8 @@ export default function Paywall() {
         const estAnnuel = pkg.packageType === Purchases.PACKAGE_TYPE.ANNUAL;
         if (estPass && passImpossible) return null;
         return (
-          <View key={pkg.identifier} style={styles.carteOffre}>
+          <View key={pkg.identifier} style={[styles.carteOffre, estAnnuel && styles.carteVedette]}>
+            {estAnnuel && <Text style={styles.badge}>{t('paywall.badgeSaison')}</Text>}
             <Text style={styles.nomOffre}>
               {estPass
                 ? t('paywall.passTournoiNom')
@@ -125,6 +152,7 @@ export default function Paywall() {
                 ? t('paywall.prixAchatUnique', { prix: pkg.product.priceString })
                 : t(estAnnuel ? 'paywall.prixParAn' : 'paywall.prixParMois', { prix: pkg.product.priceString })}
             </Text>
+            {estAnnuel && detailAnnuel && <Text style={styles.detailAnnuel}>{detailAnnuel}</Text>}
             <Pressable style={styles.bouton} onPress={() => acheter(pkg)} disabled={enCoursId !== null}>
               <Text style={styles.texteBouton}>
                 {enCoursId === pkg.identifier ? t('paywall.achatEnCours') : t('paywall.acheter')}
@@ -172,7 +200,23 @@ function creerStyles(c) {
     },
     nomOffre: { fontFamily: POLICE_TITRE, fontSize: 18, letterSpacing: 0.2, color: c.texte, marginBottom: 4 },
     descriptionOffre: { fontFamily: POLICE_TEXTE, fontSize: 12.5, color: c.texteAttenue, marginBottom: 10 },
+    carteVedette: { borderColor: c.accent, borderWidth: 2 },
+    badge: {
+      alignSelf: 'flex-start',
+      backgroundColor: c.accent,
+      color: c.accentEncre,
+      fontFamily: POLICE_TEXTE_SEMIBOLD,
+      fontSize: 11,
+      letterSpacing: 0.4,
+      textTransform: 'uppercase',
+      borderRadius: 6,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      overflow: 'hidden',
+      marginBottom: 8,
+    },
     prixOffre: { fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 16, color: c.accent, marginBottom: 14 },
+    detailAnnuel: { fontFamily: POLICE_TEXTE, fontSize: 12.5, color: c.texteAttenue, marginTop: -10, marginBottom: 14 },
     bouton: {
       backgroundColor: c.accent,
       borderRadius: 10,

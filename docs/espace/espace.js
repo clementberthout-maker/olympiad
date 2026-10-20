@@ -950,11 +950,11 @@ function fenetreOffres({ enCreation = false } = {}) {
   ouvrirFenetre(`<h2>${tr('Passe à la vitesse supérieure', 'Go further')}</h2>
     <p class="sous">${tr(`La version gratuite s'arrête à ${LIMITE_GRATUITE} équipes par tournoi. Choisis une offre pour en ajouter autant que tu veux.`, `The free plan stops at ${LIMITE_GRATUITE} teams per tournament. Pick a plan to add as many as you like.`)}</p>
     <div class="cartes-offres">
-      ${offre('pass', tr('Pass Tournoi', 'Tournament Pass'), tr('Achat unique', 'One-time purchase'), tr('Équipes illimitées, export PDF et co-organisateurs pour ce tournoi, jusqu\'à 5 jours après sa date.', 'Unlimited teams, PDF export and co-organizers for this tournament, until 5 days after its date.'))}
-      ${offre('pro', 'OLYMPIAD Pro', tr('Mensuel ou annuel', 'Monthly or yearly'), tr('Toutes les fonctions premium, sur tous tes tournois. Résiliable à tout moment.', 'Every premium feature, on all your tournaments. Cancel anytime.'), true)}
+      ${offre('pass', tr('Pass Tournoi', 'Tournament Pass'), tr('9,99 € · achat unique', '€9.99 · one-time purchase'), tr('Équipes illimitées, export PDF et co-organisateurs pour ce tournoi, jusqu\'à 5 jours après sa date.', 'Unlimited teams, PDF export and co-organizers for this tournament, until 5 days after its date.'))}
+      ${offre('pro', 'OLYMPIAD Pro', tr('59,99 € / an (Saison) ou 14,99 € / mois', '€59.99 / year (Season) or €14.99 / month'), tr('Toutes les fonctions premium, sur tous tes tournois. L\'annuel revient à 5 € / mois. Résiliable à tout moment.', 'Every premium feature, on all your tournaments. Yearly comes to €5 / month. Cancel anytime.'), true)}
     </div>
     <div id="etapes-offre" class="encart etapes-offre" hidden></div>
-    <p class="mention-offres">${tr('Prix affichés dans l\'application avant tout achat. Paiement via l\'App Store ou Google Play.', 'Prices are shown in the app before any purchase. Payment through the App Store or Google Play.')}</p>
+    <p class="mention-offres">${tr('Prix TTC pour la France ; le prix exact dans ton pays est affiché dans l\'application avant tout achat. Paiement via l\'App Store ou Google Play.', 'Prices include VAT for France; the exact price in your country is shown in the app before any purchase. Payment through the App Store or Google Play.')}</p>
     <div class="actions-fenetre"><button class="bouton secondaire petit" data-action="fermer-fenetre">${tr('Plus tard', 'Later')}</button></div>`, (f) => {
     f.dataset.enCreation = enCreation ? '1' : '';
   });

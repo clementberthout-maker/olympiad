@@ -354,6 +354,12 @@ OLYMPIAD sert à organiser des tournois sportifs amateurs. L'organisateur crée 
 - **Accueil** : boutons « Commencer », « Choisir le Pass » et « Passer à Pro » sur les cartes des offres (toute la carte est cliquable). Le Pass et le Pro ouvrent une fenêtre dans la page : étapes d'achat dans l'app, l'offre vaut aussi dans l'espace web avec le même compte, badges des stores « Bientôt », liens vers la démo de l'espace et le simulateur.
 - Le site n'encaisse rien : les achats restent dans l'app (App Store, Google Play via RevenueCat), conformément aux conditions d'utilisation. Vérifié en mode démo (FR, EN, téléphone).
 
+### Prix de lancement (20 octobre)
+- **Prix validés (TTC France) :** Pass Tournoi 9,99 €, Pro mensuel 14,99 €, Pro annuel « Saison » 59,99 € (≈ 5 €/mois, -67 %). Pas de pack, de Grand Pass ni d'offre structures au lancement. Le Pass garde sa portée (équipes illimitées, PDF, co-organisateurs, jusqu'à 5 jours après le tournoi). Revenu net par vente dans `BUDGET-PROJET.md`.
+- **App** (`app/paywall.js`) : ordre Pass, Pro annuel, Pro mensuel ; l'annuel est encadré avec un badge « Saison · le plus avantageux » et une ligne « Soit X / mois, N % de moins que le mensuel », calculée à partir des prix du store (`pricePerMonthString`, `price`), aucun montant écrit en dur. Textes FR et EN dans `lib/traductions.js`. À livrer au prochain build.
+- **Site** : prix affichés sur les cartes de l'accueil, dans le simulateur et dans la fenêtre des offres de l'espace, avec la mention « Prix TTC pour la France ; le prix exact dans ton pays est affiché dans l'application ». Vérifié en FR et EN sur le serveur local.
+- **Conditions d'utilisation** (article 3) : prix TTC en France ajoutés. À publier avec le site (push).
+
 ## 3. Ce qu'il reste à faire
 
 Légende : `[ ]` à faire · `[x]` fait
@@ -385,6 +391,7 @@ Légende : `[ ]` à faire · `[x]` fait
 - [ ] **C10. Produits à créer dans les deux stores :** *Google : profil de paiement (particulier) créé le 11/10 ; produits créés et actifs le 11/10 : `pass_tournoi` (option d'achat `achat`, rétrocompatible, contenu numérique) et `pro` (formules `mensuel` et `annuel`). Reste Apple.*
   - Pass Tournoi : achat unique **consommable** (un Pass par tournoi, rachetable ; RevenueCat consomme l'achat sur Android). Sur iOS : type « Consommable », pas « Non consommable ».
   - Pro : abonnement mensuel et annuel. Sur iOS, il faut un groupe d'abonnements ; sur Android, un seul produit avec deux formules.
+- [ ] **C10b. Appliquer les prix de lancement (validés le 20/10) :** Play Console : `pass_tournoi` 9,99 €, `pro` formule `mensuel` 14,99 €, formule `annuel` 59,99 € (prix en euros, puis conversion automatique pour les autres pays). App Store Connect, à la création des produits : Pass consommable 9,99 €, groupe d'abonnements avec mensuel 14,99 € et annuel 59,99 € (pays de référence France). Rien à changer dans RevenueCat (il lit les prix des stores) ; vérifier ensuite l'écran d'achat sur le build.
 - [ ] **C11. RevenueCat :** *Android fait le 12/10 : compte de service Google relié (2 vérifications sur 3 au vert, la validation des achats d'abonnement attend la propagation chez Google), entitlement `pro` (`pro:mensuel`, `pro:annuel`), offre `default` avec `$rc_monthly` → `pro:mensuel`, `$rc_annual` → `pro:annuel`, `$rc_lifetime` → `pass_tournoi` (consommable), clé `goog_…` dans `.env` et dans EAS (production, preview, development). Clé secrète `REVENUECAT_SECRET_KEY` (API v1) enregistrée dans Supabase le 12/10. Reste iOS.*
   - Relier les deux stores (clé API App Store Connect, compte de service Google).
   - Créer l'entitlement `pro` et une offre « current » avec trois packages : Lifetime, Monthly et Annual.
@@ -474,6 +481,7 @@ Une ligne par modification, la plus récente en haut.
 
 | Date | Modification |
 |------|--------------|
+| 2026-10-20 | Prix de lancement : Pass 9,99 €, Pro 14,99 €/mois ou 59,99 €/an « Saison » (écran d'achat, site, CGU, budget) ; prix des stores à saisir (C10b) |
 | 2026-10-20 | Migration « Pass Tournoi limité dans le temps » exécutée, `valider-pass-tournoi` redéployée (B9) |
 | 2026-10-20 | Site : fenêtre des offres à la limite de 12 équipes dans l'espace, offres cliquables sur l'accueil (achat dans l'app) |
 | 2026-10-20 | Conditions d'utilisation publiées (Pass Tournoi limité) ; Pass noté pour le prochain build (D16e) |
