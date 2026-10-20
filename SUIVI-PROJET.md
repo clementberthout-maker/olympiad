@@ -327,6 +327,12 @@ OLYMPIAD sert à organiser des tournois sportifs amateurs. L'organisateur crée 
 - **Mis en place sur Supabase le 20/10** avec l'utilisateur : mot de passe d'application Gmail dédié, secrets `SMTP_USER`, `SMTP_PASSWORD`, `CRON_SECRET`, secrets Vault, migration exécutée (tâche `comptes-inactifs-quotidien` créée). Testé : simulation (0 compte à avertir ou supprimer) et appel réel par `pg_net` avec le secret de Vault (réponse 200, rien supprimé ni envoyé).
 - Déploiement par la CLI impossible sur ce PC (`TransportError`) : l'antivirus inspecte les connexions HTTPS avec son propre certificat. Fonction déployée depuis l'éditeur du tableau de bord, en un seul fichier (`index.ts` + `modele.ts` + partie utile de `_shared/commun.ts`), vérification JWT désactivée. Pour Node, ajouter `--use-system-ca`.
 
+### Security Advisor de Supabase (20 octobre)
+- 0 erreur. Correctifs préparés dans `supabase/schema.sql` (à exécuter) : `search_path` fixé sur `proteger_debloque`, `EXECUTE` retiré aux fonctions de déclencheur (`gerer_nouvel_utilisateur`, `limiter_equipes`, `proteger_debloque`) et à `anon` sur `rejoindre_comme_co_organisateur`, lecture du bucket `avatars` par l'API limitée à sa propre photo (les adresses publiques des photos marchent toujours).
+- Migration exécutée par Clément ; changement de photo testé avec son compte dans l'espace.
+- **Retirer la photo** : la fonction n'existait ni dans l'app ni dans l'espace (ce n'était pas un effet de la migration). Ajoutée dans le profil de l'espace (lien sous le nom, confirmation, fichier supprimé du bucket et `photo_url` vidé), vérifiée en mode démo.
+- Laissés volontairement, avec la raison notée dans le fichier : `a_le_droit` (évaluée par les policies pendant la lecture des spectateurs), fonctions voulues pour les connectés, `pg_net` dans `public`, table `avertissements_inactivite` sans policy, mots de passe piratés (plan Pro).
+
 ## 3. Ce qu'il reste à faire
 
 Légende : `[ ]` à faire · `[x]` fait
@@ -376,7 +382,8 @@ Légende : `[ ]` à faire · `[x]` fait
     - [x] Tester en mode simulation, puis l'appel réel par `pg_net`.
     - [ ] Le 21/10 : vérifier le premier passage de nuit (`select status, start_time from cron.job_run_details order by start_time desc limit 3;`). Le compte démo des stores doit rester actif (connexion au moins une fois tous les 3 ans). Un vrai envoi d'e-mail n'a pas encore été testé (aucun compte assez ancien).
   - [ ] Dès la micro-entreprise créée : compléter les mentions légales, les CGU et la politique (statut, adresse ou domiciliation, SIRET) et adhérer à un **médiateur de la consommation** (obligatoire pour vendre à des particuliers), à citer dans les CGU.
-  - [ ] Supabase : passer l'onglet *Security Advisor*, activer la protection contre les mots de passe compromis, et prévoir des sauvegardes (C15).
+  - [ ] Supabase : passer l'onglet *Security Advisor*, activer la protection contre les mots de passe compromis, et prévoir des sauvegardes (C15). *Security Advisor passé le 20/10 : 0 erreur, 13 avertissements. Migration « Avertissements du Security Advisor » ajoutée à la fin de `supabase/schema.sql` (search_path de `proteger_debloque`, droits retirés aux fonctions de déclencheur et à `anon`, liste des photos limitée à sa propre photo). Migration exécutée par Clément le 20/10, changement de photo testé dans l'espace. **Reste** : tester « Retirer la photo » avec un vrai compte, relancer le Security Advisor. Protection des mots de passe et sauvegardes : au passage en Pro.*
+  - [ ] App (prochain build) : ajouter « Retirer la photo » dans « Mon profil », comme dans l'espace (`supprimerPhoto` de `docs/espace/donnees.js`).
   - [ ] Facultatif : ajouter « Mentions légales » aux liens légaux de l'app (`components/LiensLegaux.js`) au prochain build.
 - [x] **C13. Publier la politique de confidentialité :** activer GitHub Pages sur le dossier `/docs` (le dépôt doit être public, ou la page hébergée ailleurs) et noter l'adresse obtenue. *Fait : les pages sont en ligne sur https://clementberthout-maker.github.io/olympiad/ (`politique-confidentialite.html`, `conditions-utilisation.html`, `suppression-compte.html`). Le lien de suppression à déclarer à Google est `suppression-compte.html`.*
 
@@ -441,6 +448,8 @@ Une ligne par modification, la plus récente en haut.
 
 | Date | Modification |
 |------|--------------|
+| 2026-10-20 | Migration Security Advisor exécutée ; « Retirer la photo » ajouté au profil de l'espace organisateur |
+| 2026-10-20 | Security Advisor de Supabase passé (0 erreur) : migration de correctifs ajoutée à `schema.sql`, à exécuter (C16) |
 | 2026-10-20 | Comptes inactifs mis en place sur Supabase : secrets, Vault, Edge Function `comptes-inactifs` déployée, migration exécutée, tests réussis (C16) |
 | 2026-10-20 | Suppression automatique des comptes inactifs depuis 3 ans : migration `pg_cron`, Edge Function `comptes-inactifs` et e-mail d'avertissement FR/EN (pas encore exécuté sur Supabase) |
 | 2026-10-20 | Site : polices hébergées sur le site, page Mentions légales, politique (cookies, durées de conservation) et CGU (rétractation) complétées |

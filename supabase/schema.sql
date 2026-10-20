@@ -849,3 +849,45 @@ select cron.schedule(
   );
   $cron$
 );
+
+-- ============================================================
+-- MIGRATION — Avertissements du Security Advisor (20/10/2026)
+-- ============================================================
+-- 1. search_path fixé sur la seule fonction qui ne l'avait pas.
+alter function proteger_debloque() set search_path = public;
+
+-- 2. Fonctions de déclencheur : jamais appelées directement par l'app.
+--    Un déclencheur fonctionne même sans droit EXECUTE pour l'utilisateur.
+--    (gerer_nouvel_utilisateur crée le profil à l'inscription ; elle a été
+--    créée depuis le tableau de bord, hors de ce fichier.)
+revoke execute on function gerer_nouvel_utilisateur() from public, anon, authenticated;
+revoke execute on function limiter_equipes() from public, anon, authenticated;
+revoke execute on function proteger_debloque() from public, anon, authenticated;
+
+-- 3. Rejoindre un tournoi comme co-organisateur : réservé aux connectés.
+revoke execute on function rejoindre_comme_co_organisateur(text) from public, anon;
+grant execute on function rejoindre_comme_co_organisateur(text) to authenticated;
+
+-- 4. Photos de profil : le bucket est public, les photos restent visibles
+--    par leur adresse sans aucune policy. La lecture via l'API (liste des
+--    fichiers) est limitée à ses propres photos : l'app en a besoin pour
+--    remplacer ou supprimer sa photo (lib/profil.js, docs/espace/donnees.js).
+drop policy if exists "Lecture publique des photos de profil" on storage.objects;
+drop policy if exists "Un utilisateur voit sa propre photo" on storage.objects;
+create policy "Un utilisateur voit sa propre photo"
+on storage.objects for select to authenticated
+using (bucket_id = 'avatars' and auth.uid()::text = split_part(name, '.', 1));
+
+-- Avertissements laissés volontairement :
+-- - a_le_droit exécutable par anon et authenticated : utilisée par les
+--   policies "for all" (poules, equipes, matchs, resultats), donc aussi
+--   évaluée pendant la lecture publique des spectateurs. Sans droit, elle
+--   renvoie seulement false (auth.uid() vide).
+-- - rejoindre_comme_co_organisateur et supprimer_mon_compte exécutables par
+--   authenticated : c'est voulu.
+-- - pg_net dans le schéma public : l'extension ne peut pas être déplacée
+--   (il faudrait la supprimer et la recréer), ses fonctions sont dans le
+--   schéma net. Sans risque.
+-- - avertissements_inactivite sans policy (Info) : voulu, seule l'Edge
+--   Function (service_role) y accède.
+-- - Protection contre les mots de passe piratés : option du plan Pro.

@@ -48,6 +48,12 @@ function sourceSupabase() {
       verifier(await sb.storage.from('avatars').upload(chemin, blob, { upsert: true, contentType: 'image/jpeg' }));
       return `${sb.storage.from('avatars').getPublicUrl(chemin).data.publicUrl}?t=${Date.now()}`;
     },
+    async supprimerPhoto(uid) {
+      const fichiers = verifier(await sb.storage.from('avatars').list('', { search: uid })) || [];
+      const aSupprimer = fichiers.map((f) => f.name).filter((n) => n.split('.')[0] === uid);
+      if (aSupprimer.length) verifier(await sb.storage.from('avatars').remove(aSupprimer));
+      verifier(await sb.from('profils').update({ photo_url: null }).eq('id', uid));
+    },
     async estPro(uid) {
       const ligne = verifier(await sb.from('abonnements_pro').select('expire_le').eq('user_id', uid).maybeSingle());
       return Boolean(ligne) && (!ligne.expire_le || new Date(ligne.expire_le) > new Date());
@@ -202,6 +208,7 @@ function sourceDemo() {
     async televerserPhoto(uid, blob) {
       return new Promise((ok) => { const r = new FileReader(); r.onload = () => ok(r.result); r.readAsDataURL(blob); });
     },
+    async supprimerPhoto(uid) { base.profils.find((p) => p.id === uid).photo_url = null; enregistrer('profils'); },
     async estPro() { return Boolean(base.pro); },
     async supprimerMonCompte() { localStorage.removeItem(CLE); semer(); base.session = false; enregistrer('auth'); },
     async mesTournois(uid) {

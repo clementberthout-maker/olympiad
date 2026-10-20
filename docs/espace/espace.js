@@ -1067,7 +1067,7 @@ async function vueProfil() {
     <div class="grille-profil">
       <div class="carte-identite cascade"><label class="avatar-grand" style="--i:0">${p.photo_url ? `<img src="${esc(p.photo_url)}" alt="">` : esc(initiales())}<input type="file" accept="image/*" id="photo-profil" hidden></label>
         <h2 style="--i:1">${esc([p.prenom, p.nom].filter(Boolean).join(' ') || tr('Organisateur', 'Organizer'))}</h2><p style="--i:2">${esc(etat.session.user.email || '')}${p.club ? ` · ${esc(p.club)}` : ''}</p>
-        <span class="badge-pro ${etat.pro ? '' : 'gratuit'}" style="--i:3">${etat.pro ? 'OLYMPIAD PRO' : tr('OFFRE GRATUITE', 'FREE PLAN')}</span></div>
+        ${p.photo_url ? `<p style="--i:2;margin:-6px 0 12px"><button type="button" class="lien-discret" data-action="retirer-photo">${tr('Retirer la photo', 'Remove photo')}</button></p>` : ''}<span class="badge-pro ${etat.pro ? '' : 'gratuit'}" style="--i:3">${etat.pro ? 'OLYMPIAD PRO' : tr('OFFRE GRATUITE', 'FREE PLAN')}</span></div>
       <div class="cascade">
         <form class="section-profil" id="form-profil" style="--i:1"><h3>${tr('Informations', 'Details')}</h3>
           <div class="champs-2"><div class="champ"><label>${tr('Prénom', 'First name')}</label><input id="p-prenom" value="${esc(p.prenom)}"></div><div class="champ"><label>${tr('Nom', 'Last name')}</label><input id="p-nom" value="${esc(p.nom)}"></div></div>
@@ -1337,6 +1337,10 @@ document.addEventListener('click', async (e) => {
       break;
     }
     case 'onglet-suivi': e.preventDefault(); etat.ongletSuivi = cible.dataset.onglet; rendreSuivi(); break;
+    case 'retirer-photo':
+      if (!await confirmer({ titre: tr('Retirer ta photo ?', 'Remove your photo?'), texte: tr('Tes initiales s\'afficheront à la place.', 'Your initials will be shown instead.'), bouton: tr('Retirer', 'Remove'), danger: true })) break;
+      try { await donnees.supprimerPhoto(uid()); await chargerUtilisateur(); toast(tr('Photo retirée', 'Photo removed')); vueProfil(); } catch (er) { toast(messageErreur(er), 'erreur'); }
+      break;
     case 'supprimer-compte':
       if (!await confirmer({ titre: tr('Supprimer ton compte ?', 'Delete your account?'), texte: tr('Tes tournois, équipes, résultats et ta photo seront supprimés définitivement. Cette action est irréversible.', 'Your tournaments, teams, results and photo will be permanently deleted. This cannot be undone.'), bouton: tr('Supprimer mon compte', 'Delete my account'), danger: true, saisie: tr('SUPPRIMER', 'DELETE') })) break;
       try { await donnees.supprimerMonCompte(uid()); etat.session = null; toast(tr('Compte supprimé', 'Account deleted')); location.hash = '#/connexion'; } catch (er) { toast(messageErreur(er), 'erreur'); }
