@@ -118,3 +118,14 @@ Scores « en cours » affichés en direct avec un badge EN DIRECT. Calendrier mi
 `<en-US>`
 In-progress scores shown live with a LIVE badge. Schedule updated in real time for every organizer. Fairer knockout draw: group winners face runners-up from another group. Estimated end time, with a warning if matches run into the next day. Third-place match on by default. Various fixes.
 `</en-US>`
+
+## Notes de version (build 7)
+
+Nom de la release : `7 (1.0.0)`. À coller dans la Play Console (500 caractères maximum par langue). Si le build 6 n'a jamais été envoyé aux testeurs, ajouter au début la première phrase des notes du build 6.
+
+`<fr-FR>`
+Plusieurs terrains mieux utilisés : les matchs de poule remplissent tous les terrains, et la finale se joue en même temps que le match pour la 3e place. Écran des offres revu : l'abonnement annuel « Saison » est mis en avant, avec son prix par mois. Le Pass Tournoi est valable jusqu'à 5 jours après la date du tournoi ; une fois le Pass appliqué, la date ne peut plus être modifiée. Corrections diverses.
+`</fr-FR>`
+`<en-US>`
+Better use of multiple fields: group matches fill every field, and the final is played at the same time as the third-place match. Redesigned plans screen: the yearly "Season" subscription is highlighted, with its monthly price. The Tournament Pass is valid until 5 days after the tournament date; once the Pass is applied, the date can no longer be changed. Various fixes.
+`</en-US>`

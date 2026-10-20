@@ -360,6 +360,11 @@ OLYMPIAD sert à organiser des tournois sportifs amateurs. L'organisateur crée 
 - **Site** : prix affichés sur les cartes de l'accueil, dans le simulateur et dans la fenêtre des offres de l'espace, avec la mention « Prix TTC pour la France ; le prix exact dans ton pays est affiché dans l'application ». Vérifié en FR et EN sur le serveur local.
 - **Conditions d'utilisation** (article 3) : prix TTC en France ajoutés. À publier avec le site (push).
 
+### Build 7 pour le test fermé (20 octobre)
+- expo-doctor 21/21. Build Android lancé sur EAS (`versionCode` 7, profil production) : https://expo.dev/accounts/clementberth/projects/olympiad/builds/c94dd81a-0cdc-470f-9195-5970f6b080bf
+- Contenu : terrains mieux utilisés (G34), Pass Tournoi limité dans le temps (B9, D16e), écran d'achat avec l'offre « Saison » et les prix de lancement (C10b).
+- Notes de version FR/EN du build 7 ajoutées à `store/test-ferme.md`.
+
 ## 3. Ce qu'il reste à faire
 
 Légende : `[ ]` à faire · `[x]` fait
@@ -481,6 +486,7 @@ Une ligne par modification, la plus récente en haut.
 
 | Date | Modification |
 |------|--------------|
+| 2026-10-20 | Build 7 Android lancé sur EAS (`versionCode` 7) pour le test fermé ; notes de version ajoutées |
 | 2026-10-20 | Play Console : prix de lancement saisis (Pass 9,99 €, Pro 14,99 € et 59,99 € pour la France ; autres pays convertis depuis les prix HT) ; RevenueCat vérifié (C10b) |
 | 2026-10-20 | Prix de lancement : Pass 9,99 €, Pro 14,99 €/mois ou 59,99 €/an « Saison » (écran d'achat, site, CGU, budget) ; prix des stores à saisir (C10b) |
 | 2026-10-20 | Migration « Pass Tournoi limité dans le temps » exécutée, `valider-pass-tournoi` redéployée (B9) |
