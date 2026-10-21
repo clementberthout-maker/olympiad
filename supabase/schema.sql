@@ -972,3 +972,24 @@ create trigger proteger_date_tournoi
   for each row execute function proteger_date_tournoi();
 
 revoke execute on function proteger_date_tournoi() from public, anon, authenticated;
+
+-- ============================================================
+-- ACCÈS DATA API AUX TABLES (grants explicites)
+-- ============================================================
+-- Depuis le 30/10/2026, Supabase n'accorde plus automatiquement l'accès
+-- Data API (supabase-js, PostgREST) aux nouvelles tables de « public ».
+-- Ces grants rendent le schéma autonome si le projet est recréé ; sur le
+-- projet actuel ils existent déjà (sans effet). Les règles RLS continuent
+-- de décider quelles lignes chaque utilisateur voit ou modifie.
+-- Toute nouvelle table doit recevoir ses grants ici, dans la même migration.
+grant select on
+  tournois, poules, equipes, matchs, resultats, profils,
+  tournoi_organisateurs, invitations_organisateur,
+  passes_tournoi_utilises, abonnements_pro, avertissements_inactivite
+to anon;
+
+grant select, insert, update, delete on
+  tournois, poules, equipes, matchs, resultats, profils,
+  tournoi_organisateurs, invitations_organisateur,
+  passes_tournoi_utilises, abonnements_pro, avertissements_inactivite
+to authenticated, service_role;

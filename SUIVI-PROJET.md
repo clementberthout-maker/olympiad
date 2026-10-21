@@ -366,6 +366,9 @@ OLYMPIAD sert à organiser des tournois sportifs amateurs. L'organisateur crée 
 - Le build 6 n'a jamais été importé dans la Play Console : remplacé par le build 7, qui contient tout son contenu. Notes de version FR/EN du build 7 (contenu des builds 6 et 7) dans `store/test-ferme.md`.
 - **Importé dans la piste de test fermé (Alpha) et envoyé en examen le 21/10** (release `7 (1.0.0)`, notes FR/EN collées). Après validation : tester sur téléphone l'écran d'achat (9,99 €, 14,99 €, 59,99 €, badge « Saison ») et les points de D16e.
 
+### Accès Data API explicite (21 octobre)
+- Supabase n'accorde plus automatiquement l'accès Data API aux tables créées dans `public` à partir du 30/10/2026 (les tables existantes ne sont pas touchées). Bloc de `grant` ajouté à la fin de `supabase/schema.sql` pour les 11 tables (lecture pour `anon`, lecture/écriture pour `authenticated` et `service_role`), pour que le schéma reste utilisable si le projet est recréé. Sans effet sur le projet actuel ; la RLS reste le filtre. **Règle : toute nouvelle table reçoit ses `grant` dans la même migration.**
+
 ## 3. Ce qu'il reste à faire
 
 Légende : `[ ]` à faire · `[x]` fait
@@ -487,6 +490,7 @@ Une ligne par modification, la plus récente en haut.
 
 | Date | Modification |
 |------|--------------|
+| 2026-10-21 | Grants Data API explicites ajoutés dans `schema.sql` (changement Supabase du 30/10) |
 | 2026-10-21 | Comptes inactifs : premier passage de nuit de la tâche `pg_cron` vérifié, réussi (C16) |
 | 2026-10-21 | Build 7 importé dans le test fermé (Alpha) et envoyé en examen |
 | 2026-10-21 | Build 7 Android réussi sur EAS (`versionCode` 7), à importer dans la piste du test fermé |
