@@ -416,7 +416,7 @@ Légende : `[ ]` à faire · `[x]` fait
     - [x] Déployer la fonction (depuis le tableau de bord, vérification JWT désactivée).
     - [x] Créer les secrets Vault `olympiad_url_projet` et `olympiad_secret_cron` (même valeur que `CRON_SECRET`), puis exécuter la migration.
     - [x] Tester en mode simulation, puis l'appel réel par `pg_net`.
-    - [ ] Le 21/10 : vérifier le premier passage de nuit (`select status, start_time from cron.job_run_details order by start_time desc limit 3;`). Le compte démo des stores doit rester actif (connexion au moins une fois tous les 3 ans). Un vrai envoi d'e-mail n'a pas encore été testé (aucun compte assez ancien).
+    - [x] Le 21/10 : vérifier le premier passage de nuit (`select status, start_time from cron.job_run_details order by start_time desc limit 3;`). *Fait le 21/10 : passage de 3 h réussi.* Le compte démo des stores doit rester actif (connexion au moins une fois tous les 3 ans). Un vrai envoi d'e-mail n'a pas encore été testé (aucun compte assez ancien).
   - [ ] Dès la micro-entreprise créée : compléter les mentions légales, les CGU et la politique (statut, adresse ou domiciliation, SIRET) et adhérer à un **médiateur de la consommation** (obligatoire pour vendre à des particuliers), à citer dans les CGU.
   - [ ] Supabase : passer l'onglet *Security Advisor*, activer la protection contre les mots de passe compromis, et prévoir des sauvegardes (C15). *Security Advisor passé le 20/10 : 0 erreur, 13 avertissements. Migration « Avertissements du Security Advisor » ajoutée à la fin de `supabase/schema.sql` (search_path de `proteger_debloque`, droits retirés aux fonctions de déclencheur et à `anon`, liste des photos limitée à sa propre photo). Migration exécutée par Clément le 20/10, changement de photo testé dans l'espace. Security Advisor relancé par Clément : 6 avertissements et 1 info, tous voulus (voir section 2). Protection des mots de passe et sauvegardes : au passage en Pro.*
   - [ ] App (prochain build) : ajouter « Retirer la photo » dans « Mon profil », comme dans l'espace (`supprimerPhoto` de `docs/espace/donnees.js`).
@@ -487,6 +487,7 @@ Une ligne par modification, la plus récente en haut.
 
 | Date | Modification |
 |------|--------------|
+| 2026-10-21 | Comptes inactifs : premier passage de nuit de la tâche `pg_cron` vérifié, réussi (C16) |
 | 2026-10-21 | Build 7 importé dans le test fermé (Alpha) et envoyé en examen |
 | 2026-10-21 | Build 7 Android réussi sur EAS (`versionCode` 7), à importer dans la piste du test fermé |
 | 2026-10-21 | Build 6 jamais importé, remplacé par le build 7 ; notes du build 7 complétées avec le contenu du build 6 |
