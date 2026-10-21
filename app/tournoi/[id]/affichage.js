@@ -1,7 +1,8 @@
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
-import { useState, useCallback, useMemo } from 'react';
-import { useLocalSearchParams, useFocusEffect } from 'expo-router';
+import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useLocalSearchParams, useFocusEffect, useRouter } from 'expo-router';
 import { supabase } from '../../../lib/supabase';
+import { useAchats, tournoiEstDebloque } from '../../../lib/achats';
 import { calculerClassement } from '../../../lib/classement';
 import {
   estPhaseDePoule, grouperParTerrain, idEquipeGagnante, NOM_MATCH_TROISIEME_PLACE,
@@ -27,6 +28,8 @@ const INTERVALLE_ACTUALISATION = 20000;
 // (voir la proposition "Partager" sur tournoi/[id]/calendrier.js).
 export default function VueGrandEcran() {
   const { id } = useLocalSearchParams();
+  const router = useRouter();
+  const { estPro } = useAchats();
   const { couleurs } = useTheme();
   const { t, langue } = useLangue();
   const locale = langue === 'en' ? 'en-US' : 'fr-FR';
@@ -69,6 +72,15 @@ export default function VueGrandEcran() {
       return () => clearInterval(minuteur);
     }, [charger])
   );
+
+  // Fonction payante : filet de sécurité si cet écran est atteint sans
+  // passer par le menu de partage de calendrier.js (même règle que
+  // co-organisateurs.js).
+  useEffect(() => {
+    if (tournoi && !tournoiEstDebloque(tournoi, estPro)) {
+      router.replace({ pathname: '/paywall', params: { tournoiId: id, raison: 'grand_ecran' } });
+    }
+  }, [tournoi, estPro, id, router]);
 
   if (!tournoi) {
     return (

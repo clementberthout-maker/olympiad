@@ -369,6 +369,15 @@ OLYMPIAD sert à organiser des tournois sportifs amateurs. L'organisateur crée 
 ### Accès Data API explicite (21 octobre)
 - Supabase n'accorde plus automatiquement l'accès Data API aux tables créées dans `public` à partir du 30/10/2026 (les tables existantes ne sont pas touchées). Bloc de `grant` ajouté à la fin de `supabase/schema.sql` pour les 11 tables (lecture pour `anon`, lecture/écriture pour `authenticated` et `service_role`), pour que le schéma reste utilisable si le projet est recréé. Sans effet sur le projet actuel ; la RLS reste le filtre. **Règle : toute nouvelle table reçoit ses `grant` dans la même migration.**
 
+### Retours des premiers tests sur téléphone (21 octobre)
+- Écran d'achat vu sur Android dans l'ordre Mensuel, Annuel, Pass, sans badge « Saison » ni ligne « Soit X / mois » : c'est l'écran du **build 5** (encore installé tant que le build 7 n'est pas validé et mis à jour sur le téléphone). Les nouveaux prix s'affichent déjà, car ils viennent du store. À revérifier avec le build 7.
+- Sur iPhone, « Les offres ne sont pas disponibles » est normal : pas encore de clé RevenueCat iOS ni de produits Apple (C10, C11).
+- **Vue grand écran payante** : comme l'export PDF et les co-organisateurs, elle demande un tournoi débloqué (Pass valable ou Pro). Écran d'achat avec un message dédié, filet de sécurité dans `affichage.js`, textes du Pass et du profil complétés (FR/EN).
+- **Cadenas** à côté des options payantes du menu « Partager » (grand écran, PDF, co-organisateurs) tant que le tournoi n'est pas débloqué.
+- **Barre système Android** : le bas des écrans s'arrête au-dessus des boutons ou du geste Android (marge globale dans `_layout.js`, menu « Partager » compris, accueil et messages de confirmation ajustés). iOS inchangé.
+- **Logo centré dans l'en-tête sur Android** (`headerTitleAlign: 'center'`), comme sur iOS.
+- Bundle Android compilé sans erreur. **À livrer dans le prochain build (8).**
+
 ## 3. Ce qu'il reste à faire
 
 Légende : `[ ]` à faire · `[x]` fait
@@ -435,6 +444,7 @@ Légende : `[ ]` à faire · `[x]` fait
 - [ ] **D16. Tester l'application entière :** chaque sport, la phase finale, les co-organisateurs, l'export PDF, le QR code, la réinitialisation du mot de passe, les deux thèmes et les deux langues, sur iPhone et sur Android. *Test complet dans l'aperçu web le 16/10 (défauts en G25 à G33) ; reste à refaire sur de vrais téléphones, avec les achats.*
 - [ ] **D16d. Optimisation du code Android (R8), avant février 2027 :** alerte Play Console « L'optimisation du code DEX est inférieure à notre seuil » (obscurcissement 2 %, build 5). Installer `expo-build-properties` et activer `android.enableMinifyInReleaseBuilds` (et `enableShrinkResourcesInReleaseBuilds`) dans `app.json`, puis retester toute l'app et les achats sur le build obtenu (R8 peut casser des bibliothèques). Envoyer le fichier `mapping.txt` à la Play Console pour lire les plantages. Pas bloquant pour le test fermé.
 - [ ] **D16e. Prochain build : Pass Tournoi limité dans le temps (B9).** Migration SQL et Edge Function en place depuis le 20/10. À tester sur le build : date en lecture seule sur un tournoi débloqué (« Modifier le nom et la date »), Pass masqué sur l'écran d'achat d'un tournoi passé depuis plus de 5 jours, cadenas revenus après expiration, Pass acheté en brouillon toujours appliqué. Ajouter la règle aux notes de version (« Le Pass Tournoi est valable jusqu'à 5 jours après le tournoi »).
+- [ ] **D16f. Build 8 :** grand écran payant et cadenas du menu « Partager », barre système Android, logo centré (21/10). Tester sur Android : menu « Partager » entièrement visible, bas de chaque écran (profil, équipes, saisie, QR, co-organisateurs, écran d'achat), logo centré. Décider si le grand écran devient aussi payant dans l'espace web, puis mettre à jour le site, les CGU (article 3) et la fiche Play.
 - [ ] **D16c. Mot de passe oublié par code (prochain build) :** le lien de réinitialisation n'est valable qu'environ 5 minutes et seulement sur l'appareil qui a fait la demande (PKCE, testé le 15/10). Le remplacer par un code à 6 chiffres saisi dans l'app (`{{ .Token }}`, `verifyOtp` type `recovery`). Détails dans `supabase/emails/README.md`.
 - [x] **D16b. Au prochain build (après les retours du test fermé) :** appliquer les mises à jour correctives signalées par Expo Doctor sur le build 5 (`npx expo install --fix` : expo 57.0.29, expo-constants 57.0.22, expo-linking 57.0.13, expo-router 57.0.27, expo-sharing 57.0.23), puis vérifier `npm ci` avec npm 10 avant de lancer le build. Avertissement seulement, le build 5 est gardé pour le test fermé. *Fait le 16/10 pour le build 6 (expo-doctor 21/21, `npm ci` OK avec npm 10).*
 
@@ -490,6 +500,7 @@ Une ligne par modification, la plus récente en haut.
 
 | Date | Modification |
 |------|--------------|
+| 2026-10-21 | App : vue grand écran payante, cadenas sur les options payantes, écrans au-dessus de la barre système Android, logo centré sur Android (prochain build) |
 | 2026-10-21 | Grants Data API explicites ajoutés dans `schema.sql` (changement Supabase du 30/10) |
 | 2026-10-21 | Comptes inactifs : premier passage de nuit de la tâche `pg_cron` vérifié, réussi (C16) |
 | 2026-10-21 | Build 7 importé dans le test fermé (Alpha) et envoyé en examen |

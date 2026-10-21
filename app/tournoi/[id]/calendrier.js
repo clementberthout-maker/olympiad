@@ -1,4 +1,5 @@
-import { View, Text, StyleSheet, Pressable, ScrollView, Alert, Modal } from 'react-native';
+import { View, Text, StyleSheet, Pressable, ScrollView, Alert, Modal, Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useState, useCallback, useMemo, useRef } from 'react';
 import { Stack, useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -52,6 +53,11 @@ function reglagesDepuisTournoi(tournoi, matchsExistants) {
   };
 }
 
+// Petit cadenas en bout de ligne d'une option payante du menu « Partager ».
+function Cadenas({ couleur }) {
+  return <Ionicons name="lock-closed" size={16} color={couleur} style={{ marginLeft: 'auto' }} />;
+}
+
 export default function Calendrier() {
   const { id, cree } = useLocalSearchParams(); // id du tournoi
   const router = useRouter();
@@ -65,7 +71,14 @@ export default function Calendrier() {
   const { t, langue } = useLangue();
   const { estPro } = useAchats();
   const styles = useMemo(() => creerStyles(couleurs), [couleurs]);
+  // Le menu « Partager » est une Modal : elle s'affiche par-dessus tout,
+  // y compris sous la barre système Android, d'où cette marge.
+  const insets = useSafeAreaInsets();
+  const margeBasPartage = { paddingBottom: 32 + (Platform.OS === 'android' ? insets.bottom : 0) };
   const [tournoi, setTournoi] = useState(null);
+  // Grand écran, export PDF et co-organisateurs : réservés à un tournoi
+  // débloqué (Pass Tournoi valable ou compte Pro).
+  const premiumVerrouille = !!tournoi && !tournoiEstDebloque(tournoi, estPro);
   const [poules, setPoules] = useState([]);
   const [equipes, setEquipes] = useState([]);
   const [matchsBruts, setMatchsBruts] = useState([]);
@@ -139,6 +152,10 @@ export default function Calendrier() {
 
   function ouvrirVueGrandEcran() {
     setPartageVisible(false);
+    if (!tournoiEstDebloque(tournoi, estPro)) {
+      router.push({ pathname: '/paywall', params: { tournoiId: id, raison: 'grand_ecran' } });
+      return;
+    }
     router.push(`/tournoi/${id}/affichage`);
   }
 
@@ -468,21 +485,24 @@ export default function Calendrier() {
 
       <Modal visible={partageVisible} transparent animationType="fade" onRequestClose={() => setPartageVisible(false)}>
         <Pressable style={styles.fondModal} onPress={() => setPartageVisible(false)}>
-          <Pressable style={styles.cartePartage} onPress={() => {}}>
+          <Pressable style={[styles.cartePartage, margeBasPartage]} onPress={() => {}}>
             <Text style={styles.titrePartage}>{t('calendrier.partagerLeProgramme')}</Text>
             <Pressable style={styles.optionPartage} onPress={ouvrirVueGrandEcran}>
               <Ionicons name="tv-outline" size={20} color={couleurs.accent} />
               <Text style={styles.texteOptionPartage}>{t('calendrier.vueGrandEcran')}</Text>
+              {premiumVerrouille && <Cadenas couleur={couleurs.texteAttenue} />}
             </Pressable>
             <Pressable style={styles.optionPartage} onPress={exporterPdf} disabled={exportEnCours}>
               <Ionicons name="document-text-outline" size={20} color={couleurs.accent} />
               <Text style={styles.texteOptionPartage}>
                 {exportEnCours ? t('calendrier.exportEnCours') : t('calendrier.exporterPdf')}
               </Text>
+              {premiumVerrouille && <Cadenas couleur={couleurs.texteAttenue} />}
             </Pressable>
             <Pressable style={styles.optionPartage} onPress={ouvrirCoOrganisateurs}>
               <Ionicons name="people-outline" size={20} color={couleurs.accent} />
               <Text style={styles.texteOptionPartage}>{t('calendrier.inviterCoOrganisateur')}</Text>
+              {premiumVerrouille && <Cadenas couleur={couleurs.texteAttenue} />}
             </Pressable>
           </Pressable>
         </Pressable>

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef } from 'react';
-import { Animated, StyleSheet, Text } from 'react-native';
+import { Animated, Platform, StyleSheet, Text } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../lib/ThemeContext';
 import { POLICE_TEXTE_SEMIBOLD } from '../lib/theme';
@@ -39,7 +39,8 @@ export default function Toast({ toast, onHide }) {
         styles.conteneur,
         estErreur && styles.conteneurErreur,
         {
-          bottom: 28 + insets.bottom,
+          // Sur Android, l'écran s'arrête déjà au-dessus de la barre système (_layout.js).
+          bottom: 28 + (Platform.OS === 'ios' ? insets.bottom : 0),
           opacity: anim,
           transform: [{ translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [16, 0] }) }],
         },

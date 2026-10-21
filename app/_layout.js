@@ -1,7 +1,7 @@
-import { View, Text } from 'react-native';
+import { View, Text, Platform } from 'react-native';
 import { Stack } from 'expo-router';
 import '../lib/alertesWeb';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFonts, BebasNeue_400Regular } from '@expo-google-fonts/bebas-neue';
 import {
   WorkSans_400Regular, WorkSans_500Medium, WorkSans_600SemiBold, WorkSans_700Bold,
@@ -24,16 +24,23 @@ function TitreEnTete({ couleurs }) {
 
 function NavigationThemee() {
   const { couleurs } = useTheme();
+  const insets = useSafeAreaInsets();
+  // Android (edge-to-edge) : sans cette marge, le bas des écrans passe sous la
+  // barre système (boutons ou geste). Sur iOS, le contenu défile sous
+  // l'indicateur d'accueil, comme prévu par Apple.
+  const margeBas = Platform.OS === 'android' ? insets.bottom : 0;
 
   return (
     <Stack
       screenOptions={{
         headerTitle: () => <TitreEnTete couleurs={couleurs} />,
+        // Android aligne le titre à gauche par défaut, iOS le centre.
+        headerTitleAlign: 'center',
         headerLeft: ({ canGoBack }) => <BoutonRetour canGoBack={canGoBack} />,
         headerShadowVisible: false,
         headerStyle: { backgroundColor: couleurs.fond },
         headerTintColor: couleurs.accent,
-        contentStyle: { backgroundColor: couleurs.fond },
+        contentStyle: { backgroundColor: couleurs.fond, paddingBottom: margeBas },
       }}
     >
       <Stack.Screen name="index" options={{ headerShown: false }} />

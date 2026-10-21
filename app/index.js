@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, Pressable, FlatList, Image, Alert, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Pressable, FlatList, Image, Alert, ScrollView, Platform } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -41,8 +41,9 @@ export default function Accueil() {
   // Le bloc "Connecté comme…" / Mon profil / Se déconnecter est poussé en
   // bas de l'écran (marginTop: 'auto') : sans cette marge il se retrouve
   // sous la barre système Android (geste ou boutons), ce qui rend les liens
-  // difficilement cliquables.
-  const paddingBas = { paddingBottom: insets.bottom + 24 };
+  // difficilement cliquables. Sur Android, cette marge est déjà appliquée à
+  // tous les écrans par _layout.js (contentStyle).
+  const paddingBas = { paddingBottom: (Platform.OS === 'ios' ? insets.bottom : 0) + 24 };
   const [chargement, setChargement] = useState(true);
   const [session, setSession] = useState(null);
   const [profil, setProfil] = useState(null);
