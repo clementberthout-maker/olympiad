@@ -640,7 +640,7 @@ function htmlEnteteTournoi(onglet) {
       ${d.principal ? '' : `<span class="pastille-statut role" style="background:#181d26;color:#f3f2ed">${tr('Co-organisateur', 'Co-organizer')}</span>`}</div>
     <div class="actions-tournoi">
       <button class="action-t" data-action="qr">${ico('qr')}${tr('QR code', 'QR code')}</button>
-      <a class="action-t" href="#/tournoi/${t.id}/ecran">${ico('ecran')}${tr('Grand écran', 'Big screen')}</a>
+      <a class="action-t" href="#/tournoi/${t.id}/ecran">${ico('ecran')}${tr('Grand écran', 'Big screen')}${verrou}</a>
       ${d.principal ? `<button class="action-t" data-action="coorgs">${ico('groupe')}${tr('Co-organisateurs', 'Co-organizers')}${verrou}</button>` : ''}
       <button class="action-t" data-action="pdf">${ico('pdf')}${tr('Export PDF', 'PDF export')}${verrou}</button>
       <a class="action-t" href="#/suivi/${esc(t.code_acces)}">${ico('oeil')}${tr('Vue spectateur', 'Spectator view')}</a>
@@ -937,7 +937,7 @@ function ouvrirQR() {
   });
 }
 function messagePremium(raison) {
-  ouvrirFenetre(`<h2>${tr('Fonction premium', 'Premium feature')}</h2><p class="sous">${raison === 'pdf' ? tr('L\'export PDF du programme', 'PDF export of the schedule') : tr('Les co-organisateurs', 'Co-organizers')} ${tr('font partie du Pass Tournoi et d\'OLYMPIAD Pro.', 'are part of the Tournament Pass and OLYMPIAD Pro.')}</p>
+  ouvrirFenetre(`<h2>${tr('Fonction premium', 'Premium feature')}</h2><p class="sous">${{ pdf: tr('L\'export PDF du programme fait', 'PDF export of the schedule is'), ecran: tr('La vue grand écran fait', 'The big-screen view is') }[raison] || tr('Les co-organisateurs font', 'Co-organizers are')} ${tr('partie du Pass Tournoi et d\'OLYMPIAD Pro.', 'part of the Tournament Pass and OLYMPIAD Pro.')}</p>
     <div class="encart"><p style="margin:0">${tr('Les achats se font dans l\'application OLYMPIAD sur iPhone ou Android. Une fois le tournoi débloqué (ou ton abonnement Pro actif), la fonction est disponible ici aussi, avec le même compte.', 'Purchases are made in the OLYMPIAD app on iPhone or Android. Once the tournament is unlocked (or your Pro subscription is active), the feature is available here too, with the same account.')}</p></div>
     <div class="actions-fenetre"><a class="bouton secondaire petit" href="index.html#offres">${tr('Voir les offres', 'See plans')}</a><button class="bouton petit" data-action="fermer-fenetre">OK</button></div>`);
 }
@@ -950,7 +950,7 @@ function fenetreOffres({ enCreation = false } = {}) {
   ouvrirFenetre(`<h2>${tr('Passe à la vitesse supérieure', 'Go further')}</h2>
     <p class="sous">${tr(`La version gratuite s'arrête à ${LIMITE_GRATUITE} équipes par tournoi. Choisis une offre pour en ajouter autant que tu veux.`, `The free plan stops at ${LIMITE_GRATUITE} teams per tournament. Pick a plan to add as many as you like.`)}</p>
     <div class="cartes-offres">
-      ${offre('pass', tr('Pass Tournoi', 'Tournament Pass'), tr('9,99 € · achat unique', '€9.99 · one-time purchase'), tr('Équipes illimitées, export PDF et co-organisateurs pour ce tournoi, jusqu\'à 5 jours après sa date.', 'Unlimited teams, PDF export and co-organizers for this tournament, until 5 days after its date.'))}
+      ${offre('pass', tr('Pass Tournoi', 'Tournament Pass'), tr('9,99 € · achat unique', '€9.99 · one-time purchase'), tr('Équipes illimitées, grand écran, export PDF et co-organisateurs pour ce tournoi, jusqu\'à 5 jours après sa date.', 'Unlimited teams, big screen, PDF export and co-organizers for this tournament, until 5 days after its date.'))}
       ${offre('pro', 'OLYMPIAD Pro', tr('59,99 € / an (Saison) ou 14,99 € / mois', '€59.99 / year (Season) or €14.99 / month'), tr('Toutes les fonctions premium, sur tous tes tournois. L\'annuel revient à 5 € / mois. Résiliable à tout moment.', 'Every premium feature, on all your tournaments. Yearly comes to €5 / month. Cancel anytime.'), true)}
     </div>
     <div id="etapes-offre" class="encart etapes-offre" hidden></div>
@@ -1028,6 +1028,15 @@ async function vueGrandEcran(id) {
     etat.courant = await chargerCourant(id).catch(() => null);
     if (!etat.courant) { location.hash = '#/'; return; }
     abonnerTempsReel(id);
+  }
+  // Fonction premium, comme l'export PDF et les co-organisateurs (même règle que l'app).
+  // replaceState plutôt que location.hash : le changement de route fermerait la fenêtre.
+  if (!debloque(etat.courant.tournoi)) {
+    const onglet = etat.onglet || 'matchs';
+    history.replaceState(null, '', `#/tournoi/${id}/${onglet}`);
+    await vueTournoi(id, onglet);
+    messagePremium('ecran');
+    return;
   }
   await vueTournoi(id, etat.onglet || 'matchs');
   const ge = $('#grand-ecran');
@@ -1132,7 +1141,7 @@ async function vueProfil() {
           <button class="bouton petit" type="submit">${tr('Enregistrer', 'Save')}</button></form>
         <form class="section-profil" id="form-email" style="--i:2"><h3>E-mail</h3><div class="champ"><label>${tr('Nouvelle adresse e-mail', 'New email address')}</label><input id="p-email" type="email" value="${esc(etat.session.user.email || '')}"></div><p class="mention-legale" style="margin:0 0 12px">${tr('Un lien de confirmation sera envoyé à la nouvelle adresse.', 'A confirmation link will be sent to the new address.')}</p><button class="bouton petit secondaire" type="submit">${tr('Changer d\'adresse', 'Change email')}</button></form>
         <form class="section-profil" id="form-mdp" style="--i:3"><h3>${tr('Mot de passe', 'Password')}</h3><div class="champs-2"><div class="champ"><label>${tr('Mot de passe actuel', 'Current password')}</label><input id="p-ancien" type="password" autocomplete="current-password"></div><div class="champ"><label>${tr('Nouveau mot de passe', 'New password')}</label><input id="p-nouveau" type="password" autocomplete="new-password" minlength="6"></div></div><p class="erreur-form" id="erreur-mdp-profil"></p><button class="bouton petit secondaire" type="submit">${tr('Changer le mot de passe', 'Change password')}</button></form>
-        <div class="section-profil" style="--i:4"><h3>${tr('Abonnement', 'Subscription')}</h3><p class="mention-legale" style="margin:0">${etat.pro ? tr('Ton abonnement OLYMPIAD Pro est actif : toutes les fonctions premium sont débloquées, ici et dans l\'app. Il se gère dans l\'App Store ou Google Play.', 'Your OLYMPIAD Pro subscription is active: every premium feature is unlocked, here and in the app. It\'s managed in the App Store or Google Play.') : tr('Offre gratuite : 12 équipes par tournoi, sans export PDF ni co-organisateurs. Le Pass Tournoi et OLYMPIAD Pro s\'achètent dans l\'application mobile.', 'Free plan: 12 teams per tournament, no PDF export or co-organizers. The Tournament Pass and OLYMPIAD Pro are bought in the mobile app.')}</p></div>
+        <div class="section-profil" style="--i:4"><h3>${tr('Abonnement', 'Subscription')}</h3><p class="mention-legale" style="margin:0">${etat.pro ? tr('Ton abonnement OLYMPIAD Pro est actif : toutes les fonctions premium sont débloquées, ici et dans l\'app. Il se gère dans l\'App Store ou Google Play.', 'Your OLYMPIAD Pro subscription is active: every premium feature is unlocked, here and in the app. It\'s managed in the App Store or Google Play.') : tr('Offre gratuite : 12 équipes par tournoi, sans grand écran, export PDF ni co-organisateurs. Le Pass Tournoi et OLYMPIAD Pro s\'achètent dans l\'application mobile.', 'Free plan: 12 teams per tournament, no big screen, PDF export or co-organizers. The Tournament Pass and OLYMPIAD Pro are bought in the mobile app.')}</p></div>
         <div class="section-profil" style="--i:5"><h3>${tr('Informations légales', 'Legal')}</h3><p class="mention-legale" style="margin:0"><a href="politique-confidentialite.html">${tr('Politique de confidentialité', 'Privacy policy')}</a> · <a href="conditions-utilisation.html">${tr('Conditions d\'utilisation', 'Terms of use')}</a> · <a href="mentions-legales.html">${tr('Mentions légales', 'Legal notice')}</a></p></div>
         <div class="zone-danger" style="--i:6"><h3>${tr('Supprimer mon compte', 'Delete my account')}</h3><p>${tr('Tes tournois, équipes, résultats et ta photo seront supprimés définitivement. Pense à résilier l\'abonnement Pro dans le store.', 'Your tournaments, teams, results and photo will be permanently deleted. Remember to cancel Pro in the store.')}</p><button class="bouton petit danger" data-action="supprimer-compte">${tr('Supprimer mon compte', 'Delete my account')}</button></div>
       </div></div></div>`);

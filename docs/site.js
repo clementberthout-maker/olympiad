@@ -65,8 +65,8 @@
     'f.tous': 'All', 'f.orga': 'Organizers', 'f.public': 'Teams & spectators',
     's.sur': '5 sports', 's.titre': 'Every sport has its rules', 's.intro': 'Scoring, wording and tiebreakers adapt automatically to the chosen sport.',
     'o.sur': 'Plans', 'o.titre': 'Free to get started', 'o.intro': 'Unlock one tournament or all of them, only when you need it.',
-    'o.g': 'Free', 'o.g1': 'Up to 12 teams per tournament', 'o.g2': 'Schedule, scores and live tracking', 'o.g3': 'QR code and big screen view', 'o.g4': '5 sports, knockout stages and podium', 'o.g5': 'PDF export', 'o.g6': 'Co-organizers',
-    'o.p': 'Tournament Pass', 'o.pprix': '€9.99 · one-time purchase, for one tournament', 'o.p1': 'Unlimited teams', 'o.p2': 'PDF export of the schedule', 'o.p3': 'Co-organizers', 'o.p4': 'No subscription', 'o.p5': 'Valid until 5 days after the tournament date',
+    'o.g': 'Free', 'o.g1': 'Up to 12 teams per tournament', 'o.g2': 'Schedule, scores and live tracking', 'o.g3': 'QR code and access code', 'o.g7': 'Big screen view', 'o.g4': '5 sports, knockout stages and podium', 'o.g5': 'PDF export', 'o.g6': 'Co-organizers',
+    'o.p': 'Tournament Pass', 'o.pprix': '€9.99 · one-time purchase, for one tournament', 'o.p1': 'Unlimited teams', 'o.p2': 'PDF export of the schedule', 'o.p6': 'Big screen view', 'o.p3': 'Co-organizers', 'o.p4': 'No subscription', 'o.p5': 'Valid until 5 days after the tournament date',
     'o.ruban': 'For clubs', 'o.proprix': '€59.99 / year (Season) or €14.99 / month', 'o.pro1': 'Every premium feature', 'o.pro2': 'On all your tournaments', 'o.pro3': 'Ideal for clubs that organize often', 'o.pro4': 'Cancel anytime', 'o.pro5': 'Season: just €5 / month, 67% less than monthly',
     'o.gcta': 'Get started', 'o.pcta': 'Choose the Pass', 'o.procta': 'Go Pro',
     'o.mention': 'Prices include VAT for France; the exact price in your country is shown in the app before any purchase. Payment through the App Store or Google Play; the Pro subscription renews automatically unless cancelled at least 24 hours before the end of the period. See the <a href="conditions-utilisation.html">terms of use</a>.',
@@ -884,7 +884,7 @@
       const coorg = S.role === 'coorg';
       const actions = [
         ['qrcode', 'qr', tr('QR code', 'QR code'), false],
-        ['grand-ecran', 'ecran', tr('Grand écran', 'Big screen'), false],
+        ['grand-ecran', 'ecran', tr('Grand écran', 'Big screen'), !premium],
         ['coorgs', 'groupe', tr('Co-orga.', 'Co-orgs'), !premium],
         ['pdf', 'pdf', 'PDF', !premium],
       ];
@@ -961,13 +961,14 @@
         equipes: tr(`La version gratuite est limitée à ${LIMITE_GRATUITE} équipes par tournoi.`, `The free version is limited to ${LIMITE_GRATUITE} teams per tournament.`),
         pdf: tr('L\'export PDF du programme fait partie des fonctions premium.', 'PDF export of the schedule is a premium feature.'),
         coorgs: tr('Les co-organisateurs font partie des fonctions premium.', 'Co-organizers are a premium feature.'),
+        grand: tr('La vue grand écran fait partie des fonctions premium.', 'The big-screen view is a premium feature.'),
         defaut: tr('Débloque toutes les fonctions d\'OLYMPIAD.', 'Unlock every OLYMPIAD feature.'),
       };
       const offre = (id, nom, desc, prix, vedette) => `<div class="s-offre ${vedette ? 'vedette' : ''}"><h5>${nom}</h5><p>${desc}</p><p class="prix">${prix}</p><button class="s-btn" style="margin:0" data-a="acheter" data-v="${id}">${tr('Choisir', 'Choose')}</button></div>`;
       return `${barreNav()}
         <h2 class="s-titre">${tr('Passe au niveau supérieur', 'Level up')}</h2>
         <p class="s-sous">${accroches[raison] || accroches.defaut}</p>
-        ${offre('pass', tr('Pass Tournoi', 'Tournament Pass'), tr('Débloque équipes illimitées, export PDF et co-organisateurs pour ce tournoi, jusqu\'à 5 jours après sa date.', 'Unlocks unlimited teams, PDF export and co-organizers for this tournament, until 5 days after its date.'), tr('9,99 € · achat unique', '€9.99 · one-time purchase'))}
+        ${offre('pass', tr('Pass Tournoi', 'Tournament Pass'), tr('Débloque équipes illimitées, grand écran, export PDF et co-organisateurs pour ce tournoi, jusqu\'à 5 jours après sa date.', 'Unlocks unlimited teams, big screen, PDF export and co-organizers for this tournament, until 5 days after its date.'), tr('9,99 € · achat unique', '€9.99 · one-time purchase'))}
         ${offre('pro-an', tr('OLYMPIAD Pro (annuel) · Saison', 'OLYMPIAD Pro (yearly) · Season'), tr('Toutes les fonctionnalités premium, pour tous tes tournois. Le plus avantageux.', 'Every premium feature, for all your tournaments. Best value.'), tr('59,99 € / an · soit 5 € / mois, 67 % de moins', '€59.99 / year · just €5 / month, 67% less'), true)}
         ${offre('pro-mois', tr('OLYMPIAD Pro (mensuel)', 'OLYMPIAD Pro (monthly)'), tr('Le même abonnement, payé chaque mois.', 'The same subscription, paid every month.'), tr('14,99 € / mois', '€14.99 / month'))}
         <button class="s-lien" data-a="restaurer">${tr('Restaurer mes achats', 'Restore purchases')}</button>
@@ -1519,7 +1520,7 @@
         else copier(url);
         break;
       }
-      case 'grand-ecran': ouvrirGrandEcran(); break;
+      case 'grand-ecran': if (!peutPremium(t)) aller('paywall', { raison: 'grand' }); else ouvrirGrandEcran(); break;
       case 'coorgs': if (!peutPremium(t)) aller('paywall', { raison: 'coorgs' }); else { aller('coorgs'); decouvrir('coorg'); } break;
       case 'pdf': if (!peutPremium(t)) aller('paywall', { raison: 'pdf' }); else exporterPDF(); break;
       case 'paywall': aller('paywall', { raison: 'defaut' }); break;
@@ -1710,7 +1711,7 @@
     { ico: 'coupe', c: 'tous', m: 'finale', t: ['Phases finales et podium', 'Knockouts and podium'], p: ['Demi-finales, finale, exempts automatiques et match pour la 3e place.', 'Semi-finals, final, automatic byes and third-place match.'] },
     { ico: 'cle', c: 'orga', m: 'finale', t: ['Tirs au but et prolongations', 'Penalties and extra time'], p: ['En cas d\'égalité en élimination directe, le départage prévu par le sport désigne le vainqueur.', 'In a knockout draw, the sport’s tiebreaker decides the winner.'] },
     { ico: 'qr', c: 'public', m: 'qr', t: ['QR code et code d\'accès', 'QR code and access code'], p: ['Un QR code par tournoi, à afficher ou partager. Un code à 6 caractères, sans lettres ambiguës.', 'One QR code per tournament, to display or share. A 6-character code with no ambiguous letters.'] },
-    { ico: 'ecran', large: true, c: 'tous', m: 'grand', t: ['Vue grand écran', 'Big screen view'], p: ['Classements, matchs en cours et derniers résultats en gros caractères, pour une télé ou un vidéoprojecteur branché à un ordinateur (espace organisateur). Se met à jour tout seul.', 'Standings, live matches and latest results in large type for a TV or projector plugged into a computer (organizer area). Updates by itself.'] },
+    { ico: 'ecran', large: true, c: 'tous', m: 'grand', t: ['Vue grand écran', 'Big screen view'], p: ['Classements, matchs en cours et derniers résultats en gros caractères, pour une télé ou un vidéoprojecteur branché à un ordinateur (espace organisateur). Se met à jour tout seul.', 'Standings, live matches and latest results in large type for a TV or projector plugged into a computer (organizer area). Updates by itself.'], tags: [['Premium', 'Premium', 1]] },
     { ico: 'terrain', c: 'tous', m: 'vue', t: ['Par poule ou par terrain', 'By group or by field'], p: ['Chaque arbitre retrouve d\'un coup d\'œil les matchs de son terrain.', 'Each referee sees their field’s matches at a glance.'] },
     { ico: 'groupe', c: 'orga', m: 'coorg', t: ['Co-organisateurs', 'Co-organizers'], p: ['Code d\'invitation et droits par personne : saisir, gérer, supprimer.', 'Invitation code and per-person rights: enter, manage, delete.'], tags: [['Premium', 'Premium', 1]] },
     { ico: 'pdf', c: 'orga', m: 'pdf', t: ['Export PDF', 'PDF export'], p: ['Le programme complet à imprimer ou à envoyer aux équipes.', 'The full schedule to print or send to teams.'], tags: [['Premium', 'Premium', 1]] },
@@ -1891,7 +1892,7 @@
     fenetreOffre.innerHTML = `<button class="fermer-offre" type="button" data-offre-action="fermer" aria-label="${tr('Fermer', 'Close')}">${ico('croix')}</button>
       <p class="surtitre">${pass ? tr('Achat unique', 'One-time purchase') : tr('Abonnement mensuel ou annuel', 'Monthly or yearly subscription')}</p>
       <h2 id="titre-fenetre-offre">${pass ? tr('Pass Tournoi', 'Tournament Pass') : 'OLYMPIAD Pro'}</h2>
-      <p class="sous">${pass ? tr('Équipes illimitées, export PDF et co-organisateurs pour un tournoi, jusqu\'à 5 jours après sa date.', 'Unlimited teams, PDF export and co-organizers for one tournament, until 5 days after its date.') : tr('Toutes les fonctions premium, sur tous tes tournois. Résiliable à tout moment.', 'Every premium feature, on all your tournaments. Cancel anytime.')}</p>
+      <p class="sous">${pass ? tr('Équipes illimitées, grand écran, export PDF et co-organisateurs pour un tournoi, jusqu\'à 5 jours après sa date.', 'Unlimited teams, big screen, PDF export and co-organizers for one tournament, until 5 days after its date.') : tr('Toutes les fonctions premium, sur tous tes tournois. Résiliable à tout moment.', 'Every premium feature, on all your tournaments. Cancel anytime.')}</p>
       <div class="encart-offre">
         <h3>${tr('Ça se passe dans l\'app', 'It happens in the app')}</h3>
         <ol>${etapes.map((e) => `<li>${esc(e)}</li>`).join('')}</ol>

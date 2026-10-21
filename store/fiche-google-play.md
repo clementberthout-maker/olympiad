@@ -48,7 +48,7 @@ TOUT POUR TON TOURNOI
 
 OFFRES
 • Gratuit : jusqu'à 12 équipes par tournoi, avec calendrier, scores et suivi en direct.
-• Pass Tournoi : achat unique qui débloque un tournoi (équipes illimitées, export PDF, co-organisateurs).
+• Pass Tournoi : achat unique qui débloque un tournoi (équipes illimitées, vue grand écran, export PDF, co-organisateurs).
 • Pro : abonnement mensuel ou annuel qui débloque tous tes tournois.
 
 L'abonnement Pro se renouvelle automatiquement sauf résiliation au moins 24 h avant la fin de la période en cours. Tu peux le gérer ou le résilier à tout moment dans les abonnements Google Play.
@@ -101,7 +101,7 @@ EVERYTHING YOUR TOURNAMENT NEEDS
 
 PLANS
 • Free: up to 12 teams per tournament, with schedule, scores and live tracking.
-• Tournament Pass: one-time purchase that unlocks one tournament (unlimited teams, PDF export, co-organizers).
+• Tournament Pass: one-time purchase that unlocks one tournament (unlimited teams, big-screen view, PDF export, co-organizers).
 • Pro: monthly or yearly subscription that unlocks all your tournaments.
 
 The Pro subscription renews automatically unless cancelled at least 24 hours before the end of the current period. You can manage or cancel it at any time in your Google Play subscriptions.
