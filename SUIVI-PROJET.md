@@ -416,7 +416,7 @@ OLYMPIAD sert à organiser des tournois sportifs amateurs. L'organisateur crée 
 - **Équipes :** deux équipes ne peuvent plus porter le même nom dans l'app (majuscules et espaces ignorés), comme dans l'espace.
 - **Calendrier :** bandeau d'aide « Touche un match pour saisir ou modifier son score » plus visible, et chevron sur chaque match. Avant de générer la phase finale, alerte si des équipes sont à égalité parfaite à la limite de qualification (l'ordre d'inscription les départage).
 - **Accueil :** le bouton QR code est sorti de la carte du tournoi (on l'ouvrait en touchant la carte à droite). Mêmes boutons l'un sous l'autre, connecté ou non. Sous-titre qui dit l'objectif : « L'appli de l'organisateur : calendrier, scores et classements en direct ».
-- **Fiche Google Play** (`store/fiche-google-play.md`) : description courte et début de la description complète précisent que c'est un outil pour l'organisateur. À recoller dans la Play Console.
+- **Fiche Google Play** (`store/fiche-google-play.md`) : description courte et début de la description complète précisent que c'est un outil pour l'organisateur (phrase « rien à installer » corrigée le 26/10 : le QR code demande encore l'app, voir F24). À recoller dans la Play Console.
 - Fichiers modifiés vérifiés à la compilation (esbuild) et moteur testé ; pas encore testé sur téléphone. **À livrer dans le prochain build.**
 
 ## 3. Ce qu'il reste à faire
@@ -548,6 +548,7 @@ Une ligne par modification, la plus récente en haut.
 
 | Date | Modification |
 |------|--------------|
+| 2026-10-26 | Fiche Google Play : phrase « rien à installer » corrigée (le suivi demande encore l'app, F24) |
 | 2026-10-26 | Retours du testeur Android, lot 1 : finale sans tirs au but, majuscule du mot de passe, inscription, noms d'équipe en double, calendrier, accueil, fiche Play ; lots 2 et 3 ajoutés (section H) |
 | 2026-10-26 | Nom : variantes d'OLAMATCH (.com pris) vérifiées ; 34 libres (OLAMATCHS, OLAMATCHO, OLATOURNOI…) ajoutées à `NOMS-APPLICATION.md` |
 | 2026-10-24 | Nom : 37 noms tirés des expressions du sport ajoutés à `NOMS-APPLICATION.md` (MITEMPA, SETMATCHO, BRAKETO, KIKOFO, HATRIKA…), tous libres |

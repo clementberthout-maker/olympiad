@@ -25,7 +25,7 @@ Organisateurs : crée ton tournoi, saisis les scores, tous suivent en direct.
 ```
 OLYMPIAD est l'appli pour organiser des tournois sportifs amateurs, du tirage des poules jusqu'au podium.
 
-C'est un outil pour l'organisateur : lui seul crée le tournoi et saisit les scores. Les équipes et le public n'ont rien à installer pour suivre les résultats.
+C'est un outil pour l'organisateur : lui seul crée le tournoi et saisit les scores. Les équipes et le public, eux, se contentent de suivre les résultats.
 
 Tu crées ton tournoi, OLYMPIAD génère le calendrier, tu saisis les scores au bord du terrain : les équipes et les spectateurs suivent les résultats en direct sur leur téléphone, avec un simple QR code. Sans créer de compte.
 
@@ -80,7 +80,7 @@ Organizers: create your tournament, enter scores, everyone follows live.
 ```
 OLYMPIAD is the app for running amateur sports tournaments, from the group draw to the podium.
 
-It is a tool for the organizer: only they create the tournament and enter the scores. Teams and spectators have nothing to install to follow the results.
+It is a tool for the organizer: only they create the tournament and enter the scores. Teams and spectators simply follow the results.
 
 Create your tournament, OLYMPIAD builds the schedule, you enter the scores pitch-side: teams and spectators follow the results live on their phones with a simple QR code. No account needed for them.
 
