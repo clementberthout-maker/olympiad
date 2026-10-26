@@ -1,6 +1,6 @@
 # Politique de confidentialité — OLYMPIAD
 
-Dernière mise à jour : 20 octobre 2026
+Dernière mise à jour : 26 octobre 2026
 
 Cette politique explique quelles données l'application OLYMPIAD et son site internet (y compris l'espace organisateur) collectent, pourquoi, et comment exercer tes droits dessus.
 
@@ -67,7 +67,7 @@ Ces prestataires n'ont accès qu'aux données nécessaires à leur fonction et s
 
 - **Compte, profil et tournois :** conservés tant que ton compte est actif. Un compte sans aucune connexion pendant **3 ans** est supprimé avec ses tournois, après un e-mail d'avertissement envoyé au moins 30 jours avant.
 - **Suppression à ta demande :** depuis **Mon profil > Supprimer mon compte** (dans l'application ou l'espace organisateur), ton compte, ton profil, ta photo et tous les tournois que tu as créés sont supprimés immédiatement et définitivement. Par e-mail (voir Contact ci-dessous), la suppression est effective sous 30 jours.
-- **Tournois :** l'organisateur peut supprimer un tournoi à tout moment ; ses équipes, matchs et résultats sont alors supprimés pour tout le monde.
+- **Tournois :** l'organisateur peut supprimer un tournoi (ou une olympiade) à tout moment : il disparaît aussitôt pour tout le monde et reste **30 jours** dans sa corbeille (Mon profil), d'où il peut le restaurer. Passé ce délai, ses équipes, matchs et résultats sont supprimés définitivement.
 - **Achats :** les justificatifs d'achat sont conservés par Apple, Google et RevenueCat selon leurs propres obligations légales (comptables notamment). Un abonnement Pro n'est pas résilié par la suppression du compte : il doit être annulé depuis les réglages de l'App Store ou du Google Play Store.
 - **Journaux techniques :** les hébergeurs (Supabase, GitHub) conservent des journaux de connexion pendant une courte durée, pour la sécurité et le bon fonctionnement du service.
 - **E-mails que tu nous envoies** (questions, signalements, demandes d'exercice de tes droits) : conservés le temps de traiter la demande, puis au plus 1 an.

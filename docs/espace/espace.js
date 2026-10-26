@@ -9,8 +9,9 @@ import { donnees, MODE_DEMO } from './donnees.js';
 import {
   repartirEnPoules, genererCalendrierPoules, genererPremierTourEliminationDirecte, genererPhaseFinaleDepuisPoules,
   genererTourSuivant, qualifiesParTeteDeSerie, joursApresDebut, genererFinaleEtTroisiemePlace, resultatsAutoPourExempts, idEquipeGagnante, matchEliminationDecide, estPhaseDePoule,
-  grouperParPhase, grouperParTerrain, NOM_MATCH_TROISIEME_PLACE,
+  grouperParPhase, grouperParTerrain, NOM_MATCH_TROISIEME_PLACE, planMiseAJourPoules, reglagesDepuisTournoi,
 } from './moteur/generation.js';
+import { classementFinalTournoi, classementGeneral, statutEpreuve, BAREME_PAR_DEFAUT } from './moteur/olympiade.js';
 import { calculerClassement } from './moteur/classement.js';
 import { infosSport } from './moteur/sports.js';
 
@@ -59,11 +60,17 @@ const motEquipes = (t) => (t.sport === 'tennis' ? (t.tennis_double ? tr('paires'
 const formaterDate = (iso, court) => (iso ? new Date(`${iso.slice(0, 10)}T12:00:00`).toLocaleDateString(locale(), court ? { day: 'numeric', month: 'short', year: 'numeric' } : { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : '');
 const formaterHeure = (iso) => { const d = new Date(iso); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
 const heureCourte = (h) => (h ? String(h).slice(0, 5) : '');
+// Dernier jour d'un tournoi ou d'une olympiade (date_fin, ou date_debut sur un seul jour)
+const dernierJour = (t) => String(t.date_fin || t.date_debut).slice(0, 10);
+// "samedi 7 novembre 2026", ou "7 nov. 2026 – 9 nov. 2026" sur plusieurs jours
+const formaterPeriode = (t, court) => (t.date_fin && dernierJour(t) !== String(t.date_debut).slice(0, 10)
+  ? `${formaterDate(t.date_debut, true)} – ${formaterDate(t.date_fin, true)}` : formaterDate(t.date_debut, court));
 function statutTournoi(t) {
   const aujourdhui = new Date(); const j = `${aujourdhui.getFullYear()}-${pad(aujourdhui.getMonth() + 1)}-${pad(aujourdhui.getDate())}`;
-  const d = String(t.date_debut).slice(0, 10);
-  if (d === j) return ['aujourdhui', tr('Aujourd\'hui', 'Today')];
-  return d > j ? ['avenir', tr('À venir', 'Upcoming')] : ['termine', tr('Terminé', 'Finished')];
+  const d = String(t.date_debut).slice(0, 10); const f = dernierJour(t);
+  if (j < d) return ['avenir', tr('À venir', 'Upcoming')];
+  if (j > f) return ['termine', tr('Terminé', 'Finished')];
+  return f === d ? ['aujourdhui', tr('Aujourd\'hui', 'Today')] : ['aujourdhui', tr('En cours', 'Ongoing')];
 }
 
 // Messages d'erreur lisibles (voir aussi lib/erreurs.js de l'app)
@@ -187,6 +194,10 @@ const ROUTES = [
   [/^#\/nouveau-mot-de-passe$/, () => vueNouveauMotDePasse(), true],
   [/^#\/suivi\/([a-z0-9]+)$/i, (m) => vueSuivi(m[1]), false],
   [/^#\/nouveau$/, () => vueAssistant(), true],
+  [/^#\/olympiade\/nouvelle$/, () => vueFormOlympiade(null), true],
+  [/^#\/olympiade\/([\w-]+)\/modifier$/, (m) => vueFormOlympiade(m[1]), true],
+  [/^#\/olympiade\/([\w-]+)\/epreuve$/, (m) => vueNouvelleEpreuve(m[1]), true],
+  [/^#\/olympiade\/([\w-]+)$/, (m) => vueOlympiade(m[1]), true],
   [/^#\/profil$/, () => vueProfil(), true],
   [/^#\/rejoindre$/, () => vueRejoindre(), true],
   [/^#\/tournoi\/([\w-]+)\/ecran$/, (m) => vueGrandEcran(m[1]), true],
@@ -198,6 +209,7 @@ async function routeur() {
   const hash = location.hash || '#/';
   fermerTiroir(); fermerFenetre(); fermerGrandEcran();
   if (etat.desabonner && !/^#\/tournoi\/|^#\/suivi\//.test(hash)) { etat.desabonner(); etat.desabonner = null; }
+  if (etat.desabonnerOlympiade) { etat.desabonnerOlympiade(); etat.desabonnerOlympiade = null; }
   for (const [motif, rendu, protege] of ROUTES) {
     const m = hash.match(motif);
     if (!m) continue;
@@ -318,6 +330,8 @@ function vueNouveauMotDePasse() {
 async function vueTableau() {
   if (!etat.tournois) await chargement();
   try { etat.tournois = await donnees.mesTournois(uid()); } catch (e) { etat.tournois = []; toast(messageErreur(e), 'erreur'); }
+  let olympiades = [];
+  try { olympiades = await donnees.mesOlympiades(uid()); } catch (e) { /* migration pas encore appliquée */ }
   const p = etat.profil || {};
   const heure = new Date().getHours();
   const salut = heure < 18 ? tr('Bonjour', 'Hello') : tr('Bonsoir', 'Good evening');
@@ -326,18 +340,27 @@ async function vueTableau() {
     return `<a class="carte-tournoi" href="#/tournoi/${t.id}" style="--i:${i + 1}">
       <div class="haut"><span class="ico-sport">${ico(t.sport || 'football')}</span><span class="pastille-statut ${cls}">${lib}</span></div>
       <h3>${esc(t.nom)}</h3>
-      <div class="meta">${nomSport(t.sport)} · ${formaterDate(t.date_debut, true)}</div>
+      <div class="meta">${nomSport(t.sport)} · ${formaterPeriode(t, true)}</div>
       <div class="bas"><span class="pastille-statut role">${t.role === 'co' ? tr('Co-organisateur', 'Co-organizer') : tr('Organisateur', 'Organizer')}</span><span class="pastille-statut">${tr('Code', 'Code')} ${esc(String(t.code_acces).toUpperCase())}</span>${passActif(t) ? `<span class="pastille-statut avenir">${tr('Débloqué', 'Unlocked')}</span>` : ''}</div>
+    </a>`;
+  }).join('');
+  const cartesOlympiades = olympiades.map((o, i) => {
+    const [cls, lib] = statutTournoi(o);
+    return `<a class="carte-tournoi" href="#/olympiade/${o.id}" style="--i:${i + 1}">
+      <div class="haut"><span class="ico-sport">${ico('coupe')}</span><span class="pastille-statut ${cls}">${lib}</span></div>
+      <h3>${esc(o.nom)}</h3>
+      <div class="meta">${tr('Olympiade multisports', 'Multi-sport olympiad')} · ${formaterPeriode(o, true)}</div>
+      <div class="bas"><span class="pastille-statut role">PRO</span><span class="pastille-statut">${tr('Code', 'Code')} ${esc(String(o.code_acces).toUpperCase())}</span></div>
     </a>`;
   }).join('');
   return afficher(`<div class="page">
     <div class="entete-page">
       <div><h1>${salut}${p.prenom ? ` ${esc(p.prenom)}` : ''}</h1><p>${etat.tournois.length ? tr(`${etat.tournois.length} tournoi${etat.tournois.length > 1 ? 's' : ''} à gérer`, `${etat.tournois.length} tournament${etat.tournois.length > 1 ? 's' : ''} to manage`) : tr('Crée ton premier tournoi en quelques minutes.', 'Create your first tournament in a few minutes.')}${etat.pro ? ` · <span class="badge-pro">PRO</span>` : ''}</p></div>
-      <a class="bouton" href="#/nouveau">${ico('plus')}<span>${tr('Nouveau tournoi', 'New tournament')}</span></a>
+      <div style="display:flex;gap:10px;flex-wrap:wrap"><a class="bouton secondaire" href="#/olympiade/nouvelle">${ico('coupe')}<span>${tr('Nouvelle olympiade', 'New olympiad')}</span></a><a class="bouton" href="#/nouveau">${ico('plus')}<span>${tr('Nouveau tournoi', 'New tournament')}</span></a></div>
     </div>
     <div class="grille-tournois cascade">
       <a class="carte-tournoi carte-nouveau" href="#/nouveau" style="--i:0"><span class="plus">${ico('plus')}</span><h3>${tr('Nouveau tournoi', 'New tournament')}</h3><p>${tr('Sport, format, équipes : le calendrier se génère tout seul.', 'Sport, format, teams: the schedule builds itself.')}</p></a>
-      ${cartes}
+      ${cartesOlympiades}${cartes}
     </div>
     <div class="bloc-lateral cascade">
       <div class="encart" style="--i:2"><h3>${tr('Rejoindre comme co-organisateur', 'Join as a co-organizer')}</h3><p>${tr('Un organisateur t\'a donné un code d\'invitation ? Saisis-le pour aider à gérer son tournoi.', 'An organizer gave you an invitation code? Enter it to help run their tournament.')}</p>
@@ -376,8 +399,11 @@ function nouveauBrouillon() {
     departagePoule: 'diff_buts', departageElim: 'prolongations_tab', equipes: [], nombrePoules: 2, nombreTerrains: 1, heure: '09:00', dureeMatch: 60,
     miTemps: false, dureeMiTemps: 10, tempsPause: 15, pauseDejeuner: false, debutPause: '12:30', finPause: '13:30', nombreQualifies: 2,
     matchTroisiemePlace: true, pointsBonus: false, setsGagnants: 2,
+    plusieursJours: false, dateFin: '', heureFinJournee: '19:00', olympiade: null,
   };
 }
+// Dernier jour choisi, s'il est valable (après le premier jour)
+const dateFinBrouillon = (b) => (b.plusieursJours && b.dateFin && b.dateFin > b.date ? b.dateFin : null);
 const ETAPES = [['Sport', 'Sport'], ['Tournoi', 'Tournament'], ['Équipes', 'Teams'], ['Organisation', 'Organization']];
 function vueAssistant() {
   if (!etat.brouillon) etat.brouillon = nouveauBrouillon();
@@ -397,7 +423,7 @@ const interrupteur = (champ, actif) => `<button type="button" class="interrupteu
 
 function htmlAssistant() {
   const b = etat.brouillon;
-  const entete = `<div class="entete-page" style="margin-bottom:0"><div><p class="surtitre">${tr('Nouveau tournoi', 'New tournament')}</p><h1>${[tr('Choisis ton sport', 'Pick your sport'), tr('Ton tournoi', 'Your tournament'), b.sport === 'tennis' ? tr('Les joueurs', 'The players') : tr('Les équipes', 'The teams'), tr('Organisation', 'Organization')][b.etape - 1]}</h1></div><a class="lien-discret" href="#/" data-action="abandonner">${tr('Annuler', 'Cancel')}</a></div>
+  const entete = `<div class="entete-page" style="margin-bottom:0"><div><p class="surtitre">${b.olympiade ? tr('Nouvelle épreuve de l\'olympiade', 'New olympiad event') : tr('Nouveau tournoi', 'New tournament')}</p><h1>${[tr('Choisis ton sport', 'Pick your sport'), tr('Ton tournoi', 'Your tournament'), b.sport === 'tennis' ? tr('Les joueurs', 'The players') : tr('Les équipes', 'The teams'), tr('Organisation', 'Organization')][b.etape - 1]}</h1></div><a class="lien-discret" href="${b.olympiade ? `#/olympiade/${b.olympiade}` : '#/'}" data-action="abandonner">${tr('Annuler', 'Cancel')}</a></div>
     <div class="etapes-assistant">${ETAPES.map(([fr, en], i) => `<div class="etape-a ${i + 1 < b.etape ? 'faite' : ''} ${i + 1 === b.etape ? 'active' : ''}"><i></i><span>${i + 1}. ${tr(fr, en)}</span></div>`).join('')}</div>`;
   let corps = '';
   if (b.etape === 1) {
@@ -406,7 +432,9 @@ function htmlAssistant() {
   } else if (b.etape === 2) {
     const sp = infosSport(b.sport);
     corps = `<div class="champs-2"><div class="champ"><label for="b-nom">${tr('Nom du tournoi', 'Tournament name')}</label><input id="b-nom" data-brouillon="nom" maxlength="80" value="${esc(b.nom)}" placeholder="${tr('Ex : Tournoi U13 de printemps', 'E.g. U13 Spring Cup')}"></div>
-      <div class="champ"><label for="b-date">${tr('Date', 'Date')}</label>${champDate('b-date', 'data-brouillon="date"', b.date)}</div></div>
+      <div class="champ"><label for="b-date">${b.plusieursJours ? tr('Premier jour', 'First day') : tr('Date', 'Date')}</label>${champDate('b-date', 'data-brouillon="date"', b.date)}</div></div>
+      <div class="reglage"><div class="txt"><b>${tr('Sur plusieurs jours', 'Over several days')}</b><small>${tr('Les matchs reprennent chaque matin', 'Matches resume each morning')}</small></div>${interrupteur('plusieursJours', b.plusieursJours)}</div>
+      ${b.plusieursJours ? `<div class="champ"><label for="b-date-fin">${tr('Dernier jour', 'Last day')}</label>${champDate('b-date-fin', 'data-brouillon="dateFin"', b.dateFin)}</div>` : ''}
       <div class="titre-bloc">${tr('Format', 'Format')}</div>
       <div class="cartes-choix">${carteChoix('format', 'mixte', tr('Poules puis élimination directe', 'Groups then knockout'), tr('Le plus courant', 'The most common'), b.format)}${carteChoix('format', 'poules', tr('Poules uniquement', 'Groups only'), tr('Tout le monde se rencontre', 'Everyone plays each other'), b.format)}${carteChoix('format', 'elimination_directe', tr('Élimination directe', 'Knockout only'), tr('Un tableau final dès le départ', 'A bracket from the start'), b.format)}</div>
       ${b.sport === 'tennis' ? `<div class="titre-bloc">${tr('Simple ou double', 'Singles or doubles')}</div><div class="cartes-choix">${carteChoix('tennisDouble', 'false', tr('Simple', 'Singles'), '', b.tennisDouble)}${carteChoix('tennisDouble', 'true', tr('Double', 'Doubles'), '', b.tennisDouble)}</div>` : ''}
@@ -434,7 +462,8 @@ function htmlAssistant() {
         ${b.sport === 'tennis' ? `<div class="reglage"><div class="txt"><b>${tr('Sets gagnants', 'Winning sets')}</b><small>${tr('Pour remporter un match', 'To win a match')}</small></div>${stepper('setsGagnants', b.setsGagnants, 1, 3)}</div>` : ''}
       </div><div>
         <div class="titre-bloc" style="margin-top:0">${tr('Horaires', 'Times')}</div>
-        <div class="reglage"><div class="txt"><b>${tr('Premier match', 'First match')}</b></div>${champHeure('b-heure', 'data-brouillon="heure"', b.heure, true)}</div>
+        <div class="reglage"><div class="txt"><b>${tr('Premier match', 'First match')}</b>${dateFinBrouillon(b) ? `<small>${tr('chaque jour', 'each day')}</small>` : ''}</div>${champHeure('b-heure', 'data-brouillon="heure"', b.heure, true)}</div>
+        ${dateFinBrouillon(b) ? `<div class="reglage"><div class="txt"><b>${tr('Fin des matchs chaque jour', 'Matches end each day by')}</b><small>${tr('Les suivants reprennent le lendemain', 'Later ones resume the next day')}</small></div>${champHeure('b-fin-journee', 'data-brouillon="heureFinJournee"', b.heureFinJournee, true)}</div>` : ''}
         <div class="reglage"><div class="txt"><b>${tr('Durée d\'un match', 'Match length')}</b><small>${tr('en minutes', 'in minutes')}</small></div>${champNombre('b-duree', 'data-brouillon="dureeMatch"', b.dureeMatch, { min: 1, max: 180, minutes: true, titre: tr('Durée d\'un match', 'Match length'), compact: true })}</div>
         ${b.sport !== 'tennis' ? `<div class="reglage"><div class="txt"><b>${tr('Mi-temps', 'Half-time')}</b>${b.miTemps ? '' : `<small>${tr('Désactivée', 'Off')}</small>`}</div><div style="display:flex;gap:12px;align-items:center">${b.miTemps ? champNombre('b-mi-temps', 'data-brouillon="dureeMiTemps"', b.dureeMiTemps, { min: 1, max: 60, minutes: true, titre: tr('Mi-temps', 'Half-time'), compact: true }) : ''}${interrupteur('miTemps', b.miTemps)}</div></div>` : ''}
         <div class="reglage"><div class="txt"><b>${tr('Pause entre les matchs', 'Break between matches')}</b><small>${tr('en minutes', 'in minutes')}</small></div>${champNombre('b-pause', 'data-brouillon="tempsPause"', b.tempsPause, { min: 0, max: 60, minutes: true, zero: tr('Aucune', 'None'), titre: tr('Pause entre les matchs', 'Break between matches'), compact: true })}</div>
@@ -464,15 +493,17 @@ function htmlResume() {
   else matchs = genererCalendrierPoules(repartirEnPoules(faux, b.nombrePoules).map((eq, i) => ({ id: `p${i}`, nom: `Poule ${String.fromCharCode(65 + i)}`, equipes: eq })), 'x', reglages);
   const fin = new Date(Math.max(...matchs.map((m) => new Date(m.horaire).getTime())) + reglages.dureeMatchMinutes * 60000);
   const total = b.format === 'elimination_directe' ? n - 1 + (b.matchTroisiemePlace && n >= 4 ? 1 : 0) : matchs.length;
-  const lendemain = joursApresDebut(fin, b.date) > 0;
+  const lendemain = joursApresDebut(fin, dateFinBrouillon(b) || b.date) > 0;
+  const plusieurs = Boolean(dateFinBrouillon(b));
   return `<div><strong>${n}</strong><span>${motEquipes({ sport: b.sport, tennis_double: b.tennisDouble })}</span></div>
     <div><strong>${total}</strong><span>${b.format === 'elimination_directe' ? tr('matchs au total', 'matches in total') : tr('matchs de poule', 'group matches')}</span></div>
-    <div><strong>${pad(fin.getHours())}:${pad(fin.getMinutes())}</strong><span>${b.format === 'elimination_directe' ? tr('fin du premier tour', 'end of first round') : tr('fin des poules', 'groups end')}${lendemain ? ` · ${tr('le lendemain', 'next day')}` : ''}</span></div>
-    ${lendemain ? `<p class="alerte-debordement">${tr('Attention : les matchs finiraient le lendemain. Ajoute des terrains, raccourcis les matchs ou réduis les pauses.', 'Warning: matches would end the next day. Add fields, shorten matches or reduce breaks.')}</p>` : ''}`;
+    <div><strong>${pad(fin.getHours())}:${pad(fin.getMinutes())}</strong><span>${b.format === 'elimination_directe' ? tr('fin du premier tour', 'end of first round') : tr('fin des poules', 'groups end')}${plusieurs ? ` · ${fin.toLocaleDateString(locale(), { weekday: 'short', day: 'numeric', month: 'short' })}` : lendemain ? ` · ${tr('le lendemain', 'next day')}` : ''}</span></div>
+    ${lendemain ? `<p class="alerte-debordement">${plusieurs ? tr('Attention : les matchs finiraient après le dernier jour. Ajoute des terrains, raccourcis les matchs ou allonge les journées.', 'Warning: matches would end after the last day. Add fields, shorten matches or extend the days.') : tr('Attention : les matchs finiraient le lendemain. Ajoute des terrains, raccourcis les matchs ou réduis les pauses.', 'Warning: matches would end the next day. Add fields, shorten matches or reduce breaks.')}</p>` : ''}`;
 }
 function reglagesBrouillon(b) {
   const duree = b.dureeMatch + (b.miTemps && b.sport !== 'tennis' ? b.dureeMiTemps : 0);
-  return { dateDebut: b.date, heureDebut: b.heure, dureeCreneauMinutes: duree + b.tempsPause, dureeMatchMinutes: duree, nombreTerrains: b.nombreTerrains, pauseDejeuner: b.pauseDejeuner, heureDebutPause: b.pauseDejeuner ? b.debutPause : null, heureFinPause: b.pauseDejeuner ? b.finPause : null };
+  const dateFin = dateFinBrouillon(b);
+  return { dateDebut: b.date, dateFin, heureFinJournee: dateFin ? b.heureFinJournee : null, heureDebut: b.heure, dureeCreneauMinutes: duree + b.tempsPause, dureeMatchMinutes: duree, nombreTerrains: b.nombreTerrains, pauseDejeuner: b.pauseDejeuner, heureDebutPause: b.pauseDejeuner ? b.debutPause : null, heureFinPause: b.pauseDejeuner ? b.finPause : null };
 }
 function ajouterEquipesBrouillon(noms) {
   const b = etat.brouillon;
@@ -491,14 +522,6 @@ function ajouterEquipesBrouillon(noms) {
   return ajoutees;
 }
 
-// Réglages du tournoi pour le moteur (equipes.js : genererLesMatchs)
-function reglagesDepuisTournoi(t, matchsExistants = []) {
-  const dureeMatchMinutes = t.duree_match + (t.mi_temps ? t.duree_mi_temps : 0);
-  const dureeCreneauMinutes = dureeMatchMinutes + t.temps_pause;
-  let horaireDepart;
-  if (matchsExistants.length) horaireDepart = new Date(Math.max(...matchsExistants.map((m) => new Date(m.horaire).getTime())) + dureeCreneauMinutes * 60000).toISOString();
-  return { dateDebut: String(t.date_debut).slice(0, 10), heureDebut: t.heure_premier_match, dureeCreneauMinutes, dureeMatchMinutes, nombreTerrains: t.nombre_terrains, pauseDejeuner: t.pause_dejeuner, heureDebutPause: t.heure_debut_pause, heureFinPause: t.heure_fin_pause, horaireDepart };
-}
 async function insererMatchsAvecExempts(matchs) {
   const inseres = await donnees.insererMatchs(matchs);
   const exempts = resultatsAutoPourExempts(inseres);
@@ -527,12 +550,15 @@ async function creerTournoi(bouton) {
   const b = etat.brouillon;
   const erreur = $('#erreur-assistant');
   if (!b.nom.trim() || !b.date) { erreur.textContent = tr('Indique le nom et la date du tournoi (étape 2).', 'Enter the tournament name and date (step 2).'); return; }
+  if (b.plusieursJours && !dateFinBrouillon(b)) { erreur.textContent = tr('Choisis un dernier jour après le premier (étape 2).', 'Pick a last day after the first one (step 2).'); return; }
   if (!b.equipes.length) { erreur.textContent = tr('Ajoute au moins une équipe.', 'Add at least one team.'); return; }
   bouton.disabled = true; bouton.innerHTML = `<span class="rotation"></span>${tr('Création…', 'Creating…')}`;
   let tournoi = null;
   try {
     const champs = {
-      nom: b.nom.trim(), date_debut: b.date, format: b.format, sport: b.sport, tennis_double: b.sport === 'tennis' && b.tennisDouble,
+      nom: b.nom.trim(), date_debut: b.date, date_fin: dateFinBrouillon(b), heure_fin_journee: dateFinBrouillon(b) ? b.heureFinJournee : null,
+      ...(b.olympiade ? { olympiade_id: b.olympiade } : {}),
+      format: b.format, sport: b.sport, tennis_double: b.sport === 'tennis' && b.tennisDouble,
       critere_departage_poule: b.departagePoule, mode_departage: b.sport === 'tennis' ? 'prolongations_tab' : b.departageElim,
       nombre_terrains: b.nombreTerrains, heure_premier_match: b.heure, duree_match: b.dureeMatch, mi_temps: b.sport !== 'tennis' && b.miTemps,
       duree_mi_temps: b.miTemps && b.sport !== 'tennis' ? b.dureeMiTemps : null, temps_pause: b.tempsPause, pause_dejeuner: b.pauseDejeuner,
@@ -544,7 +570,8 @@ async function creerTournoi(bouton) {
       try { tournoi = await donnees.creerTournoi({ ...champs, code_acces: codeAcces() }); break; } catch (e) { if (e.code !== '23505' || essai === 4) throw e; }
     }
     let equipes;
-    try { equipes = await donnees.insererEquipes(b.equipes.map((nom) => ({ tournoi_id: tournoi.id, nom }))); } catch (e) {
+    const idsOlympiade = b.olympiade ? await idsEquipesOlympiade(b.olympiade, b.equipes) : [];
+    try { equipes = await donnees.insererEquipes(b.equipes.map((nom, i) => ({ tournoi_id: tournoi.id, nom, ...(b.olympiade ? { olympiade_equipe_id: idsOlympiade[i] } : {}) }))); } catch (e) {
       if (e.code === 'OLY01') await donnees.supprimerTournoi(tournoi.id).catch(() => {});
       throw e;
     }
@@ -559,6 +586,31 @@ async function creerTournoi(bouton) {
   }
 }
 
+// Équipes communes d'une olympiade portant ces noms (créées si besoin)
+const normaliserNom = (n) => n.trim().replace(/\s+/g, ' ').toLowerCase();
+async function idsEquipesOlympiade(olympiadeId, noms) {
+  const existantes = await donnees.equipesOlympiade(olympiadeId);
+  const parNom = new Map(existantes.map((e) => [normaliserNom(e.nom), e.id]));
+  const manquantes = [...new Set(noms.filter((n) => !parNom.has(normaliserNom(n))))];
+  if (manquantes.length) (await donnees.ajouterEquipesOlympiade(manquantes.map((nom) => ({ olympiade_id: olympiadeId, nom })))).forEach((e) => parNom.set(normaliserNom(e.nom), e.id));
+  return noms.map((n) => parNom.get(normaliserNom(n)));
+}
+
+// Met à jour le calendrier des poules sans perdre les scores (même règle que
+// l'app : voir planMiseAJourPoules dans le moteur)
+async function mettreAJourCalendrier(tournoiId) {
+  const c = await donnees.chargerTournoi(tournoiId);
+  const matchsPoule = c.matchs.filter((m) => estPhaseDePoule(m.phase)).map((m) => ({ ...m, resultat: c.resultats.find((r) => r.match_id === m.id) }));
+  const plan = planMiseAJourPoules(c.poules, c.equipes, matchsPoule, tournoiId, reglagesDepuisTournoi(c.tournoi));
+  const parPoule = {};
+  plan.affectations.forEach((a) => { (parPoule[a.pouleId] = parPoule[a.pouleId] || []).push(a.equipeId); });
+  for (const [pouleId, ids] of Object.entries(parPoule)) await donnees.affecterPoule(ids, pouleId);
+  await donnees.supprimerMatchs(plan.matchsASupprimer);
+  if (plan.matchsAInserer.length) await donnees.insererMatchs(plan.matchsAInserer);
+  return plan;
+}
+const tableauLance = (c) => c.matchs.some((m) => !estPhaseDePoule(m.phase));
+
 // ---------------------------------------------------------------------
 // Page d'un tournoi
 // ---------------------------------------------------------------------
@@ -570,7 +622,7 @@ async function chargerCourant(id) {
   c.droits = { principal, saisir: principal || Boolean(ligne?.peut_saisir_scores), gerer: principal || Boolean(ligne?.peut_gerer_le_tournoi), supprimer: principal || Boolean(ligne?.peut_supprimer_le_tournoi) };
   return c;
 }
-// Pass Tournoi valable jusqu'à 5 jours après la date du tournoi, inclus
+// Pass Tournoi valable jusqu'à 5 jours après le dernier jour du tournoi, inclus
 // (même règle que lib/achats.js de l'app et limiter_equipes dans la base).
 const JOURS_VALIDITE_PASS = 5;
 function finDuPass(dateDebut) {
@@ -581,7 +633,7 @@ function finDuPass(dateDebut) {
 function passActif(t) {
   if (!t?.debloque) return false;
   const a = new Date();
-  return `${a.getFullYear()}-${pad(a.getMonth() + 1)}-${pad(a.getDate())}` <= finDuPass(t.date_debut);
+  return `${a.getFullYear()}-${pad(a.getMonth() + 1)}-${pad(a.getDate())}` <= finDuPass(dernierJour(t));
 }
 const debloque = (t) => etat.pro || passActif(t);
 
@@ -632,9 +684,9 @@ function htmlEnteteTournoi(onglet) {
   const verrou = debloque(t) ? '' : ico('cadenas', 'cadenas');
   const onglets = [['matchs', tr('Matchs', 'Matches')], ['classement', tr('Classement', 'Standings')], ...(d.gerer ? [['equipes', t.sport === 'tennis' ? tr('Joueurs', 'Players') : tr('Équipes', 'Teams')], ['reglages', tr('Réglages', 'Settings')]] : [])];
   return `<section class="entete-tournoi"><div class="page">
-    <div class="fil"><a href="#/">${tr('Mes tournois', 'My tournaments')}</a>${ico('droite', '')}<span>${esc(t.nom)}</span></div>
+    <div class="fil"><a href="#/">${tr('Mes tournois', 'My tournaments')}</a>${ico('droite', '')}${t.olympiade_id ? `<a href="#/olympiade/${t.olympiade_id}">${tr('Olympiade', 'Olympiad')}</a>${ico('droite', '')}` : ''}<span>${esc(t.nom)}</span></div>
     <div class="titre-tournoi"><span class="ico-sport">${ico(t.sport)}</span><h1 id="titre-t">${esc(t.nom)}</h1></div>
-    <div class="infos-tournoi"><span>${nomSport(t.sport)} · ${formaterDate(t.date_debut)}</span><span>${c.equipes.length} ${motEquipes(t)}</span>
+    <div class="infos-tournoi"><span>${nomSport(t.sport)} · ${formaterPeriode(t)}</span><span>${c.equipes.length} ${motEquipes(t)}</span>
       <span class="puce-code">${tr('Code', 'Code')} <b>${esc(String(t.code_acces).toUpperCase())}</b><button data-action="copier" data-texte="${esc(String(t.code_acces).toUpperCase())}">${tr('Copier', 'Copy')}</button></span>
       <span class="indicateur-direct" id="indicateur-direct">${tr('CONNEXION…', 'CONNECTING…')}</span>
       ${d.principal ? '' : `<span class="pastille-statut role" style="background:#181d26;color:#f3f2ed">${tr('Co-organisateur', 'Co-organizer')}</span>`}</div>
@@ -740,6 +792,7 @@ function htmlEquipes() {
     </div><div>
       <div class="titre-bloc" style="margin-top:0">${tr('Calendrier', 'Schedule')}</div>
       <div class="encart"><h3>${c.matchs.length ? tr('Régénérer le calendrier', 'Regenerate the schedule') : tr('Générer le calendrier', 'Generate the schedule')}</h3>
+        ${c.matchs.length && t.format !== 'elimination_directe' && !tableauLance(c) ? `<p class="mention" style="margin-top:0">${tr('Une équipe ajoutée maintenant rejoint une poule et ses matchs s\'ajoutent au calendrier : les scores déjà saisis sont conservés.', 'A team added now joins a group and its matches are added to the schedule: scores already entered are kept.')}</p>` : ''}
         <p>${c.matchs.length ? tr('Refait le tirage des poules et tous les matchs avec les équipes et les réglages actuels. Les résultats déjà saisis seront effacés.', 'Redraws the groups and every match with the current teams and settings. Results already entered will be erased.') : tr('Crée les poules et les matchs avec les équipes et les réglages actuels.', 'Creates groups and matches with the current teams and settings.')}</p>
         ${t.format !== 'elimination_directe' ? `<div class="reglage"><div class="txt"><b>${tr('Nombre de poules', 'Number of groups')}</b></div>${stepper('poulesRegen', etat.poulesRegen ?? Math.max(1, c.poules.length || 2), 1, Math.max(1, Math.floor(c.equipes.length / 2)))}</div>` : ''}
         <button class="bouton petit ${c.matchs.length ? 'danger' : ''}" data-action="regenerer" ${c.equipes.length < 2 ? 'disabled' : ''}>${ico('retourner')}<span>${c.matchs.length ? tr('Régénérer', 'Regenerate') : tr('Générer', 'Generate')}</span></button></div>
@@ -759,8 +812,10 @@ function htmlReglages() {
   return `<form id="form-reglages" class="grille-reglages"><div>
       <div class="titre-bloc" style="margin-top:0">${tr('Informations', 'Details')}</div>
       ${champ('nom', tr('Nom du tournoi', 'Tournament name'), 'text', t.nom, 'maxlength="80"')}
-      ${verrouiller(champ('date_debut', tr('Date', 'Date'), 'date', String(t.date_debut).slice(0, 10)), Boolean(t.debloque))}
-      ${t.debloque ? `<p class="mention">${tr(`Date figée par le Pass Tournoi, valable jusqu'au ${formaterDate(finDuPass(t.date_debut))} inclus.`, `Date locked by the Tournament Pass, valid until ${formaterDate(finDuPass(t.date_debut))} inclusive.`)}</p>` : ''}
+      ${verrouiller(champ('date_debut', t.date_fin ? tr('Premier jour', 'First day') : tr('Date', 'Date'), 'date', String(t.date_debut).slice(0, 10)), Boolean(t.debloque))}
+      <div class="reglage"><div class="txt"><b>${tr('Sur plusieurs jours', 'Over several days')}</b></div><button type="button" class="interrupteur" role="switch" aria-checked="${Boolean(t.date_fin)}" data-action="basculer-reglage" data-reglage="plusieurs_jours" ${t.debloque ? 'disabled' : ''}></button></div>
+      <div class="zone-pause ${t.date_fin ? '' : 'verrouille'}" id="zone-jours"><div class="champs-2">${verrouiller(champ('date_fin', tr('Dernier jour', 'Last day'), 'date', t.date_fin ? String(t.date_fin).slice(0, 10) : ''), !t.date_fin || Boolean(t.debloque))}${verrouiller(champ('heure_fin_journee', tr('Fin des matchs chaque jour', 'Matches end each day by'), 'time', heureCourte(t.heure_fin_journee) || '19:00'), !t.date_fin)}</div></div>
+      ${t.debloque ? `<p class="mention">${tr(`Dates figées par le Pass Tournoi, valable jusqu'au ${formaterDate(finDuPass(dernierJour(t)))} inclus.`, `Dates locked by the Tournament Pass, valid until ${formaterDate(finDuPass(dernierJour(t)))} inclusive.`)}</p>` : ''}
       <div class="titre-bloc">${tr('Organisation', 'Organization')}</div>
       <div class="champs-2">${champ('nombre_terrains', tr('Terrains', 'Fields'), 'nombre', t.nombre_terrains, { min: 1, max: 20, titre: tr('Terrains', 'Fields'), icone: 'terrain' })}${t.format === 'mixte' ? champ('nombre_qualifies_par_poule', tr('Qualifiés par poule', 'Qualifiers per group'), 'nombre', t.nombre_qualifies_par_poule, { min: 1, max: 16, titre: tr('Qualifiés', 'Qualifiers'), icone: 'coupe' }) : ''}</div>
       ${t.format !== 'poules' ? `<div class="reglage"><div class="txt"><b>${tr('Match pour la 3e place', 'Third-place match')}</b></div><button type="button" class="interrupteur" role="switch" aria-checked="${Boolean(t.match_troisieme_place)}" data-action="basculer-reglage" data-reglage="match_troisieme_place"></button></div>` : ''}
@@ -776,7 +831,7 @@ function htmlReglages() {
       <p class="erreur-form" id="erreur-reglages"></p>
       <button class="bouton petit" type="submit">${tr('Enregistrer les réglages', 'Save settings')}</button>
     </div></form>
-    ${c.droits.supprimer ? `<div class="zone-danger"><h3>${tr('Supprimer le tournoi', 'Delete the tournament')}</h3><p>${tr('Le tournoi, ses équipes, ses matchs et ses résultats seront supprimés définitivement, pour tout le monde.', 'The tournament, its teams, matches and results will be permanently deleted, for everyone.')}</p><button class="bouton petit danger" data-action="supprimer-tournoi">${ico('poubelle')}<span>${tr('Supprimer le tournoi', 'Delete the tournament')}</span></button></div>` : ''}`;
+    ${c.droits.supprimer ? `<div class="zone-danger"><h3>${tr('Supprimer le tournoi', 'Delete the tournament')}</h3><p>${tr('Le tournoi part dans la corbeille, invisible pour tout le monde. Son organisateur peut le restaurer pendant 30 jours depuis « Mon profil », puis il est effacé définitivement.', 'The tournament goes to the trash, hidden from everyone. Its organizer can restore it for 30 days from “My profile”, then it is permanently erased.')}</p><button class="bouton petit danger" data-action="supprimer-tournoi">${ico('poubelle')}<span>${tr('Supprimer le tournoi', 'Delete the tournament')}</span></button></div>` : ''}`;
 }
 
 // Temps réel : rechargement et surbrillance des matchs modifiés
@@ -1011,7 +1066,7 @@ function exporterPDF() {
   const lignes = (ms) => ms.map((m) => { const r = m.resultat; return `<tr><td>${formaterHeure(m.horaire)}</td><td>${m.terrain ? `${tr('Terrain', 'Field')} ${esc(m.terrain)}` : '—'}</td><td>${esc(nomEquipe(c, m.equipe_a_id))}</td><td>${m.equipe_b_id ? esc(nomEquipe(c, m.equipe_b_id)) : tr('Exempt', 'Bye')}</td><td>${r?.statut === 'termine' && m.equipe_b_id ? `${r.score_a} - ${r.score_b}` : ''}</td></tr>`; }).join('');
   const cp = classementsPoules(c);
   imprimer(`<!doctype html><html><head><meta charset="utf-8"><title>${esc(t.nom)}</title>${stylesImpression}</head><body>
-    <h1>${esc(t.nom)}</h1><p class="meta">${formaterDate(t.date_debut)} · ${nomSport(t.sport)} · ${c.equipes.length} ${motEquipes(t)} · ${tr('Code d\'accès', 'Access code')} ${esc(String(t.code_acces).toUpperCase())}</p>
+    <h1>${esc(t.nom)}</h1><p class="meta">${formaterPeriode(t)} · ${nomSport(t.sport)} · ${c.equipes.length} ${motEquipes(t)} · ${tr('Code d\'accès', 'Access code')} ${esc(String(t.code_acces).toUpperCase())}</p>
     ${cp.map((p) => `<p><b>${esc(libellePhase(p.poule.nom))}</b> : ${p.classement.map((s) => esc(s.equipe.nom)).join(', ')}</p>`).join('')}
     ${a.phases.map((g) => `<h2>${esc(libellePhase(g.nom))}</h2><table><thead><tr><th>${tr('Horaire', 'Time')}</th><th>${tr('Terrain', 'Field')}</th><th>${tr('Équipe A', 'Team A')}</th><th>${tr('Équipe B', 'Team B')}</th><th>Score</th></tr></thead><tbody>${lignes(g.matchs)}</tbody></table>`).join('')}
     ${cp.map((p) => `<h2>${tr('Classement', 'Standings')} · ${esc(libellePhase(p.poule.nom))}</h2><table><thead><tr><th>#</th><th>${tr('Équipe', 'Team')}</th><th>${tr('J', 'P')}</th><th>Diff</th><th>Pts</th></tr></thead><tbody>${p.classement.map((s, i) => `<tr><td>${i + 1}</td><td>${esc(s.equipe.nom)}</td><td>${s.joues}</td><td>${s.diff_buts}</td><td><b>${s.points}</b></td></tr>`).join('')}</tbody></table>`).join('')}
@@ -1090,6 +1145,13 @@ async function vueSuivi(code) {
   await chargement();
   let tournoi = null;
   try { tournoi = await donnees.tournoiParCode(code); } catch (e) { tournoi = null; }
+  // Code d'une olympiade multisports : son suivi public
+  if (!tournoi) {
+    const olympiade = await donnees.olympiadeParCode(code).catch(() => null);
+    if (olympiade) return vueOlympiade(olympiade.id, true);
+  }
+  etat.olympiadeSuivi = null;
+  if (tournoi?.olympiade_id) etat.olympiadeSuivi = (await donnees.chargerOlympiade(tournoi.olympiade_id).catch(() => null))?.olympiade || null;
   if (!tournoi) return afficher(`<div class="page" style="max-width:640px"><div class="vide-etat"><h2 style="font-size:40px;margin:0 0 6px">${tr('Tournoi introuvable', 'Tournament not found')}</h2><p>${tr('Ce code d\'accès ne correspond à aucun tournoi. Vérifie le code ou le QR code utilisé.', 'This access code matches no tournament. Check the code or QR code.')}</p></div></div>`);
   etat.courant = await chargerCourant(tournoi.id).catch(() => null);
   if (!etat.courant) return;
@@ -1113,7 +1175,7 @@ function rendreSuivi() {
   const t = c.tournoi;
   zone.innerHTML = `<section class="entete-tournoi"><div class="page">
       <div class="titre-tournoi"><span class="ico-sport">${ico(t.sport)}</span><h1>${esc(t.nom)}</h1></div>
-      <div class="infos-tournoi"><span>${nomSport(t.sport)} · ${formaterDate(t.date_debut)}</span><span class="indicateur-direct" id="indicateur-direct">${tr('EN DIRECT', 'LIVE')}</span></div>
+      <div class="infos-tournoi"><span>${nomSport(t.sport)} · ${formaterPeriode(t)}</span><span class="indicateur-direct" id="indicateur-direct">${tr('EN DIRECT', 'LIVE')}</span>${etat.olympiadeSuivi ? `<a class="puce-code" href="#/suivi/${esc(etat.olympiadeSuivi.code_acces)}">${tr('Classement général de l\'olympiade', 'Olympiad overall ranking')}</a>` : ''}</div>
       <nav class="onglets-tournoi"><a href="#" data-action="onglet-suivi" data-onglet="classement" class="${etat.ongletSuivi === 'classement' ? 'actif' : ''}">${tr('Classement', 'Standings')}</a><a href="#" data-action="onglet-suivi" data-onglet="calendrier" class="${etat.ongletSuivi === 'calendrier' ? 'actif' : ''}">${tr('Calendrier', 'Schedule')}</a></nav>
     </div></section>
     <div class="page"><div class="contenu-onglet">${etat.ongletSuivi === 'classement' ? htmlClassement() : htmlMatchs(true)}</div>
@@ -1124,11 +1186,119 @@ function rendreSuivi() {
 }
 
 // ---------------------------------------------------------------------
+// Olympiades multisports (olympiade/creer.js, olympiade/[id], suivi-olympiade)
+// ---------------------------------------------------------------------
+// Classement final de chaque épreuve et classement général (moteur commun)
+function calculerOlympiade(brut) {
+  const epreuves = brut.tournois.map((tournoi) => {
+    const matchs = brut.matchs.filter((m) => m.tournoi_id === tournoi.id);
+    const equipes = brut.equipes.filter((e) => e.tournoi_id === tournoi.id);
+    const places = classementFinalTournoi({ tournoi, poules: brut.poules.filter((p) => p.tournoi_id === tournoi.id), equipes, matchs });
+    return { tournoi, equipes, places, statut: statutEpreuve(matchs, places) };
+  });
+  return { ...brut, epreuves, classement: classementGeneral(brut.equipesOlympiade, epreuves, brut.olympiade.bareme || undefined) };
+}
+const STATUTS_EPREUVE = { avenir: ['avenir', 'À venir', 'Upcoming'], encours: ['aujourdhui', 'En cours', 'Ongoing'], terminee: ['termine', 'Terminée', 'Finished'] };
+
+async function vueOlympiade(id, publique = false) {
+  await chargement();
+  let o = null;
+  try { const brut = await donnees.chargerOlympiade(id); o = brut && calculerOlympiade(brut); } catch (e) { toast(messageErreur(e), 'erreur'); }
+  if (!o) return afficher(`<div class="page"><div class="vide-etat"><h2>${tr('Olympiade introuvable', 'Olympiad not found')}</h2><p>${tr('Elle a peut-être été supprimée par son organisateur.', 'It may have been deleted by its organizer.')}</p></div></div>`);
+  const organisateur = !publique && o.olympiade.organisateur_id === uid();
+  await afficher(`<div id="vue-olympiade">${htmlOlympiade(o, organisateur)}</div>`);
+  // Temps réel : tout résultat peut changer le classement général
+  let minuteur = null;
+  etat.desabonnerOlympiade = donnees.tempsReelOlympiade(() => {
+    clearTimeout(minuteur);
+    minuteur = setTimeout(async () => {
+      try { const brut = await donnees.chargerOlympiade(id); const zone = $('#vue-olympiade'); if (brut && zone) zone.innerHTML = htmlOlympiade(calculerOlympiade(brut), organisateur); } catch (e) { /* hors ligne */ }
+    }, 500);
+  });
+}
+function htmlOlympiade(o, organisateur) {
+  const ol = o.olympiade;
+  const terminees = o.epreuves.filter((e) => e.places);
+  const code = String(ol.code_acces).toUpperCase();
+  const lignes = o.classement.map((l, i) => `<tr class="${l.rang === 1 && terminees.length ? 'qualifie' : ''}" style="--i:${i}"><td>${l.rang}</td><td>${esc(l.equipe.nom)}</td>${terminees.map((e) => `<td>${l.points[e.tournoi.id] ?? '–'}</td>`).join('')}<td><b>${l.total}</b></td></tr>`).join('');
+  const epreuves = o.epreuves.map(({ tournoi, statut }, i) => {
+    const [cls, fr, en] = STATUTS_EPREUVE[statut];
+    return `<a class="carte-tournoi" href="${organisateur ? `#/tournoi/${tournoi.id}` : `#/suivi/${esc(tournoi.code_acces)}`}" style="--i:${i}">
+      <div class="haut"><span class="ico-sport">${ico(tournoi.sport)}</span><span class="pastille-statut ${cls}">${tr(fr, en)}</span></div>
+      <h3>${esc(tournoi.nom)}</h3><div class="meta">${nomSport(tournoi.sport)} · ${formaterPeriode(tournoi, true)}</div></a>`;
+  }).join('');
+  return `<section class="entete-tournoi"><div class="page">
+      ${organisateur ? `<div class="fil"><a href="#/">${tr('Mes tournois', 'My tournaments')}</a>${ico('droite', '')}<span>${esc(ol.nom)}</span></div>` : ''}
+      <p class="surtitre" style="margin:0">${tr('Olympiade multisports', 'Multi-sport olympiad')}</p>
+      <div class="titre-tournoi"><span class="ico-sport">${ico('coupe')}</span><h1>${esc(ol.nom)}</h1></div>
+      <div class="infos-tournoi"><span>${formaterPeriode(ol)}</span><span>${o.equipesOlympiade.length} ${tr('équipes', 'teams')} · ${o.epreuves.length} ${tr('épreuves', 'events')}</span>
+        <span class="puce-code">${tr('Code', 'Code')} <b>${esc(code)}</b><button data-action="copier" data-texte="${esc(code)}">${tr('Copier', 'Copy')}</button></span></div>
+      ${organisateur ? `<div class="actions-tournoi"><a class="action-t" href="#/olympiade/${ol.id}/epreuve">${ico('plus')}${tr('Ajouter une épreuve', 'Add an event')}</a><a class="action-t" href="#/olympiade/${ol.id}/modifier">${ico('reglages')}${tr('Modifier', 'Edit')}</a><button class="action-t" data-action="copier" data-texte="${esc(lienSuivi(ol.code_acces))}">${ico('lien')}${tr('Lien de suivi', 'Follow link')}</button><a class="action-t" href="#/suivi/${esc(ol.code_acces)}">${ico('oeil')}${tr('Vue spectateur', 'Spectator view')}</a></div>` : ''}
+    </div></section>
+    <div class="page"><div class="contenu-onglet">
+      <div class="tableau-classement"><h3>${tr('Classement général', 'Overall ranking')}</h3>
+        <p class="mention" style="margin:0 0 10px">${terminees.length ? tr(`${terminees.length} épreuve(s) terminée(s) sur ${o.epreuves.length} comptent pour l'instant.`, `${terminees.length} finished event(s) out of ${o.epreuves.length} count so far.`) : tr('Les points arrivent dès qu\'une épreuve est terminée.', 'Points come in as soon as an event is finished.')} ${tr('Barème', 'Scale')} : ${esc((ol.bareme || BAREME_PAR_DEFAUT).join(' · '))}</p>
+        ${o.classement.length ? `<table><thead><tr><th></th><th>${tr('Équipe', 'Team')}</th>${terminees.map((e) => `<th>${esc(nomSport(e.tournoi.sport))}</th>`).join('')}<th>Pts</th></tr></thead><tbody>${lignes}</tbody></table>` : `<div class="vide-etat">${tr('Aucune équipe pour l\'instant.', 'No teams yet.')}</div>`}
+      </div>
+      <h2 style="font-size:40px;margin:34px 0 12px">${tr('Épreuves', 'Events')}</h2>
+      ${o.epreuves.length ? `<div class="grille-tournois cascade">${epreuves}</div>` : `<div class="vide-etat">${organisateur ? `<p>${tr('Aucune épreuve pour l\'instant : ajoute un premier sport.', 'No events yet: add a first sport.')}</p><a class="bouton petit" href="#/olympiade/${ol.id}/epreuve">${tr('Ajouter une épreuve', 'Add an event')}</a>` : tr('Aucune épreuve pour l\'instant.', 'No events yet.')}</div>`}
+    </div></div>`;
+}
+
+// Création ou modification d'une olympiade (réservée aux comptes Pro)
+async function vueFormOlympiade(id) {
+  let o = null; let equipes = [];
+  if (id) {
+    await chargement();
+    try { const brut = await donnees.chargerOlympiade(id); o = brut?.olympiade; equipes = brut?.equipesOlympiade || []; } catch (e) { toast(messageErreur(e), 'erreur'); }
+    if (!o) { location.hash = '#/'; return; }
+  } else if (!etat.pro) {
+    location.replace('#/');
+    ouvrirFenetre(`<h2>${tr('Réservé à OLYMPIAD Pro', 'OLYMPIAD Pro only')}</h2><p class="sous">${tr('Les olympiades multisports (plusieurs sports, mêmes équipes, un classement général) font partie de l\'abonnement Pro, qui s\'achète dans l\'application mobile.', 'Multi-sport olympiads (several sports, same teams, one overall ranking) are part of the Pro subscription, bought in the mobile app.')}</p><div class="actions-fenetre"><a class="bouton secondaire petit" href="index.html#offres">${tr('Voir les offres', 'See plans')}</a><button class="bouton petit" data-action="fermer-fenetre">OK</button></div>`);
+    return;
+  }
+  const d = new Date(); d.setDate(d.getDate() + (((6 - d.getDay() + 7) % 7) || 7));
+  const date = o ? String(o.date_debut).slice(0, 10) : `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  return afficher(`<div class="page" style="max-width:760px"><div class="entete-page"><div><p class="surtitre">${tr('Olympiade multisports', 'Multi-sport olympiad')}</p><h1>${o ? tr('Modifier l\'olympiade', 'Edit the olympiad') : tr('Nouvelle olympiade', 'New olympiad')}</h1></div><a class="lien-discret" href="${o ? `#/olympiade/${o.id}` : '#/'}">${tr('Annuler', 'Cancel')}</a></div>
+    ${o ? '' : `<p class="intro" style="font-size:15px">${tr('Chaque sport sera une épreuve avec son propre calendrier. Les points gagnés selon la place dans chaque épreuve font le classement général.', 'Each sport will be an event with its own schedule. Points earned by placing in each event make the overall ranking.')}</p>`}
+    <form id="form-olympiade" data-id="${o ? o.id : ''}" novalidate>
+      <div class="champ"><label for="o-nom">${tr('Nom de l\'olympiade', 'Olympiad name')}</label><input id="o-nom" maxlength="80" value="${esc(o?.nom || '')}" placeholder="${tr('Ex : Olympiades du club 2027', 'E.g. Club Olympics 2027')}"></div>
+      <div class="champ"><label>${tr('Premier jour', 'First day')}</label>${champDate('o-date', 'data-reglage="date_debut"', date)}</div>
+      <div class="reglage"><div class="txt"><b>${tr('Sur plusieurs jours', 'Over several days')}</b></div><button type="button" class="interrupteur" role="switch" aria-checked="${Boolean(o?.date_fin)}" data-action="basculer-reglage" data-reglage="plusieurs_jours"></button></div>
+      <div class="zone-pause ${o?.date_fin ? '' : 'verrouille'}" id="zone-jours"><div class="champ"><label>${tr('Dernier jour', 'Last day')}</label>${verrouiller(champDate('o-date-fin', 'data-reglage="date_fin"', o?.date_fin ? String(o.date_fin).slice(0, 10) : ''), !o?.date_fin)}</div></div>
+      <div class="champ"><label for="o-bareme">${tr('Barème des points (1er, 2e, 3e…)', 'Points scale (1st, 2nd, 3rd…)')}</label><input id="o-bareme" value="${esc((o?.bareme || BAREME_PAR_DEFAUT).join(', '))}"><small class="mention">${tr('Points gagnés au classement général selon la place dans chaque épreuve, séparés par des virgules (0 au-delà).', 'Points earned in the overall ranking for each place in an event, separated by commas (0 beyond).')}</small></div>
+      ${o ? '' : `<div class="champ"><label for="o-equipes">${tr('Équipes, une par ligne', 'Teams, one per line')}</label><textarea id="o-equipes" placeholder="Racing Vallée&#10;FC Rivière&#10;…"></textarea><small class="mention">${tr('Les mêmes équipes participent à toutes les épreuves.', 'The same teams take part in every event.')}</small></div>`}
+      <p class="erreur-form" id="erreur-olympiade"></p>
+      <button class="bouton" type="submit">${o ? tr('Enregistrer', 'Save') : tr('Créer l\'olympiade', 'Create the olympiad')}</button>
+    </form>
+    ${o ? `<div class="titre-bloc">${tr('Équipes', 'Teams')}<small>${equipes.length}</small></div>
+      <form class="ligne-formulaire" id="form-equipe-olympiade" data-id="${o.id}"><input id="o-nouvelle-equipe" maxlength="60" placeholder="${tr('Nom', 'Name')}" autocomplete="off"><button class="bouton petit" type="submit">${ico('plus')}<span>${tr('Ajouter', 'Add')}</span></button></form>
+      <div class="liste-equipes" style="grid-template-columns:1fr">${equipes.map((e, i) => `<div class="puce-equipe"><span class="n">${i + 1}</span><span class="nom">${esc(e.nom)}</span><button type="button" class="bouton-icone" data-action="supprimer-equipe-olympiade" data-id="${e.id}" data-nom="${esc(e.nom)}" data-olympiade="${o.id}" aria-label="${tr('Retirer', 'Remove')}">${ico('poubelle')}</button></div>`).join('')}</div>
+      <div class="zone-danger"><h3>${tr('Supprimer l\'olympiade', 'Delete the olympiad')}</h3><p>${tr('Elle part dans la corbeille avec toutes ses épreuves, restaurable 30 jours depuis « Mon profil ».', 'It goes to the trash with all its events, restorable for 30 days from “My profile”.')}</p><button class="bouton petit danger" data-action="supprimer-olympiade" data-id="${o.id}">${ico('poubelle')}<span>${tr('Supprimer l\'olympiade', 'Delete the olympiad')}</span></button></div>` : ''}
+  </div>`, (v) => $('#o-nom', v).focus());
+}
+
+// Nouvelle épreuve : l'assistant de création, avec les équipes et les dates de l'olympiade
+async function vueNouvelleEpreuve(id) {
+  let brut = null;
+  try { brut = await donnees.chargerOlympiade(id); } catch (e) { toast(messageErreur(e), 'erreur'); }
+  if (!brut) { location.replace('#/'); return; }
+  const o = brut.olympiade;
+  etat.brouillon = { ...nouveauBrouillon(), olympiade: o.id, date: String(o.date_debut).slice(0, 10), plusieursJours: Boolean(o.date_fin), dateFin: o.date_fin ? String(o.date_fin).slice(0, 10) : '', equipes: brut.equipesOlympiade.map((e) => e.nom) };
+  location.replace('#/nouveau');
+}
+
+// ---------------------------------------------------------------------
 // Profil (profil.js)
 // ---------------------------------------------------------------------
 async function vueProfil() {
   await chargerUtilisateur();
   const p = etat.profil || {};
+  let corbeille = [];
+  try { corbeille = (await donnees.corbeille(uid())).sort((a, b) => new Date(b.supprime_le) - new Date(a.supprime_le)); } catch (e) { /* migration pas encore appliquée */ }
+  const effacement = (d) => { const x = new Date(d); x.setDate(x.getDate() + 30); return x.toLocaleDateString(locale(), { day: 'numeric', month: 'long' }); };
+  const htmlCorbeille = `<div class="section-profil" style="--i:5"><h3>${tr('Corbeille', 'Trash')}</h3><p class="mention-legale" style="margin:0 0 12px">${tr('Un tournoi ou une olympiade supprimé reste ici 30 jours, invisible pour tout le monde, puis il est effacé pour de bon.', 'A deleted tournament or olympiad stays here for 30 days, hidden from everyone, then it is erased for good.')}</p>
+    ${corbeille.length ? corbeille.map((x) => `<div class="puce-equipe"><span class="nom">${esc(x.nom)}<small style="display:block;color:var(--texte-attenue, #808693)">${x.type === 'olympiade' ? `${tr('Olympiade', 'Olympiad')} · ` : ''}${tr(`effacé le ${effacement(x.supprime_le)}`, `erased on ${effacement(x.supprime_le)}`)}</small></span><button class="bouton petit secondaire" data-action="restaurer" data-type="${x.type}" data-id="${x.id}">${tr('Restaurer', 'Restore')}</button></div>`).join('') : `<p class="mention-legale" style="margin:0">${tr('La corbeille est vide.', 'The trash is empty.')}</p>`}</div>`;
   return afficher(`<div class="page"><div class="entete-page"><div><p class="surtitre">${tr('Compte', 'Account')}</p><h1>${tr('Mon profil', 'My profile')}</h1></div></div>
     <div class="grille-profil">
       <div class="carte-identite cascade"><label class="avatar-grand" style="--i:0">${p.photo_url ? `<img src="${esc(p.photo_url)}" alt="">` : esc(initiales())}<input type="file" accept="image/*" id="photo-profil" hidden></label>
@@ -1142,6 +1312,7 @@ async function vueProfil() {
         <form class="section-profil" id="form-email" style="--i:2"><h3>E-mail</h3><div class="champ"><label>${tr('Nouvelle adresse e-mail', 'New email address')}</label><input id="p-email" type="email" value="${esc(etat.session.user.email || '')}"></div><p class="mention-legale" style="margin:0 0 12px">${tr('Un lien de confirmation sera envoyé à la nouvelle adresse.', 'A confirmation link will be sent to the new address.')}</p><button class="bouton petit secondaire" type="submit">${tr('Changer d\'adresse', 'Change email')}</button></form>
         <form class="section-profil" id="form-mdp" style="--i:3"><h3>${tr('Mot de passe', 'Password')}</h3><div class="champs-2"><div class="champ"><label>${tr('Mot de passe actuel', 'Current password')}</label><input id="p-ancien" type="password" autocomplete="current-password"></div><div class="champ"><label>${tr('Nouveau mot de passe', 'New password')}</label><input id="p-nouveau" type="password" autocomplete="new-password" minlength="6"></div></div><p class="erreur-form" id="erreur-mdp-profil"></p><button class="bouton petit secondaire" type="submit">${tr('Changer le mot de passe', 'Change password')}</button></form>
         <div class="section-profil" style="--i:4"><h3>${tr('Abonnement', 'Subscription')}</h3><p class="mention-legale" style="margin:0">${etat.pro ? tr('Ton abonnement OLYMPIAD Pro est actif : toutes les fonctions premium sont débloquées, ici et dans l\'app. Il se gère dans l\'App Store ou Google Play.', 'Your OLYMPIAD Pro subscription is active: every premium feature is unlocked, here and in the app. It\'s managed in the App Store or Google Play.') : tr('Offre gratuite : 12 équipes par tournoi, sans grand écran, export PDF ni co-organisateurs. Le Pass Tournoi et OLYMPIAD Pro s\'achètent dans l\'application mobile.', 'Free plan: 12 teams per tournament, no big screen, PDF export or co-organizers. The Tournament Pass and OLYMPIAD Pro are bought in the mobile app.')}</p></div>
+        ${htmlCorbeille}
         <div class="section-profil" style="--i:5"><h3>${tr('Informations légales', 'Legal')}</h3><p class="mention-legale" style="margin:0"><a href="politique-confidentialite.html">${tr('Politique de confidentialité', 'Privacy policy')}</a> · <a href="conditions-utilisation.html">${tr('Conditions d\'utilisation', 'Terms of use')}</a> · <a href="mentions-legales.html">${tr('Mentions légales', 'Legal notice')}</a></p></div>
         <div class="zone-danger" style="--i:6"><h3>${tr('Supprimer mon compte', 'Delete my account')}</h3><p>${tr('Tes tournois, équipes, résultats et ta photo seront supprimés définitivement. Pense à résilier l\'abonnement Pro dans le store.', 'Your tournaments, teams, results and photo will be permanently deleted. Remember to cancel Pro in the store.')}</p><button class="bouton petit danger" data-action="supprimer-compte">${tr('Supprimer mon compte', 'Delete my account')}</button></div>
       </div></div></div>`);
@@ -1288,6 +1459,7 @@ document.addEventListener('click', async (e) => {
     case 'abandonner': etat.brouillon = null; break;
     case 'choisir-sport':
       b.sport = cible.dataset.sport;
+      if (b.olympiade && !b.nom.trim()) b.nom = nomSport(b.sport);
       b.departageElim = (DEPARTAGES_ELIM[b.sport][0] || ['prolongations_tab'])[0];
       b.etape = 2; rafraichirAssistant(); focusAssistant(); break;
     case 'brouillon': {
@@ -1298,6 +1470,7 @@ document.addEventListener('click', async (e) => {
     case 'etape': {
       const sens = Number(cible.dataset.sens);
       if (sens > 0 && b.etape === 2 && (!b.nom.trim() || !b.date)) { $('#erreur-assistant').textContent = tr('Indique le nom et la date du tournoi.', 'Enter the tournament name and date.'); return; }
+      if (sens > 0 && b.etape === 2 && b.plusieursJours && !dateFinBrouillon(b)) { $('#erreur-assistant').textContent = tr('Choisis un dernier jour après le premier.', 'Pick a last day after the first one.'); return; }
       b.etape = Math.min(4, Math.max(1, b.etape + sens)); rafraichirAssistant(); focusAssistant(); window.scrollTo({ top: 0, behavior: 'smooth' }); break;
     }
     case 'pas': {
@@ -1393,6 +1566,11 @@ document.addEventListener('click', async (e) => {
     case 'basculer-reglage': {
       const actif = cible.getAttribute('aria-checked') !== 'true';
       cible.setAttribute('aria-checked', String(actif));
+      if (cible.dataset.reglage === 'plusieurs_jours') {
+        const zone = $('#zone-jours');
+        if (zone) { zone.classList.toggle('verrouille', !actif); $$('.selecteur-champ', zone).forEach((bt) => { bt.disabled = !actif; }); }
+        if (!actif && selecteurOuvert && zone?.contains(selecteurOuvert.bouton)) fermerSelecteur();
+      }
       if (cible.dataset.reglage === 'pause_dejeuner') {
         const zone = $('#zone-pause');
         if (zone) { zone.classList.toggle('verrouille', !actif); $$('.selecteur-champ', zone).forEach((bt) => { bt.disabled = !actif; }); }
@@ -1402,8 +1580,22 @@ document.addEventListener('click', async (e) => {
     }
     case 'supprimer-tournoi': {
       const t = etat.courant.tournoi;
-      if (!await confirmer({ titre: tr('Supprimer le tournoi ?', 'Delete the tournament?'), texte: tr('Action définitive, pour tout le monde (spectateurs et co-organisateurs compris).', 'Permanent, for everyone (spectators and co-organizers included).'), bouton: tr('Supprimer définitivement', 'Delete permanently'), danger: true, saisie: tr('SUPPRIMER', 'DELETE') })) break;
-      try { await donnees.supprimerTournoi(t.id); etat.courant = null; etat.tournois = null; toast(tr('Tournoi supprimé', 'Tournament deleted')); location.hash = '#/'; } catch (er) { toast(messageErreur(er), 'erreur'); }
+      if (!await confirmer({ titre: tr('Supprimer le tournoi ?', 'Delete the tournament?'), texte: tr('Il part dans la corbeille : invisible pour tout le monde (spectateurs et co-organisateurs compris), restaurable 30 jours depuis « Mon profil ».', 'It goes to the trash: hidden from everyone (spectators and co-organizers included), restorable for 30 days from “My profile”.'), bouton: tr('Supprimer', 'Delete'), danger: true })) break;
+      try { await donnees.mettreALaCorbeille('tournoi', t.id); etat.courant = null; etat.tournois = null; toast(tr('Tournoi mis à la corbeille', 'Tournament moved to the trash')); location.hash = t.olympiade_id ? `#/olympiade/${t.olympiade_id}` : '#/'; } catch (er) { toast(messageErreur(er), 'erreur'); }
+      break;
+    }
+    case 'restaurer':
+      try { await donnees.restaurer(cible.dataset.type, cible.dataset.id); etat.tournois = null; toast(tr('Restauré', 'Restored')); vueProfil(); } catch (er) { toast(messageErreur(er), 'erreur'); }
+      break;
+    case 'supprimer-olympiade': {
+      if (!await confirmer({ titre: tr('Supprimer l\'olympiade ?', 'Delete the olympiad?'), texte: tr('Elle part dans la corbeille avec toutes ses épreuves, restaurable 30 jours depuis « Mon profil ».', 'It goes to the trash with all its events, restorable for 30 days from “My profile”.'), bouton: tr('Supprimer', 'Delete'), danger: true })) break;
+      try { await donnees.mettreALaCorbeille('olympiade', cible.dataset.id); toast(tr('Olympiade mise à la corbeille', 'Olympiad moved to the trash')); location.hash = '#/'; } catch (er) { toast(messageErreur(er), 'erreur'); }
+      break;
+    }
+    case 'supprimer-equipe-olympiade': {
+      const nom = cible.dataset.nom;
+      if (!await confirmer({ titre: tr(`Retirer ${nom} ?`, `Remove ${nom}?`), texte: tr('L\'équipe sera aussi retirée de toutes les épreuves, avec ses matchs et leurs résultats.', 'The team will also be removed from every event, with its matches and results.'), bouton: tr('Retirer', 'Remove'), danger: true })) break;
+      try { await donnees.supprimerEquipeOlympiade(cible.dataset.id); vueFormOlympiade(cible.dataset.olympiade); } catch (er) { toast(messageErreur(er), 'erreur'); }
       break;
     }
     case 'onglet-suivi': e.preventDefault(); etat.ongletSuivi = cible.dataset.onglet; rendreSuivi(); break;
@@ -1438,7 +1630,20 @@ document.addEventListener('submit', async (e) => {
     if (!nom) return;
     if (c.equipes.some((e) => e.nom.toLowerCase() === nom.toLowerCase())) { toast(tr(`« ${nom} » est déjà dans le tournoi.`, `“${nom}” is already in the tournament.`), 'erreur'); champ.select(); return; }
     if (c.equipes.length >= LIMITE_GRATUITE && !debloque(c.tournoi)) { toast(messageErreur({ code: 'OLY01' }), 'erreur'); fenetreOffres(); return; }
-    try { await donnees.insererEquipes([{ tournoi_id: c.tournoi.id, nom }]); champ.value = ''; await rechargerCourant(false); $('#ajout-equipe')?.focus(); toast(tr(`${nom} ajouté`, `${nom} added`)); } catch (er) { toast(messageErreur(er), 'erreur'); if (er.code === 'OLY01') fenetreOffres(); }
+    // Tableau à élimination directe lancé : une équipe de plus n'y aurait pas sa place
+    if (tableauLance(c)) { toast(tr('La phase à élimination directe a commencé : régénère le calendrier pour ajouter une équipe.', 'The knockout stage has started: regenerate the schedule to add a team.'), 'erreur'); return; }
+    try {
+      const lien = c.tournoi.olympiade_id ? { olympiade_equipe_id: (await idsEquipesOlympiade(c.tournoi.olympiade_id, [nom]))[0] } : {};
+      await donnees.insererEquipes([{ tournoi_id: c.tournoi.id, nom, ...lien }]);
+      champ.value = '';
+      // Calendrier déjà généré : l'équipe rejoint une poule, scores conservés
+      if (c.matchs.length) {
+        const plan = await mettreAJourCalendrier(c.tournoi.id);
+        const poule = plan.affectations[0]?.pouleNom;
+        toast(tr(`${nom} ajouté${poule ? ` en ${poule}` : ''} · ${plan.matchsAInserer.length} matchs à venir replanifiés, scores conservés`, `${nom} added${poule ? ` to ${libellePhase(poule)}` : ''} · ${plan.matchsAInserer.length} upcoming matches rescheduled, scores kept`));
+      } else toast(tr(`${nom} ajouté`, `${nom} added`));
+      await rechargerCourant(false); $('#ajout-equipe')?.focus();
+    } catch (er) { toast(messageErreur(er), 'erreur'); if (er.code === 'OLY01') fenetreOffres(); }
     return;
   }
   if (f.id === 'form-reglages') {
@@ -1448,8 +1653,12 @@ document.addEventListener('submit', async (e) => {
     const bascule = (cle, defaut) => (v(cle) ? v(cle).getAttribute('aria-checked') === 'true' : defaut);
     const miTemps = t.sport !== 'tennis' ? nb('duree_mi_temps', 0) : 0;
     const pauseDej = bascule('pause_dejeuner', t.pause_dejeuner);
+    const plusieurs = bascule('plusieurs_jours', Boolean(t.date_fin));
+    const dateDebut = v('date_debut').value || t.date_debut;
+    const dateFin = plusieurs ? (v('date_fin').value || null) : null;
+    if (plusieurs && !(dateFin && dateFin > String(dateDebut).slice(0, 10))) { $('#erreur-reglages').textContent = tr('Choisis un dernier jour après le premier.', 'Pick a last day after the first one.'); return; }
     const champs = {
-      nom: v('nom').value.trim() || t.nom, date_debut: v('date_debut').value || t.date_debut,
+      nom: v('nom').value.trim() || t.nom, date_debut: dateDebut, date_fin: dateFin, heure_fin_journee: dateFin ? v('heure_fin_journee').value : null,
       nombre_terrains: Math.max(1, nb('nombre_terrains', t.nombre_terrains)), heure_premier_match: v('heure_premier_match').value || '09:00',
       duree_match: Math.max(1, nb('duree_match', t.duree_match)), temps_pause: nb('temps_pause', t.temps_pause), mi_temps: miTemps > 0, duree_mi_temps: miTemps > 0 ? miTemps : null,
       pause_dejeuner: pauseDej, heure_debut_pause: pauseDej ? v('heure_debut_pause').value : null, heure_fin_pause: pauseDej ? v('heure_fin_pause').value : null,
@@ -1457,7 +1666,55 @@ document.addEventListener('submit', async (e) => {
       match_troisieme_place: bascule('match_troisieme_place', t.match_troisieme_place), points_bonus: bascule('points_bonus', t.points_bonus),
       sets_gagnants: Math.min(3, Math.max(1, nb('sets_gagnants', t.sets_gagnants))),
     };
-    try { await donnees.majTournoi(t.id, champs); toast(tr('Réglages enregistrés', 'Settings saved')); await rechargerCourant(false); const zone = $('#page-tournoi > .entete-tournoi'); if (zone) { const tmp = document.createElement('div'); tmp.innerHTML = htmlEnteteTournoi(etat.onglet); zone.replaceWith(tmp.firstElementChild); abonnerTempsReel(t.id); } } catch (er) { $('#erreur-reglages').textContent = messageErreur(er); }
+    const cles = ['date_debut', 'date_fin', 'heure_fin_journee', 'nombre_terrains', 'heure_premier_match', 'duree_match', 'mi_temps', 'duree_mi_temps', 'temps_pause', 'pause_dejeuner', 'heure_debut_pause', 'heure_fin_pause'];
+    const comparable = (cle, x) => (x === null || x === undefined || x === '' ? null : cle.startsWith('heure_') ? String(x).slice(0, 5) : String(x).slice(0, 10));
+    const horairesChanges = cles.some((cle) => comparable(cle, t[cle]) !== comparable(cle, champs[cle]));
+    const c0 = etat.courant;
+    try { await donnees.majTournoi(t.id, champs); toast(tr('Réglages enregistrés', 'Settings saved'));
+      // Horaires changés en cours de route : replanifier les matchs à venir (scores conservés)
+      if (horairesChanges && c0.matchs.length && t.format !== 'elimination_directe' && !tableauLance(c0)
+        && await confirmer({ titre: tr('Replanifier les matchs à venir ?', 'Reschedule upcoming matches?'), texte: tr('Les matchs déjà joués ou en cours gardent leur horaire et leur score ; seuls les matchs à venir sont replanifiés avec ces horaires.', 'Matches already played or in progress keep their time and score; only upcoming matches are rescheduled with these timings.'), bouton: tr('Replanifier', 'Reschedule') })) {
+        await mettreAJourCalendrier(t.id); toast(tr('Matchs à venir replanifiés', 'Upcoming matches rescheduled'));
+      }
+      await rechargerCourant(false); const zone = $('#page-tournoi > .entete-tournoi'); if (zone) { const tmp = document.createElement('div'); tmp.innerHTML = htmlEnteteTournoi(etat.onglet); zone.replaceWith(tmp.firstElementChild); abonnerTempsReel(t.id); } } catch (er) { $('#erreur-reglages').textContent = messageErreur(er); }
+    return;
+  }
+  if (f.id === 'form-olympiade') {
+    const erreur = $('#erreur-olympiade'); erreur.textContent = '';
+    const val = (cle) => $(`[data-reglage="${cle}"]`, f)?.value || '';
+    const plusieurs = $('[data-reglage="plusieurs_jours"]', f).getAttribute('aria-checked') === 'true';
+    const nom = $('#o-nom', f).value.trim(); const dateDebut = val('date_debut'); const dateFin = plusieurs ? val('date_fin') : null;
+    const bareme = $('#o-bareme', f).value.split(/[,;\s]+/).map((x) => parseInt(x, 10)).filter((x) => Number.isFinite(x) && x >= 0);
+    if (!nom || !dateDebut) { erreur.textContent = tr('Indique le nom et la date.', 'Enter the name and date.'); return; }
+    if (plusieurs && !(dateFin && dateFin > dateDebut)) { erreur.textContent = tr('Choisis un dernier jour après le premier.', 'Pick a last day after the first one.'); return; }
+    if (!bareme.length) { erreur.textContent = tr('Indique au moins une valeur de barème.', 'Enter at least one scale value.'); return; }
+    const champs = { nom, date_debut: dateDebut, date_fin: dateFin, bareme };
+    const bouton = $('button[type=submit]', f); bouton.disabled = true;
+    try {
+      if (f.dataset.id) { await donnees.majOlympiade(f.dataset.id, champs); toast(tr('Olympiade enregistrée', 'Olympiad saved')); location.hash = `#/olympiade/${f.dataset.id}`; return; }
+      let o = null;
+      for (let essai = 0; essai < 5; essai++) {
+        try { o = await donnees.creerOlympiade({ ...champs, code_acces: codeAcces(), organisateur_id: uid() }); break; } catch (e) { if (e.code !== '23505' || essai === 4) throw e; }
+      }
+      const noms = [...new Map($('#o-equipes', f).value.split(/\r?\n|;/).map((x) => x.trim().slice(0, 60)).filter(Boolean).map((n) => [normaliserNom(n), n])).values()];
+      if (noms.length) await donnees.ajouterEquipesOlympiade(noms.map((n) => ({ olympiade_id: o.id, nom: n })));
+      toast(tr('Olympiade créée : ajoute une première épreuve.', 'Olympiad created: add a first event.'));
+      location.hash = `#/olympiade/${o.id}`;
+    } catch (er) {
+      erreur.textContent = er.code === '42501' || /row-level security/i.test(er.message || '') ? tr('Les olympiades sont réservées à l\'abonnement OLYMPIAD Pro.', 'Olympiads are part of the OLYMPIAD Pro subscription.') : messageErreur(er);
+      bouton.disabled = false;
+    }
+    return;
+  }
+  if (f.id === 'form-equipe-olympiade') {
+    const champ = $('#o-nouvelle-equipe', f); const nom = champ.value.trim().slice(0, 60);
+    if (!nom) return;
+    try {
+      const existantes = await donnees.equipesOlympiade(f.dataset.id);
+      if (existantes.some((e) => normaliserNom(e.nom) === normaliserNom(nom))) { toast(tr(`« ${nom} » est déjà dans l'olympiade.`, `“${nom}” is already in the olympiad.`), 'erreur'); return; }
+      await donnees.ajouterEquipesOlympiade([{ olympiade_id: f.dataset.id, nom }]);
+      toast(tr(`${nom} ajouté`, `${nom} added`)); vueFormOlympiade(f.dataset.id);
+    } catch (er) { toast(messageErreur(er), 'erreur'); }
     return;
   }
   if (f.id === 'form-profil') {

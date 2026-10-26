@@ -67,12 +67,13 @@ function sourceSupabase() {
     },
 
     // Tournois dont l'utilisateur est organisateur principal ou co-organisateur
+    // (hors corbeille ; les épreuves d'olympiade sont montrées dans leur olympiade)
     async mesTournois(uid) {
-      const miens = verifier(await sb.from('tournois').select('*').eq('organisateur_id', uid).order('created_at', { ascending: false })) || [];
+      const miens = verifier(await sb.from('tournois').select('*').eq('organisateur_id', uid).is('supprime_le', null).is('olympiade_id', null).order('created_at', { ascending: false })) || [];
       const lignes = verifier(await sb.from('tournoi_organisateurs').select('*').eq('user_id', uid)) || [];
       let coorgs = [];
       if (lignes.length) {
-        coorgs = verifier(await sb.from('tournois').select('*').in('id', lignes.map((l) => l.tournoi_id))) || [];
+        coorgs = verifier(await sb.from('tournois').select('*').in('id', lignes.map((l) => l.tournoi_id)).is('supprime_le', null)) || [];
       }
       return [
         ...miens.map((t) => ({ ...t, role: 'principal' })),
@@ -97,6 +98,57 @@ function sourceSupabase() {
     async creerTournoi(champs) { return verifier(await sb.from('tournois').insert(champs).select().single()); },
     async majTournoi(id, champs) { verifier(await sb.from('tournois').update(champs).eq('id', id)); },
     async supprimerTournoi(id) { verifier(await sb.from('tournois').delete().eq('id', id)); },
+    async supprimerMatchs(ids) { if (ids.length) verifier(await sb.from('matchs').delete().in('id', ids)); },
+
+    // Corbeille (30 jours, voir supabase/schema.sql)
+    async mettreALaCorbeille(type, id) {
+      verifier(type === 'olympiade'
+        ? await sb.rpc('mettre_olympiade_a_la_corbeille', { p_olympiade_id: id })
+        : await sb.rpc('mettre_tournoi_a_la_corbeille', { p_tournoi_id: id }));
+    },
+    async restaurer(type, id) {
+      verifier(type === 'olympiade'
+        ? await sb.rpc('restaurer_olympiade', { p_olympiade_id: id })
+        : await sb.rpc('restaurer_tournoi', { p_tournoi_id: id }));
+    },
+    async corbeille(uid) {
+      const [tournois, olympiades] = await Promise.all([
+        sb.from('tournois').select('id, nom, supprime_le').eq('organisateur_id', uid).not('supprime_le', 'is', null).then(verifier),
+        sb.from('olympiades').select('id, nom, supprime_le').eq('organisateur_id', uid).not('supprime_le', 'is', null).then(verifier),
+      ]);
+      return [...(tournois || []).map((x) => ({ ...x, type: 'tournoi' })), ...(olympiades || []).map((x) => ({ ...x, type: 'olympiade' }))];
+    },
+
+    // Olympiades multisports
+    async mesOlympiades(uid) {
+      return verifier(await sb.from('olympiades').select('*').eq('organisateur_id', uid).is('supprime_le', null).order('created_at', { ascending: false })) || [];
+    },
+    async olympiadeParCode(code) { return verifier(await sb.from('olympiades').select('*').ilike('code_acces', code).maybeSingle()); },
+    // Olympiade, équipes communes et toutes ses épreuves avec leurs matchs
+    async chargerOlympiade(id) {
+      const olympiade = verifier(await sb.from('olympiades').select('*').eq('id', id).maybeSingle());
+      if (!olympiade) return null;
+      const [equipesOlympiade, tournois] = await Promise.all([
+        sb.from('olympiade_equipes').select('*').eq('olympiade_id', id).order('created_at').then(verifier),
+        sb.from('tournois').select('*').eq('olympiade_id', id).is('supprime_le', null).order('created_at').then(verifier),
+      ]);
+      const ids = (tournois || []).map((t) => t.id);
+      let poules = []; let equipes = []; let matchs = [];
+      if (ids.length) {
+        [poules, equipes, matchs] = await Promise.all([
+          sb.from('poules').select('*').in('tournoi_id', ids).order('nom').then(verifier),
+          sb.from('equipes').select('*').in('tournoi_id', ids).then(verifier),
+          sb.from('matchs').select('*, resultats(*)').in('tournoi_id', ids).order('horaire').then(verifier),
+        ]);
+      }
+      matchs = (matchs || []).map(({ resultats, ...m }) => ({ ...m, resultat: (Array.isArray(resultats) ? resultats[0] : resultats) || undefined }));
+      return { olympiade, equipesOlympiade: equipesOlympiade || [], tournois: tournois || [], poules: poules || [], equipes: equipes || [], matchs };
+    },
+    async creerOlympiade(champs) { return verifier(await sb.from('olympiades').insert(champs).select().single()); },
+    async majOlympiade(id, champs) { verifier(await sb.from('olympiades').update(champs).eq('id', id)); },
+    async equipesOlympiade(olympiadeId) { return verifier(await sb.from('olympiade_equipes').select('*').eq('olympiade_id', olympiadeId).order('created_at')) || []; },
+    async ajouterEquipesOlympiade(lignes) { return verifier(await sb.from('olympiade_equipes').insert(lignes).select()) || []; },
+    async supprimerEquipeOlympiade(id) { verifier(await sb.from('olympiade_equipes').delete().eq('id', id)); },
     async insererEquipes(lignes) { return verifier(await sb.from('equipes').insert(lignes).select()); },
     async supprimerEquipe(id) { verifier(await sb.from('equipes').delete().eq('id', id)); },
     async creerPoule(tournoiId, nom) { return verifier(await sb.from('poules').insert({ tournoi_id: tournoiId, nom }).select().single()); },
@@ -132,6 +184,13 @@ function sourceSupabase() {
         .on('postgres_changes', { event: '*', schema: 'public', table: 'resultats' }, (e) => quandChange('resultats', e))
         .on('postgres_changes', { event: '*', schema: 'public', table: 'matchs', filter: `tournoi_id=eq.${tournoiId}` }, (e) => quandChange('matchs', e))
         .subscribe((etat) => quandEtat && quandEtat(etat === 'SUBSCRIBED'));
+      return () => sb.removeChannel(canal);
+    },
+    // Olympiade : tout résultat peut changer le classement général
+    tempsReelOlympiade(quandChange) {
+      const canal = sb.channel(`espace-olympiade-${Date.now()}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'resultats' }, () => quandChange())
+        .subscribe();
       return () => sb.removeChannel(canal);
     },
   };
@@ -190,7 +249,16 @@ function sourceDemo() {
     enregistrer('tout');
   }
   if (!base) semer();
+  // Démo enregistrée avant les olympiades et la corbeille
+  base.olympiades = base.olympiades || []; base.olympiade_equipes = base.olympiade_equipes || [];
   const copie = (x) => JSON.parse(JSON.stringify(x));
+  const visible = (t) => !t.supprime_le;
+  const effacerTournoi = (id) => {
+    const ids = base.matchs.filter((m) => m.tournoi_id === id).map((m) => m.id);
+    base.tournois = base.tournois.filter((t) => t.id !== id); base.poules = base.poules.filter((p) => p.tournoi_id !== id);
+    base.equipes = base.equipes.filter((e) => e.tournoi_id !== id); base.matchs = base.matchs.filter((m) => m.tournoi_id !== id);
+    base.resultats = base.resultats.filter((r) => !ids.includes(r.match_id));
+  };
   const utilisateur = () => (base.session ? { user: { id: MOI, email: base.profils[0].email } } : null);
   const ecouteursAuth = new Set();
 
@@ -213,9 +281,9 @@ function sourceDemo() {
     async supprimerMonCompte() { localStorage.removeItem(CLE); semer(); base.session = false; enregistrer('auth'); },
     async mesTournois(uid) {
       await pause();
-      const miens = base.tournois.filter((t) => t.organisateur_id === uid).map((t) => ({ ...t, role: 'principal' }));
+      const miens = base.tournois.filter((t) => t.organisateur_id === uid && visible(t) && !t.olympiade_id).map((t) => ({ ...t, role: 'principal' }));
       const lignes = base.tournoi_organisateurs.filter((l) => l.user_id === uid);
-      const co = base.tournois.filter((t) => lignes.some((l) => l.tournoi_id === t.id) && t.organisateur_id !== uid).map((t) => ({ ...t, role: 'co', droits: lignes.find((l) => l.tournoi_id === t.id) }));
+      const co = base.tournois.filter((t) => visible(t) && lignes.some((l) => l.tournoi_id === t.id) && t.organisateur_id !== uid).map((t) => ({ ...t, role: 'co', droits: lignes.find((l) => l.tournoi_id === t.id) }));
       return copie([...miens.reverse(), ...co]);
     },
     async chargerTournoi(id) {
@@ -225,15 +293,46 @@ function sourceDemo() {
       const matchs = base.matchs.filter((m) => m.tournoi_id === id).sort((a, b) => new Date(a.horaire) - new Date(b.horaire));
       return copie({ tournoi, poules: base.poules.filter((p) => p.tournoi_id === id).sort((a, b) => a.nom.localeCompare(b.nom)), equipes: base.equipes.filter((e) => e.tournoi_id === id), matchs, resultats: base.resultats.filter((r) => matchs.some((m) => m.id === r.match_id)) });
     },
-    async tournoiParCode(code) { return copie(base.tournois.find((t) => t.code_acces.toLowerCase() === code.toLowerCase()) || null); },
+    async tournoiParCode(code) {
+      const t = base.tournois.find((x) => x.code_acces.toLowerCase() === code.toLowerCase());
+      const o = t?.olympiade_id && base.olympiades.find((x) => x.id === t.olympiade_id);
+      return copie(t && visible(t) && (!o || visible(o)) ? t : null);
+    },
     async droits(tournoiId, uid) { return copie(base.tournoi_organisateurs.find((l) => l.tournoi_id === tournoiId && l.user_id === uid) || null); },
     async creerTournoi(champs) { await pause(300); const t = { ...champs, id: uuid(), debloque: false, created_at: new Date().toISOString() }; base.tournois.push(t); enregistrer('tournois'); return copie(t); },
     async majTournoi(id, champs) { Object.assign(base.tournois.find((t) => t.id === id), champs); enregistrer('tournois'); },
-    async supprimerTournoi(id) {
-      const ids = base.matchs.filter((m) => m.tournoi_id === id).map((m) => m.id);
-      base.tournois = base.tournois.filter((t) => t.id !== id); base.poules = base.poules.filter((p) => p.tournoi_id !== id);
-      base.equipes = base.equipes.filter((e) => e.tournoi_id !== id); base.matchs = base.matchs.filter((m) => m.tournoi_id !== id);
-      base.resultats = base.resultats.filter((r) => !ids.includes(r.match_id)); enregistrer('tournois');
+    async supprimerTournoi(id) { effacerTournoi(id); enregistrer('tournois'); },
+    async supprimerMatchs(ids) { base.matchs = base.matchs.filter((m) => !ids.includes(m.id)); base.resultats = base.resultats.filter((r) => !ids.includes(r.match_id)); enregistrer('matchs'); },
+    async mettreALaCorbeille(type, id) { const liste = type === 'olympiade' ? base.olympiades : base.tournois; const x = liste.find((e) => e.id === id); if (x) x.supprime_le = new Date().toISOString(); enregistrer('tournois'); },
+    async restaurer(type, id) { const liste = type === 'olympiade' ? base.olympiades : base.tournois; const x = liste.find((e) => e.id === id); if (x) x.supprime_le = null; enregistrer('tournois'); },
+    async corbeille(uid) {
+      return copie([...base.tournois.filter((t) => t.organisateur_id === uid && t.supprime_le).map((t) => ({ ...t, type: 'tournoi' })), ...base.olympiades.filter((o) => o.organisateur_id === uid && o.supprime_le).map((o) => ({ ...o, type: 'olympiade' }))]);
+    },
+    async mesOlympiades(uid) { return copie(base.olympiades.filter((o) => o.organisateur_id === uid && visible(o)).reverse()); },
+    async olympiadeParCode(code) { return copie(base.olympiades.find((o) => visible(o) && o.code_acces.toLowerCase() === code.toLowerCase()) || null); },
+    async chargerOlympiade(id) {
+      await pause();
+      const olympiade = base.olympiades.find((o) => o.id === id);
+      if (!olympiade) return null;
+      const tournois = base.tournois.filter((t) => t.olympiade_id === id && visible(t));
+      const ids = tournois.map((t) => t.id);
+      const matchs = base.matchs.filter((m) => ids.includes(m.tournoi_id)).map((m) => ({ ...m, resultat: base.resultats.find((r) => r.match_id === m.id) }));
+      return copie({ olympiade, equipesOlympiade: base.olympiade_equipes.filter((e) => e.olympiade_id === id), tournois, poules: base.poules.filter((p) => ids.includes(p.tournoi_id)), equipes: base.equipes.filter((e) => ids.includes(e.tournoi_id)), matchs });
+    },
+    async creerOlympiade(champs) {
+      if (!base.pro) throw Object.assign(new Error('new row violates row-level security policy'), { code: '42501' });
+      const o = { ...champs, id: uuid(), supprime_le: null, created_at: new Date().toISOString() }; base.olympiades.push(o); enregistrer('olympiades'); return copie(o);
+    },
+    async majOlympiade(id, champs) { Object.assign(base.olympiades.find((o) => o.id === id), champs); enregistrer('olympiades'); },
+    async equipesOlympiade(olympiadeId) { return copie(base.olympiade_equipes.filter((e) => e.olympiade_id === olympiadeId)); },
+    async ajouterEquipesOlympiade(lignes) { const n = lignes.map((l, i) => ({ ...l, id: uuid(), created_at: new Date(Date.now() + i).toISOString() })); base.olympiade_equipes.push(...n); enregistrer('olympiades'); return copie(n); },
+    async supprimerEquipeOlympiade(id) {
+      base.equipes.filter((e) => e.olympiade_equipe_id === id).forEach((e) => {
+        const ids = base.matchs.filter((m) => m.equipe_a_id === e.id || m.equipe_b_id === e.id).map((m) => m.id);
+        base.matchs = base.matchs.filter((m) => !ids.includes(m.id)); base.resultats = base.resultats.filter((r) => !ids.includes(r.match_id));
+      });
+      base.equipes = base.equipes.filter((e) => e.olympiade_equipe_id !== id);
+      base.olympiade_equipes = base.olympiade_equipes.filter((e) => e.id !== id); enregistrer('olympiades');
     },
     async insererEquipes(lignes) {
       const t = base.tournois.find((x) => x.id === lignes[0].tournoi_id);
@@ -280,6 +379,7 @@ function sourceDemo() {
       if (quandEtat) setTimeout(() => quandEtat(true), 200);
       return () => abonnes.delete(f);
     },
+    tempsReelOlympiade(quandChange) { const f = () => quandChange(); abonnes.add(f); return () => abonnes.delete(f); },
   };
 }
 

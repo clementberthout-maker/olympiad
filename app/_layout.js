@@ -62,6 +62,9 @@ function NavigationThemee() {
       <Stack.Screen name="tournoi/[id]/affichage" />
       <Stack.Screen name="tournoi/[id]/co-organisateurs" />
       <Stack.Screen name="suivi/[code]/index" />
+      <Stack.Screen name="suivi-olympiade/[code]" />
+      <Stack.Screen name="olympiade/creer" />
+      <Stack.Screen name="olympiade/[id]/index" />
       <Stack.Screen name="profil" />
       <Stack.Screen name="paywall" options={{ presentation: 'modal' }} />
     </Stack>

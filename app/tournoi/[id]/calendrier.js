@@ -18,7 +18,9 @@ import {
   idEquipeGagnante,
   matchEliminationDecide,
   grouperParTerrain,
+  reglagesDepuisTournoi,
 } from '../../../lib/generation';
+import { formaterPeriode } from '../../../lib/dates';
 import { genererHtmlProgramme } from '../../../lib/exportProgramme';
 import { messageErreur } from '../../../lib/erreurs';
 import ClassementPoule from '../../../components/ClassementPoule';
@@ -30,29 +32,6 @@ import { useLangue } from '../../../lib/LangueContext';
 import { libellePhase } from '../../../lib/phases';
 import { useAchats, tournoiEstDebloque } from '../../../lib/achats';
 import { POLICE_TITRE, POLICE_TEXTE, POLICE_TEXTE_SEMIBOLD } from '../../../lib/theme';
-
-function reglagesDepuisTournoi(tournoi, matchsExistants) {
-  const dureeMatchMinutes = tournoi.duree_match + (tournoi.mi_temps ? tournoi.duree_mi_temps : 0);
-  const dureeCreneauMinutes = dureeMatchMinutes + tournoi.temps_pause;
-
-  let horaireDepart;
-  if (matchsExistants.length) {
-    const dernierHoraire = Math.max(...matchsExistants.map((m) => new Date(m.horaire).getTime()));
-    horaireDepart = new Date(dernierHoraire + dureeCreneauMinutes * 60000).toISOString();
-  }
-
-  return {
-    dateDebut: tournoi.date_debut,
-    heureDebut: tournoi.heure_premier_match,
-    dureeCreneauMinutes,
-    dureeMatchMinutes,
-    nombreTerrains: tournoi.nombre_terrains,
-    pauseDejeuner: tournoi.pause_dejeuner,
-    heureDebutPause: tournoi.heure_debut_pause,
-    heureFinPause: tournoi.heure_fin_pause,
-    horaireDepart,
-  };
-}
 
 // Petit cadenas en bout de ligne d'une option payante du menu « Partager ».
 function Cadenas({ couleur }) {
@@ -180,10 +159,7 @@ export default function Calendrier() {
     }
     setExportEnCours(true);
     try {
-      const dateFormatee = new Date(`${tournoi.date_debut}T00:00:00`).toLocaleDateString(
-        langue === 'en' ? 'en-US' : 'fr-FR',
-        { day: 'numeric', month: 'long', year: 'numeric' }
-      );
+      const dateFormatee = formaterPeriode(tournoi.date_debut, tournoi.date_fin, langue === 'en' ? 'en-US' : 'fr-FR');
       const html = genererHtmlProgramme({
         tournoi,
         poules,
@@ -204,6 +180,11 @@ export default function Calendrier() {
       setExportEnCours(false);
       setPartageVisible(false);
     }
+  }
+
+  // Après la création : retour à l'accueil, ou à l'olympiade pour une épreuve.
+  function retourApresCreation() {
+    router.replace(tournoi?.olympiade_id ? `/olympiade/${tournoi.olympiade_id}` : '/');
   }
 
   async function insererMatchs(matchs) {
@@ -300,7 +281,7 @@ export default function Calendrier() {
 
   if (!tournoi) {
     return vientDEtreCree ? (
-      <Stack.Screen options={{ headerLeft: () => <BoutonRetour canGoBack onPress={() => router.replace('/')} /> }} />
+      <Stack.Screen options={{ headerLeft: () => <BoutonRetour canGoBack onPress={retourApresCreation} /> }} />
     ) : null;
   }
 
@@ -372,10 +353,16 @@ export default function Calendrier() {
     <>
       {vientDEtreCree && (
         <Stack.Screen
-          options={{ headerLeft: () => <BoutonRetour canGoBack onPress={() => router.replace('/')} /> }}
+          options={{ headerLeft: () => <BoutonRetour canGoBack onPress={retourApresCreation} /> }}
         />
       )}
       <ScrollView contentContainerStyle={styles.container}>
+      {tournoi.olympiade_id && (
+        <Pressable onPress={() => router.push(`/olympiade/${tournoi.olympiade_id}`)} hitSlop={8} style={styles.lienOlympiade}>
+          <Ionicons name="trophy-outline" size={14} color={couleurs.lien} />
+          <Text style={styles.texteLienOlympiade}>{t('olympiade.voirClassementGeneral')}</Text>
+        </Pressable>
+      )}
       <View style={styles.entete}>
         <Text style={styles.titre}>{tournoi.nom}</Text>
         <Pressable style={styles.boutonPartager} onPress={() => setPartageVisible(true)} hitSlop={8}>
@@ -555,6 +542,8 @@ function creerStyles(c) {
   return StyleSheet.create({
     container: { padding: 20, paddingTop: 24, paddingBottom: 60, backgroundColor: c.fond },
     entete: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+    lienOlympiade: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 },
+    texteLienOlympiade: { fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 13, color: c.lien },
     titre: { fontFamily: POLICE_TITRE, fontSize: 24, letterSpacing: 0.3, color: c.texte, flexShrink: 1 },
     boutonPartager: {
       width: 44,

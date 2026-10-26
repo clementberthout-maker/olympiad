@@ -9,6 +9,7 @@ import { useLangue } from '../lib/LangueContext';
 import { POLICE_TITRE, POLICE_TEXTE_MEDIUM, POLICE_TEXTE_SEMIBOLD } from '../lib/theme';
 import { listerTournoisSuivis, retirerTournoiSuivi } from '../lib/tournoisSuivis';
 import { infosSport } from '../lib/sports';
+import { formaterPeriode, statutPeriode } from '../lib/dates';
 import { vibrerAttention } from '../lib/haptique';
 import LogoMarque from '../components/LogoMarque';
 import Squelette from '../components/Squelette';
@@ -16,16 +17,8 @@ import BoutonLangue from '../components/BoutonLangue';
 
 const NOMBRE_TOURNOIS_APERCU = 2;
 
-// Un tournoi OLYMPIAD se déroule sur une seule journée (date_debut) : le
-// statut se déduit donc simplement de cette date, sans requête supplémentaire.
-function statutTournoi(dateDebut) {
-  const aujourdHui = new Date();
-  aujourdHui.setHours(0, 0, 0, 0);
-  const date = new Date(`${dateDebut}T00:00:00`);
-  if (date.getTime() === aujourdHui.getTime()) return 'aujourdhui';
-  if (date.getTime() > aujourdHui.getTime()) return 'avenir';
-  return 'termine';
-}
+// Icône d'une carte : le sport du tournoi, ou un podium pour une olympiade.
+const iconeCarte = (item) => (item.type === 'olympiade' ? 'podium' : infosSport(item.sport).icone);
 
 export default function Accueil() {
   const router = useRouter();
@@ -53,7 +46,8 @@ export default function Accueil() {
   const [suivisEtendu, setSuivisEtendu] = useState(false);
 
   const LABEL_STATUT = {
-    aujourdhui: t('accueil.statutAujourdhui'), avenir: t('accueil.statutAvenir'), termine: t('accueil.statutTermine'),
+    aujourdhui: t('accueil.statutAujourdhui'), encours: t('accueil.statutEnCours'),
+    avenir: t('accueil.statutAvenir'), termine: t('accueil.statutTermine'),
   };
 
   useFocusEffect(
@@ -71,12 +65,26 @@ export default function Accueil() {
             .maybeSingle();
           if (actif) setProfil(p);
 
-          const { data: tournois } = await supabase
-            .from('tournois')
-            .select('*')
-            .eq('organisateur_id', s.user.id)
-            .order('created_at', { ascending: false });
-          if (actif) setMesTournois(tournois || []);
+          // Tournois (hors corbeille et hors épreuves d'olympiade, montrées
+          // dans leur olympiade) et olympiades, les plus récents d'abord.
+          const [{ data: tournois }, { data: olympiades }] = await Promise.all([
+            supabase
+              .from('tournois')
+              .select('*')
+              .eq('organisateur_id', s.user.id)
+              .is('supprime_le', null)
+              .is('olympiade_id', null),
+            supabase
+              .from('olympiades')
+              .select('*')
+              .eq('organisateur_id', s.user.id)
+              .is('supprime_le', null),
+          ]);
+          const liste = [
+            ...(tournois || []).map((x) => ({ ...x, type: 'tournoi' })),
+            ...(olympiades || []).map((x) => ({ ...x, type: 'olympiade' })),
+          ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+          if (actif) setMesTournois(liste);
         } else {
           setProfil(null);
           setMesTournois([]);
@@ -151,22 +159,21 @@ export default function Accueil() {
         keyExtractor={(item) => item.code}
         scrollEnabled={false}
         renderItem={({ item }) => {
-          const statut = statutTournoi(item.dateDebut);
+          const statut = statutPeriode(item.dateDebut, item.dateFin);
           return (
-            <Pressable style={styles.carteTournoi} onPress={() => router.push(`/suivi/${item.code}`)}>
+            <Pressable
+              style={styles.carteTournoi}
+              onPress={() => router.push(item.type === 'olympiade' ? `/suivi-olympiade/${item.code}` : `/suivi/${item.code}`)}
+            >
               <MaterialCommunityIcons
-                name={infosSport(item.sport).icone}
+                name={iconeCarte(item)}
                 size={20}
                 color={couleurs.accent}
                 style={styles.iconeSport}
               />
               <View style={styles.infoTournoi}>
                 <Text style={styles.nomTournoi} numberOfLines={1}>{item.nom}</Text>
-                <Text style={styles.dateTournoi}>
-                  {new Date(`${item.dateDebut}T00:00:00`).toLocaleDateString(locale, {
-                    day: 'numeric', month: 'long', year: 'numeric',
-                  })}
-                </Text>
+                <Text style={styles.dateTournoi}>{formaterPeriode(item.dateDebut, item.dateFin, locale)}</Text>
               </View>
               <View style={[styles.badgeStatut, styles[`badgeStatut_${statut}`]]}>
                 <Text style={[styles.texteBadgeStatut, styles[`texteBadgeStatut_${statut}`]]}>
@@ -256,7 +263,8 @@ export default function Accueil() {
             keyExtractor={(item) => item.id}
             scrollEnabled={false}
             renderItem={({ item }) => {
-              const statut = statutTournoi(item.date_debut);
+              const statut = statutPeriode(item.date_debut, item.date_fin);
+              const estOlympiade = item.type === 'olympiade';
               // Le QR code est un bouton à part, à côté de la carte (et non
               // dedans) : en touchant la carte un peu à droite, on ouvrait
               // le QR code au lieu du tournoi.
@@ -264,10 +272,10 @@ export default function Accueil() {
                 <View style={styles.ligneCarte}>
                 <Pressable
                   style={[styles.carteTournoi, styles.carteAvecQr]}
-                  onPress={() => router.push(`/tournoi/${item.id}/calendrier`)}
+                  onPress={() => router.push(estOlympiade ? `/olympiade/${item.id}` : `/tournoi/${item.id}/calendrier`)}
                 >
                   <MaterialCommunityIcons
-                    name={infosSport(item.sport).icone}
+                    name={iconeCarte(item)}
                     size={20}
                     color={couleurs.accent}
                     style={styles.iconeSport}
@@ -275,9 +283,7 @@ export default function Accueil() {
                   <View style={styles.infoTournoi}>
                     <Text style={styles.nomTournoi} numberOfLines={1}>{item.nom}</Text>
                     <Text style={styles.dateTournoi}>
-                      {new Date(`${item.date_debut}T00:00:00`).toLocaleDateString(locale, {
-                        day: 'numeric', month: 'long', year: 'numeric',
-                      })}
+                      {estOlympiade ? `${t('olympiade.multisports')} · ` : ''}{formaterPeriode(item.date_debut, item.date_fin, locale)}
                     </Text>
                   </View>
                   <View style={[styles.badgeStatut, styles[`badgeStatut_${statut}`]]}>
@@ -289,7 +295,7 @@ export default function Accueil() {
                 </Pressable>
                 <Pressable
                   style={styles.boutonQrCarte}
-                  onPress={() => router.push(`/tournoi/${item.id}/qrcode`)}
+                  onPress={() => router.push(estOlympiade ? `/tournoi/${item.id}/qrcode?type=olympiade` : `/tournoi/${item.id}/qrcode`)}
                   accessibilityRole="button"
                   accessibilityLabel={t('accueil.qrCode')}
                 >
@@ -385,10 +391,12 @@ function creerStyles(c) {
       borderRadius: 20, paddingVertical: 3, paddingHorizontal: 8, marginRight: 8,
     },
     badgeStatut_aujourdhui: { backgroundColor: c.accent + '22' },
+    badgeStatut_encours: { backgroundColor: c.accent + '22' },
     badgeStatut_avenir: { backgroundColor: c.surface2, borderWidth: 1, borderColor: c.bordure },
     badgeStatut_termine: { backgroundColor: c.surface2, borderWidth: 1, borderColor: c.bordure },
     texteBadgeStatut: { fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 9, letterSpacing: 0.3 },
     texteBadgeStatut_aujourdhui: { color: c.accent },
+    texteBadgeStatut_encours: { color: c.accent },
     texteBadgeStatut_avenir: { color: c.texteAttenue },
     texteBadgeStatut_termine: { color: c.texteAttenue },
     ligneCarte: { flexDirection: 'row', gap: 8, marginBottom: 8 },

@@ -23,47 +23,85 @@ function creneauSuivant(dateDebut, heureDebut, dureeCreneauMinutes, indexCreneau
   return base.toISOString();
 }
 
+// Même jour que `date`, à l'heure "HH:MM" (ou "HH:MM:SS").
+function aLHeure(date, heure) {
+  const [h, m] = String(heure).split(':').map(Number);
+  const d = new Date(date);
+  d.setHours(h, m, 0, 0);
+  return d;
+}
+
 // Calcule tous les créneaux horaires en tenant compte d'une éventuelle
 // pause déjeuner définie par un créneau précis (heure de début / heure de
 // fin) : aucun match ne doit être en train de se jouer pendant ce créneau.
+// Tournoi sur plusieurs jours (dateFin après dateDebut, avec une heure de
+// fin de journée) : un match qui finirait après cette heure est reporté au
+// lendemain, à l'heure du premier match. La pause déjeuner vaut chaque jour.
 function calculerCreneaux(nombreCreneaux, reglages) {
   const {
-    dateDebut, heureDebut, dureeCreneauMinutes, dureeMatchMinutes,
+    dateDebut, dateFin, heureDebut, heureFinJournee, dureeCreneauMinutes, dureeMatchMinutes,
     pauseDejeuner, heureDebutPause, heureFinPause, horaireDepart,
   } = reglages;
+  const plusieursJours = Boolean(dateFin && dateFin > dateDebut && heureFinJournee);
+  const avecPause = Boolean(pauseDejeuner && heureDebutPause && heureFinPause);
 
-  let curseur;
-  if (horaireDepart) {
-    curseur = new Date(horaireDepart);
-  } else {
-    const [h, m] = heureDebut.split(':').map(Number);
-    curseur = new Date(`${dateDebut}T00:00:00`);
-    curseur.setHours(h, m, 0, 0);
-  }
-
-  let debutPause = null;
-  let finPause = null;
-  if (pauseDejeuner && heureDebutPause && heureFinPause) {
-    const [hd, md] = heureDebutPause.split(':').map(Number);
-    const [hf, mf] = heureFinPause.split(':').map(Number);
-    debutPause = new Date(`${dateDebut}T00:00:00`);
-    debutPause.setHours(hd, md, 0, 0);
-    finPause = new Date(`${dateDebut}T00:00:00`);
-    finPause.setHours(hf, mf, 0, 0);
-  }
+  let curseur = horaireDepart
+    ? new Date(horaireDepart)
+    : aLHeure(new Date(`${dateDebut}T00:00:00`), heureDebut);
 
   const creneaux = [];
   for (let i = 0; i < nombreCreneaux; i++) {
-    if (debutPause && curseur < finPause) {
+    // Deux passages au plus : un report après la pause peut ensuite
+    // déborder sur la fin de journée (et inversement le lendemain).
+    for (let essai = 0; essai < 3; essai++) {
       const finDuMatch = new Date(curseur.getTime() + dureeMatchMinutes * 60000);
-      if (finDuMatch >= debutPause) {
-        curseur = new Date(finPause);
+      if (avecPause) {
+        const debutPause = aLHeure(curseur, heureDebutPause);
+        const finPause = aLHeure(curseur, heureFinPause);
+        if (curseur < finPause && finDuMatch >= debutPause) {
+          curseur = finPause;
+          continue;
+        }
       }
+      if (plusieursJours && finDuMatch > aLHeure(curseur, heureFinJournee)) {
+        const lendemain = new Date(curseur);
+        lendemain.setDate(lendemain.getDate() + 1);
+        curseur = aLHeure(lendemain, heureDebut);
+        continue;
+      }
+      break;
     }
     creneaux.push(new Date(curseur));
     curseur = new Date(curseur.getTime() + dureeCreneauMinutes * 60000);
   }
   return creneaux;
+}
+
+// Réglages du moteur à partir d'un tournoi enregistré en base. Avec des
+// matchs déjà générés, les suivants partent du créneau qui suit le dernier.
+export function reglagesDepuisTournoi(tournoi, matchsExistants = []) {
+  const dureeMatchMinutes = tournoi.duree_match + (tournoi.mi_temps ? tournoi.duree_mi_temps : 0);
+  const dureeCreneauMinutes = dureeMatchMinutes + tournoi.temps_pause;
+
+  let horaireDepart;
+  if (matchsExistants.length) {
+    const dernierHoraire = Math.max(...matchsExistants.map((m) => new Date(m.horaire).getTime()));
+    horaireDepart = new Date(dernierHoraire + dureeCreneauMinutes * 60000).toISOString();
+  }
+
+  return {
+    dateDebut: String(tournoi.date_debut).slice(0, 10),
+    dateFin: tournoi.date_fin ? String(tournoi.date_fin).slice(0, 10) : null,
+    heureDebut: String(tournoi.heure_premier_match || '09:00').slice(0, 5),
+    heureFinJournee: tournoi.heure_fin_journee ? String(tournoi.heure_fin_journee).slice(0, 5) : null,
+    dureeCreneauMinutes,
+    dureeMatchMinutes,
+    nombreTerrains: tournoi.nombre_terrains,
+    pauseDejeuner: tournoi.pause_dejeuner,
+    heureDebutPause: tournoi.heure_debut_pause,
+    heureFinPause: tournoi.heure_fin_pause,
+    horaireDepart,
+  };
 }
 
 // Répartit les équipes mélangées dans `nombrePoules` poules, le plus
@@ -240,8 +278,14 @@ const ESSAIS_PLANIFICATION = 200;
 // tournoi le plus court possible, en évitant qu'une équipe enchaîne ses
 // matchs quand le nombre de terrains le permet.
 export function genererCalendrierPoules(poulesAvecEquipes, tournoiId, reglages) {
-  const { nombreTerrains } = reglages;
   const journeesParPoule = poulesAvecEquipes.map(({ nom, equipes }) => journeesRoundRobin(equipes, nom));
+  return planifierJournees(journeesParPoule, tournoiId, reglages);
+}
+
+// Place sur les créneaux et les terrains les rencontres de poule rangées
+// par journée (voir genererCalendrierPoules).
+function planifierJournees(journeesParPoule, tournoiId, reglages) {
+  const { nombreTerrains } = reglages;
   const rencontres = journeesParPoule.flatMap((journees) =>
     journees.flatMap((rencontresDuJour, journee) => rencontresDuJour.map((r) => ({ ...r, journee })))
   );
@@ -271,6 +315,52 @@ export function genererCalendrierPoules(poulesAvecEquipes, tournoiId, reglages) 
   })));
 }
 
+// Clé d'une rencontre, quel que soit l'ordre des deux équipes.
+const clePaire = (a, b) => (a < b ? `${a}|${b}` : `${b}|${a}`);
+
+// Met à jour le calendrier des poules en cours de tournoi, sans perdre les
+// scores : les matchs déjà joués ou en cours (avec un résultat) restent tels
+// quels ; les équipes ajoutées depuis (sans poule) rejoignent la poule la
+// moins remplie ; tous les matchs à venir sont supprimés puis replanifiés
+// avec les rencontres qui manquent, à partir du créneau qui suit le dernier
+// match joué. Ne s'applique pas une fois la phase finale lancée.
+// `matchs` : matchs de poule avec leur `resultat` (ou undefined).
+// Retourne les écritures à faire : poules des nouvelles équipes, matchs à
+// supprimer et matchs à insérer.
+export function planMiseAJourPoules(poules, equipes, matchs, tournoiId, reglages) {
+  const conserves = matchs.filter((m) => m.resultat);
+  const aVenir = matchs.filter((m) => !m.resultat);
+
+  const composition = poules.map((p) => ({ id: p.id, nom: p.nom, equipes: equipes.filter((e) => e.poule_id === p.id) }));
+  const affectations = [];
+  if (composition.length) {
+    for (const equipe of equipes.filter((e) => !composition.some((p) => p.id === e.poule_id))) {
+      const cible = composition.reduce((min, p) => (p.equipes.length < min.equipes.length ? p : min));
+      cible.equipes.push(equipe);
+      affectations.push({ equipeId: equipe.id, pouleId: cible.id, pouleNom: cible.nom });
+    }
+  }
+
+  const dejaJouees = new Set(conserves.map((m) => clePaire(m.equipe_a_id, m.equipe_b_id)));
+  const journeesParPoule = composition.map(({ nom, equipes: equipesPoule }) => journeesRoundRobin(equipesPoule, nom)
+    .map((journee) => journee.filter((r) => !dejaJouees.has(clePaire(r.equipeA.id, r.equipeB.id)))));
+
+  // Reprise : après le dernier match joué, et pas avant le premier match
+  // qui était prévu. Rien de joué : on repart de l'heure du premier match.
+  let horaireDepart = null;
+  if (conserves.length) {
+    const apresDernier = Math.max(...conserves.map((m) => new Date(m.horaire).getTime())) + reglages.dureeCreneauMinutes * 60000;
+    const premierPrevu = aVenir.length ? Math.min(...aVenir.map((m) => new Date(m.horaire).getTime())) : 0;
+    horaireDepart = new Date(Math.max(apresDernier, premierPrevu)).toISOString();
+  }
+
+  return {
+    affectations,
+    matchsASupprimer: aVenir.map((m) => m.id),
+    matchsAInserer: planifierJournees(journeesParPoule, tournoiId, { ...reglages, horaireDepart }),
+  };
+}
+
 // Heure de fin estimée de la première phase (poules, ou premier tour d'un
 // tournoi 100% élimination) pour `nombreEquipes` équipes et ces réglages :
 // fin du dernier match prévu. null s'il n'y a pas assez d'équipes.
@@ -290,7 +380,8 @@ export function finEstimeePremierePhase(nombreEquipes, format, nombrePoules, reg
 }
 
 // Nombre de jours entre le jour du tournoi et `date` (0 = le jour même,
-// 1 = le lendemain…) : sert à prévenir quand le calendrier déborde.
+// 1 = le lendemain…) : sert à prévenir quand le calendrier déborde. Pour un
+// tournoi sur plusieurs jours, passer son dernier jour.
 export function joursApresDebut(date, dateDebut) {
   const jour = new Date(`${dateDebut}T00:00:00`);
   const fin = new Date(new Date(date).getTime() - 1); // fin à minuit pile = encore le jour même

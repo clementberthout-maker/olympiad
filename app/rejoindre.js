@@ -10,14 +10,16 @@ import { useLangue } from '../lib/LangueContext';
 import { POLICE_TITRE, POLICE_TEXTE, POLICE_TEXTE_MEDIUM } from '../lib/theme';
 
 // Retrouve le code d'accès à partir du texte scanné : soit un lien OLYMPIAD
-// (ex: olympiad://suivi/ABC123 ou exp://.../--/suivi/ABC123), soit
+// (ex: olympiad://suivi/ABC123, olympiad://suivi-olympiade/ABC123 ou
+// exp://.../--/suivi/ABC123), soit
 // directement le code si le QR ne contient pas un lien reconnu.
 function extraireCode(texteScanne) {
   try {
     const { path } = Linking.parse(texteScanne);
     if (path) {
       const segments = path.split('/').filter(Boolean);
-      const index = segments.indexOf('suivi');
+      // suivi/CODE (tournoi) ou suivi-olympiade/CODE (olympiade multisports)
+      const index = segments.findIndex((s) => s === 'suivi' || s === 'suivi-olympiade');
       if (index !== -1 && segments[index + 1]) return segments[index + 1];
     }
   } catch {

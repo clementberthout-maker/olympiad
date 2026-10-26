@@ -18,7 +18,7 @@ import { messageErreur } from '../lib/erreurs';
 export default function Profil() {
   const router = useRouter();
   const { couleurs } = useTheme();
-  const { t } = useLangue();
+  const { t, langue } = useLangue();
   const { estPro, restaurerAchats } = useAchats();
   const styles = useMemo(() => creerStyles(couleurs), [couleurs]);
   const [restaurationEnCours, setRestaurationEnCours] = useState(false);
@@ -41,6 +41,42 @@ export default function Profil() {
 
   const [identifiantsEnregistres, setIdentifiantsEnregistres] = useState(false);
   const [suppressionEnCours, setSuppressionEnCours] = useState(false);
+  // Tournois et olympiades supprimés depuis moins de 30 jours (voir la
+  // migration « corbeille » dans supabase/schema.sql).
+  const [corbeille, setCorbeille] = useState([]);
+  const [restaurationId, setRestaurationId] = useState(null);
+
+  const chargerCorbeille = useCallback(async (uid) => {
+    const [{ data: tournois }, { data: olympiades }] = await Promise.all([
+      supabase.from('tournois').select('id, nom, supprime_le').eq('organisateur_id', uid).not('supprime_le', 'is', null),
+      supabase.from('olympiades').select('id, nom, supprime_le').eq('organisateur_id', uid).not('supprime_le', 'is', null),
+    ]);
+    setCorbeille([
+      ...(tournois || []).map((x) => ({ ...x, type: 'tournoi' })),
+      ...(olympiades || []).map((x) => ({ ...x, type: 'olympiade' })),
+    ].sort((a, b) => new Date(b.supprime_le) - new Date(a.supprime_le)));
+  }, []);
+
+  async function restaurerElement(element) {
+    setRestaurationId(element.id);
+    const { error } = element.type === 'olympiade'
+      ? await supabase.rpc('restaurer_olympiade', { p_olympiade_id: element.id })
+      : await supabase.rpc('restaurer_tournoi', { p_tournoi_id: element.id });
+    setRestaurationId(null);
+    if (error) {
+      Alert.alert(t('commun.erreur'), messageErreur(error, t));
+      return;
+    }
+    Alert.alert(t('corbeille.restaureTitre'), t('corbeille.restaureMessage', { nom: element.nom }));
+    if (userId) chargerCorbeille(userId);
+  }
+
+  // Date d'effacement définitif : 30 jours après la mise à la corbeille.
+  function dateEffacement(supprimeLe) {
+    const d = new Date(supprimeLe);
+    d.setDate(d.getDate() + 30);
+    return d.toLocaleDateString(langue === 'en' ? 'en-US' : 'fr-FR', { day: 'numeric', month: 'long' });
+  }
 
   useFocusEffect(
     useCallback(() => {
@@ -71,6 +107,7 @@ export default function Profil() {
 
         const identifiants = await recupererIdentifiants();
         if (actif) setIdentifiantsEnregistres(!!identifiants);
+        if (actif) chargerCorbeille(session.user.id);
       }
       charger();
       return () => { actif = false; };
@@ -371,6 +408,29 @@ export default function Profil() {
 
         <View style={styles.separateur} />
 
+        <Text style={styles.titreSection}>{t('corbeille.titre')}</Text>
+        <Text style={styles.aideSection}>{t('corbeille.aide')}</Text>
+        {corbeille.length === 0 ? (
+          <Text style={styles.aideSection}>{t('corbeille.vide')}</Text>
+        ) : corbeille.map((element) => (
+          <View key={element.id} style={styles.ligneCorbeille}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.nomCorbeille} numberOfLines={1}>{element.nom}</Text>
+              <Text style={styles.dateCorbeille}>
+                {element.type === 'olympiade' ? `${t('olympiade.multisports')} · ` : ''}
+                {t('corbeille.effaceLe', { date: dateEffacement(element.supprime_le) })}
+              </Text>
+            </View>
+            <Pressable onPress={() => restaurerElement(element)} disabled={restaurationId === element.id} hitSlop={6}>
+              <Text style={styles.lienRestaurer}>
+                {restaurationId === element.id ? t('corbeille.restaurationEnCours') : t('corbeille.restaurer')}
+              </Text>
+            </Pressable>
+          </View>
+        ))}
+
+        <View style={styles.separateur} />
+
         <Text style={styles.titreSection}>{t('profil.informationsLegales')}</Text>
         <LiensLegaux />
 
@@ -391,6 +451,14 @@ export default function Profil() {
 function creerStyles(c) {
   return StyleSheet.create({
     container: { padding: 20, paddingTop: 40, paddingBottom: 60, backgroundColor: c.fond },
+    ligneCorbeille: {
+      flexDirection: 'row', alignItems: 'center', gap: 10,
+      backgroundColor: c.surface, borderWidth: 1, borderColor: c.bordure, borderRadius: 10,
+      padding: 12, marginBottom: 8,
+    },
+    nomCorbeille: { fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 14.5, color: c.texte },
+    dateCorbeille: { fontFamily: POLICE_TEXTE, fontSize: 12, color: c.texteAttenue, marginTop: 2 },
+    lienRestaurer: { fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 13.5, color: c.lien },
     titre: { fontFamily: POLICE_TITRE, fontSize: 28, letterSpacing: 0.3, color: c.texte, marginBottom: 24 },
     label: {
       fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 11.5, textTransform: 'uppercase', letterSpacing: 0.4,

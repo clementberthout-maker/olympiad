@@ -14,6 +14,7 @@ import BadgeEnDirect from '../../../components/BadgeEnDirect';
 import { useTheme } from '../../../lib/ThemeContext';
 import { useLangue } from '../../../lib/LangueContext';
 import { libellePhase } from '../../../lib/phases';
+import { formaterPeriode } from '../../../lib/dates';
 import { POLICE_TITRE, POLICE_TEXTE, POLICE_TEXTE_SEMIBOLD } from '../../../lib/theme';
 
 // Intervalle d'actualisation automatique : cet écran est pensé pour rester
@@ -130,11 +131,7 @@ export default function VueGrandEcran() {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.titre}>{tournoi.nom}</Text>
-      <Text style={styles.soustitre}>
-        {new Date(`${tournoi.date_debut}T00:00:00`).toLocaleDateString(locale, {
-          day: 'numeric', month: 'long', year: 'numeric',
-        })}
-      </Text>
+      <Text style={styles.soustitre}>{formaterPeriode(tournoi.date_debut, tournoi.date_fin, locale)}</Text>
 
       {afficherPodium ? (
         <View style={styles.podium}>

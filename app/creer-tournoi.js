@@ -1,6 +1,7 @@
 import { View, Text, TextInput, StyleSheet, Pressable, ScrollView, Alert, KeyboardAvoidingView, Platform } from 'react-native';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { supabase } from '../lib/supabase';
 import CarteSelectionnable from '../components/CarteSelectionnable';
 import SelecteurDate from '../components/SelecteurDate';
 import IndicateurEtapes from '../components/IndicateurEtapes';
@@ -9,7 +10,9 @@ import { useLangue } from '../lib/LangueContext';
 import { POLICE_TITRE, POLICE_TEXTE, POLICE_TEXTE_SEMIBOLD } from '../lib/theme';
 
 export default function CreerTournoi() {
-  const { sport: sportParam } = useLocalSearchParams(); // choisi sur l'écran précédent, voir choisir-sport.js
+  // Sport choisi sur l'écran précédent (voir choisir-sport.js) ; olympiade :
+  // id de l'olympiade multisports dont ce tournoi sera une épreuve.
+  const { sport: sportParam, olympiade: olympiadeParam } = useLocalSearchParams();
   const sport = sportParam || 'football';
   const router = useRouter();
   const { couleurs } = useTheme();
@@ -17,6 +20,23 @@ export default function CreerTournoi() {
   const styles = useMemo(() => creerStyles(couleurs), [couleurs]);
   const [nom, setNom] = useState('');
   const [date, setDate] = useState('');
+  const [plusieursJours, setPlusieursJours] = useState(false);
+  const [dateFin, setDateFin] = useState('');
+
+  // Épreuve d'une olympiade : nom du sport et dates de l'olympiade par défaut.
+  useEffect(() => {
+    if (!olympiadeParam) return;
+    setNom((n) => n || t(`sports.${sport}.label`));
+    supabase.from('olympiades').select('date_debut, date_fin').eq('id', olympiadeParam).maybeSingle()
+      .then(({ data }) => {
+        if (!data) return;
+        setDate((d) => d || data.date_debut);
+        if (data.date_fin) {
+          setPlusieursJours(true);
+          setDateFin((d) => d || data.date_fin);
+        }
+      });
+  }, [olympiadeParam]);
   const [format, setFormat] = useState('mixte');
   const [tennisDouble, setTennisDouble] = useState(false);
   const [departagePoule, setDepartagePoule] = useState('diff_buts');
@@ -70,11 +90,17 @@ export default function CreerTournoi() {
       Alert.alert(t('creerTournoi.champsManquantsTitre'), t('creerTournoi.champsManquantsMessage'));
       return;
     }
+    if (plusieursJours && !(dateFin && dateFin > date)) {
+      Alert.alert(t('equipes.dateFinInvalideTitre'), t('equipes.dateFinInvalideMessage'));
+      return;
+    }
     router.push({
       pathname: '/tournoi/[id]/equipes',
       params: {
         id: 'nouveau', sport, nom, date, format, departagePoule, departageElimination,
         tennisDouble: tennisDouble ? '1' : '0',
+        ...(plusieursJours ? { dateFin } : {}),
+        ...(olympiadeParam ? { olympiade: olympiadeParam } : {}),
       },
     });
   }
@@ -100,6 +126,22 @@ export default function CreerTournoi() {
 
       <Text style={styles.label}>{t('creerTournoi.date')}</Text>
       <SelecteurDate value={date} onChange={setDate} placeholder={t('creerTournoi.choisirLaDate')} />
+
+      <Text style={styles.label}>{t('equipes.plusieursJours')}</Text>
+      <View style={styles.ligneChoix}>
+        <View style={{ flex: 1 }}>
+          <CarteSelectionnable label={t('commun.non')} selectionnee={!plusieursJours} onPress={() => setPlusieursJours(false)} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <CarteSelectionnable label={t('commun.oui')} selectionnee={plusieursJours} onPress={() => setPlusieursJours(true)} />
+        </View>
+      </View>
+      {plusieursJours && (
+        <>
+          <Text style={styles.label}>{t('equipes.dateDeFin')}</Text>
+          <SelecteurDate value={dateFin} onChange={setDateFin} placeholder={t('creerTournoi.choisirLaDate')} />
+        </>
+      )}
 
       <Text style={styles.label}>{t('creerTournoi.format')}</Text>
       {formats.map((f) => (
@@ -194,6 +236,7 @@ function creerStyles(c) {
       fontFamily: POLICE_TEXTE,
       color: c.texte,
     },
+    ligneChoix: { flexDirection: 'row', gap: 10 },
     enteteAvance: {
       flexDirection: 'row',
       justifyContent: 'space-between',

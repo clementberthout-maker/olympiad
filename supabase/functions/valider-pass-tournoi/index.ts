@@ -21,11 +21,11 @@ const PRODUITS_PASS = (Deno.env.get('REVENUECAT_PASS_PRODUCT_IDS') || '')
 
 const JOURS_VALIDITE_PASS = 5;
 
-// true si le dernier jour de validité (date du tournoi + 5 jours, inclus)
-// est terminé, en heure UTC comme current_date dans la base.
-function passeDepuisTrop(dateDebut: string | null): boolean {
-  if (!dateDebut) return false;
-  const fin = new Date(`${String(dateDebut).slice(0, 10)}T00:00:00Z`);
+// true si le dernier jour de validité (dernier jour du tournoi + 5 jours,
+// inclus) est terminé, en heure UTC comme current_date dans la base.
+function passeDepuisTrop(dernierJour: string | null): boolean {
+  if (!dernierJour) return false;
+  const fin = new Date(`${String(dernierJour).slice(0, 10)}T00:00:00Z`);
   fin.setUTCDate(fin.getUTCDate() + JOURS_VALIDITE_PASS + 1);
   return Date.now() >= fin.getTime();
 }
@@ -47,16 +47,16 @@ Deno.serve(async (req) => {
 
   const { data: tournoi } = await admin
     .from('tournois')
-    .select('id, organisateur_id, debloque, date_debut')
+    .select('id, organisateur_id, debloque, date_debut, date_fin')
     .eq('id', tournoiId)
     .maybeSingle();
   if (!tournoi) return reponse(404, { code: 'tournoi_introuvable' });
   // Seul l'organisateur principal achète et applique un Pass à son tournoi.
   if (tournoi.organisateur_id !== user.id) return reponse(403, { code: 'pas_organisateur' });
-  // Un Pass n'est valable que jusqu'à JOURS_VALIDITE_PASS jours après la date
-  // du tournoi (même règle que lib/achats.js et limiter_equipes) : passé ce
+  // Un Pass n'est valable que jusqu'à JOURS_VALIDITE_PASS jours après le
+  // dernier jour du tournoi (même règle que lib/achats.js et limiter_equipes) : passé ce
   // délai, on refuse avant de consommer un achat.
-  if (passeDepuisTrop(tournoi.date_debut)) return reponse(400, { code: 'pass_expire' });
+  if (passeDepuisTrop(tournoi.date_fin || tournoi.date_debut)) return reponse(400, { code: 'pass_expire' });
   if (tournoi.debloque) return reponse(200, { debloque: true });
 
   let subscriber;

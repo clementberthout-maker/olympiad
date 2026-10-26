@@ -10,7 +10,9 @@ import { useLangue } from '../../../lib/LangueContext';
 import { POLICE_TITRE, POLICE_TEXTE, POLICE_TEXTE_SEMIBOLD } from '../../../lib/theme';
 
 export default function QrCodeTournoi() {
-  const { id } = useLocalSearchParams();
+  // type=olympiade : QR code d'une olympiade multisports (même écran).
+  const { id, type } = useLocalSearchParams();
+  const estOlympiade = type === 'olympiade';
   const { couleurs } = useTheme();
   const { t } = useLangue();
   const styles = useMemo(() => creerStyles(couleurs), [couleurs]);
@@ -20,16 +22,16 @@ export default function QrCodeTournoi() {
   useFocusEffect(
     useCallback(() => {
       let actif = true;
-      supabase.from('tournois').select('*').eq('id', id).single().then(({ data }) => {
+      supabase.from(estOlympiade ? 'olympiades' : 'tournois').select('*').eq('id', id).single().then(({ data }) => {
         if (actif) setTournoi(data);
       });
       return () => { actif = false; };
-    }, [id])
+    }, [id, estOlympiade])
   );
 
   if (!tournoi) return null;
 
-  const lien = Linking.createURL(`suivi/${tournoi.code_acces}`);
+  const lien = Linking.createURL(`${estOlympiade ? 'suivi-olympiade' : 'suivi'}/${tournoi.code_acces}`);
   // Affiché en majuscules, comme sur le site (la recherche ignore la casse)
   const codeAffiche = String(tournoi.code_acces).toUpperCase();
 

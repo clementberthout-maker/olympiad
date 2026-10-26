@@ -1,8 +1,9 @@
 import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
 import { useEffect, useMemo } from 'react';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { supabase } from '../lib/supabase';
+import { useAchats } from '../lib/achats';
 import { useTheme } from '../lib/ThemeContext';
 import { useLangue } from '../lib/LangueContext';
 import { POLICE_TITRE, POLICE_TEXTE } from '../lib/theme';
@@ -13,7 +14,10 @@ import IndicateurEtapes from '../components/IndicateurEtapes';
 // détermine le vocabulaire (buts/points...) utilisé sur les écrans suivants
 // — voir lib/sports.js et creer-tournoi.js.
 export default function ChoisirSport() {
+  // olympiade : id de l'olympiade multisports dont on ajoute une épreuve.
+  const { olympiade } = useLocalSearchParams();
   const router = useRouter();
+  const { estPro } = useAchats();
   const { couleurs } = useTheme();
   const { t } = useLangue();
   const styles = useMemo(() => creerStyles(couleurs), [couleurs]);
@@ -25,14 +29,23 @@ export default function ChoisirSport() {
   }, []);
 
   function choisirSport(sport) {
-    router.push({ pathname: '/creer-tournoi', params: { sport } });
+    router.push({ pathname: '/creer-tournoi', params: { sport, ...(olympiade ? { olympiade } : {}) } });
+  }
+
+  // Olympiade multisports : réservée aux comptes Pro.
+  function choisirOlympiade() {
+    if (!estPro) {
+      router.push({ pathname: '/paywall', params: { raison: 'olympiade' } });
+      return;
+    }
+    router.push('/olympiade/creer');
   }
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <IndicateurEtapes etape={1} total={3} label={t('commun.etape', { n: 1, total: 3, label: t('choisirSport.etapeLabel') })} />
       <Text style={styles.eyebrow}>{t('choisirSport.eyebrow')}</Text>
-      <Text style={styles.titre}>{t('choisirSport.titre')}</Text>
+      <Text style={styles.titre}>{olympiade ? t('olympiade.choisirSportEpreuve') : t('choisirSport.titre')}</Text>
 
       {SPORTS.map((s) => (
         <Pressable key={s.valeur} style={styles.carte} onPress={() => choisirSport(s.valeur)}>
@@ -43,6 +56,23 @@ export default function ChoisirSport() {
           <Text style={styles.chevron}>›</Text>
         </Pressable>
       ))}
+
+      {!olympiade && (
+        <>
+          <Text style={styles.ou}>{t('olympiade.ouPlusieursSports')}</Text>
+          <Pressable style={[styles.carte, styles.carteOlympiade]} onPress={choisirOlympiade}>
+            <View style={[styles.infoCarte, { flex: 1 }]}>
+              <MaterialCommunityIcons name="podium" size={22} color={couleurs.accent} />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.texteCarte}>{t('olympiade.carteTitre')}</Text>
+                <Text style={styles.sousTexteCarte}>{t('olympiade.carteAide')}</Text>
+              </View>
+            </View>
+            <Text style={styles.badgePro}>PRO</Text>
+            <Text style={styles.chevron}>›</Text>
+          </Pressable>
+        </>
+      )}
     </ScrollView>
   );
 }
@@ -69,5 +99,12 @@ function creerStyles(c) {
     infoCarte: { flexDirection: 'row', alignItems: 'center', gap: 12 },
     texteCarte: { fontFamily: POLICE_TEXTE, fontSize: 15.5, color: c.texte },
     chevron: { fontSize: 20, color: c.texteAttenue },
+    ou: { fontFamily: POLICE_TEXTE, fontSize: 12.5, color: c.texteAttenue, marginTop: 14, marginBottom: 10 },
+    carteOlympiade: { borderColor: c.accent, gap: 8 },
+    sousTexteCarte: { fontFamily: POLICE_TEXTE, fontSize: 12, color: c.texteAttenue, marginTop: 2 },
+    badgePro: {
+      fontFamily: POLICE_TITRE, fontSize: 12, letterSpacing: 0.6, color: c.accentEncre,
+      backgroundColor: c.accent, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2, overflow: 'hidden',
+    },
   });
 }

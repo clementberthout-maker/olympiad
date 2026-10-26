@@ -27,7 +27,7 @@ export default function CoOrganisateurs() {
   const [erreur, setErreur] = useState(null);
 
   const charger = useCallback(async () => {
-    const { data: t2 } = await supabase.from('tournois').select('nom, debloque, date_debut').eq('id', id).single();
+    const { data: t2 } = await supabase.from('tournois').select('nom, debloque, date_debut, date_fin').eq('id', id).single();
     setTournoi(t2);
 
     let { data: invitation, error: erreurInvitation } = await supabase

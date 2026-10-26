@@ -15,6 +15,7 @@ import BadgeEnDirect from '../../../components/BadgeEnDirect';
 import { useTheme } from '../../../lib/ThemeContext';
 import { useLangue } from '../../../lib/LangueContext';
 import { libellePhase } from '../../../lib/phases';
+import { formaterPeriode } from '../../../lib/dates';
 import { signalerTournoi } from '../../../lib/liensLegaux';
 import { POLICE_TITRE, POLICE_TEXTE, POLICE_TEXTE_MEDIUM, POLICE_TEXTE_SEMIBOLD } from '../../../lib/theme';
 
@@ -38,6 +39,7 @@ export default function Suivi() {
   const [resultats, setResultats] = useState([]);
   const [parTerrain, setParTerrain] = useState(false);
   const [introuvable, setIntrouvable] = useState(false);
+  const [olympiade, setOlympiade] = useState(null);
   const [rafraichissement, setRafraichissement] = useState(false);
   const [onglet, setOnglet] = useState('apercu');
   // undefined = pas encore déterminé (affiche l'écran de sélection),
@@ -51,6 +53,15 @@ export default function Suivi() {
       .ilike('code_acces', String(code).trim())
       .single();
     if (!t) {
+      // Le code est peut-être celui d'une olympiade multisports.
+      if (erreurTournoi?.code === 'PGRST116') {
+        const { data: o } = await supabase
+          .from('olympiades').select('code_acces').ilike('code_acces', String(code).trim()).maybeSingle();
+        if (o) {
+          router.replace(`/suivi-olympiade/${o.code_acces}`);
+          return;
+        }
+      }
       // Aucun tournoi pour ce code (supprimé par son organisateur) : on le
       // retire des tournois suivis. Pas en cas de simple erreur réseau.
       if (erreurTournoi?.code === 'PGRST116') await retirerTournoiSuivi(String(code));
@@ -58,7 +69,12 @@ export default function Suivi() {
       return;
     }
     setTournoi(t);
-    enregistrerTournoiSuivi({ code: t.code_acces, nom: t.nom, dateDebut: t.date_debut, sport: t.sport });
+    enregistrerTournoiSuivi({ code: t.code_acces, nom: t.nom, dateDebut: t.date_debut, dateFin: t.date_fin, sport: t.sport });
+    // Épreuve d'une olympiade : lien vers son classement général.
+    if (t.olympiade_id) {
+      const { data: o } = await supabase.from('olympiades').select('code_acces, nom').eq('id', t.olympiade_id).maybeSingle();
+      setOlympiade(o || null);
+    }
 
     const { data: p } = await supabase.from('poules').select('*').eq('tournoi_id', t.id).order('nom');
     setPoules(p || []);
@@ -171,11 +187,7 @@ export default function Suivi() {
     return (
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.titre}>{tournoi.nom}</Text>
-        <Text style={styles.date}>
-          {new Date(`${tournoi.date_debut}T00:00:00`).toLocaleDateString(locale, {
-            day: 'numeric', month: 'long', year: 'numeric',
-          })}
-        </Text>
+        <Text style={styles.date}>{formaterPeriode(tournoi.date_debut, tournoi.date_fin, locale)}</Text>
         <Text style={styles.section}>
           {t(tournoi.sport === 'tennis' ? 'suivi.quelJoueur' : 'suivi.quelleEquipe')}
         </Text>
@@ -348,11 +360,12 @@ export default function Suivi() {
       }
     >
       <Text style={styles.titre}>{tournoi.nom}</Text>
-      <Text style={styles.date}>
-        {new Date(`${tournoi.date_debut}T00:00:00`).toLocaleDateString(locale, {
-          day: 'numeric', month: 'long', year: 'numeric',
-        })}
-      </Text>
+      <Text style={styles.date}>{formaterPeriode(tournoi.date_debut, tournoi.date_fin, locale)}</Text>
+      {olympiade && (
+        <Pressable onPress={() => router.push(`/suivi-olympiade/${olympiade.code_acces}`)} hitSlop={8}>
+          <Text style={styles.lienOlympiade}>{t('olympiade.voirClassementGeneralDe', { nom: olympiade.nom })}</Text>
+        </Pressable>
+      )}
       <Text style={styles.hintActualiser}>{t('suivi.tirerPourActualiser')}</Text>
 
       {equipes.length > 0 && (
@@ -566,6 +579,7 @@ function creerStyles(c) {
     texteBoutonRetour: { color: c.accentEncre, fontFamily: POLICE_TITRE, fontSize: 16, letterSpacing: 0.3 },
     titre: { fontFamily: POLICE_TITRE, fontSize: 24, letterSpacing: 0.3, color: c.texte },
     date: { fontFamily: POLICE_TEXTE, fontSize: 13, color: c.texteAttenue },
+    lienOlympiade: { fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 13, color: c.lien, marginTop: 6 },
     hintActualiser: { fontFamily: POLICE_TEXTE, fontSize: 11.5, color: c.texteAttenue, marginTop: 4, marginBottom: 18 },
     lienChanger: { fontFamily: POLICE_TEXTE_MEDIUM, fontSize: 12.5, color: c.accent, marginBottom: 18 },
     separateurTexte: { fontFamily: POLICE_TEXTE, fontSize: 12, color: c.texteAttenue, textAlign: 'center', marginVertical: 16 },

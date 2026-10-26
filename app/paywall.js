@@ -31,8 +31,8 @@ export default function Paywall() {
 
   useEffect(() => {
     if (!tournoiId) return;
-    supabase.from('tournois').select('date_debut').eq('id', tournoiId).maybeSingle()
-      .then(({ data }) => setPassImpossible(passExpire(data?.date_debut)));
+    supabase.from('tournois').select('date_debut, date_fin').eq('id', tournoiId).maybeSingle()
+      .then(({ data }) => setPassImpossible(passExpire(data?.date_fin || data?.date_debut)));
   }, [tournoiId]);
 
   // Ordre d'affichage : Pass, puis Pro annuel (mis en avant), puis mensuel.
@@ -135,7 +135,7 @@ export default function Paywall() {
         // l'identifiant du produit — indépendant du store (iOS vs Android).
         const estPass = pkg.packageType === Purchases.PACKAGE_TYPE.LIFETIME;
         const estAnnuel = pkg.packageType === Purchases.PACKAGE_TYPE.ANNUAL;
-        if (estPass && passImpossible) return null;
+        if (estPass && (passImpossible || raison === 'olympiade')) return null;
         return (
           <View key={pkg.identifier} style={[styles.carteOffre, estAnnuel && styles.carteVedette]}>
             {estAnnuel && <Text style={styles.badge}>{t('paywall.badgeSaison')}</Text>}

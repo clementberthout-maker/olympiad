@@ -16,7 +16,12 @@ import {
   resultatsAutoPourExempts,
   finEstimeePremierePhase,
   joursApresDebut,
+  planMiseAJourPoules,
+  reglagesDepuisTournoi,
+  estPhaseDePoule,
 } from '../../../lib/generation';
+import { dernierJour, formaterPeriode } from '../../../lib/dates';
+import { libellePhase } from '../../../lib/phases';
 import CarteSelectionnable from '../../../components/CarteSelectionnable';
 import RouePicker from '../../../components/RouePicker';
 import SelecteurDate from '../../../components/SelecteurDate';
@@ -37,6 +42,22 @@ function pad(n) {
 function plage(debut, fin) {
   return Array.from({ length: fin - debut + 1 }, (_, i) => debut + i);
 }
+
+// Deux équipes du même nom rendraient le calendrier et le classement
+// illisibles : on compare sans tenir compte des majuscules ni des espaces
+// (même règle que l'espace organisateur du site).
+const normaliser = (n) => n.trim().replace(/\s+/g, ' ').toLowerCase();
+
+// Réglages qui changent les horaires des matchs : s'ils changent alors que
+// le calendrier existe, on propose de replanifier les matchs à venir.
+const CLES_HORAIRES = [
+  'date_debut', 'date_fin', 'heure_fin_journee', 'nombre_terrains', 'heure_premier_match', 'duree_match',
+  'mi_temps', 'duree_mi_temps', 'temps_pause', 'pause_dejeuner', 'heure_debut_pause', 'heure_fin_pause',
+];
+const valeurComparable = (cle, v) => {
+  if (v === null || v === undefined || v === '') return null;
+  return cle.startsWith('heure_') ? String(v).slice(0, 5) : String(v);
+};
 
 const HEURES = plage(0, 23);
 const MINUTES = plage(0, 59);
@@ -61,9 +82,9 @@ function Stepper({ valeur, onChange, min = 0, pas = 1, styles }) {
 export default function GestionEquipes() {
   const {
     id, modifier,
-    sport: sportParam, nom: nomParam, date: dateParam, format: formatParam,
+    sport: sportParam, nom: nomParam, date: dateParam, dateFin: dateFinParam, format: formatParam,
     departagePoule: departagePouleParam, departageElimination: departageEliminationParam,
-    tennisDouble: tennisDoubleParam,
+    tennisDouble: tennisDoubleParam, olympiade: olympiadeParam,
   } = useLocalSearchParams(); // id du tournoi ("nouveau" tant qu'il n'est pas encore créé)
   const router = useRouter();
   const { couleurs } = useTheme();
@@ -88,6 +109,13 @@ export default function GestionEquipes() {
   const [modifierInfos, setModifierInfos] = useState(false);
   const [nomEdit, setNomEdit] = useState(estBrouillon ? (nomParam || '') : '');
   const [dateEdit, setDateEdit] = useState(estBrouillon ? (dateParam || '') : '');
+  // Tournoi sur plusieurs jours : dernier jour, et heure après laquelle
+  // aucun match ne finit (les suivants reprennent le lendemain).
+  const [plusieursJours, setPlusieursJours] = useState(estBrouillon && Boolean(dateFinParam));
+  const [dateFinEdit, setDateFinEdit] = useState(estBrouillon ? (dateFinParam || '') : '');
+  const [finJourneeH, setFinJourneeH] = useState(19);
+  const [finJourneeM, setFinJourneeM] = useState(0);
+  const dateFinEffective = plusieursJours && dateFinEdit && dateFinEdit > dateEdit ? dateFinEdit : null;
 
   const [modifierTitreDate, setModifierTitreDate] = useState(false);
   const [nomEdite, setNomEdite] = useState('');
@@ -127,6 +155,11 @@ export default function GestionEquipes() {
   // Simple ou double (tennis) : choisi à la création (voir creer-tournoi.js),
   // non modifiable ici, comme le sport et le format.
   const tennisDoubleActif = estBrouillon ? tennisDoubleParam === '1' : Boolean(tournoi?.tennis_double);
+  // Épreuve d'une olympiade multisports : ses équipes sont liées aux
+  // équipes communes de l'olympiade (classement général).
+  const olympiadeId = estBrouillon ? (olympiadeParam || null) : (tournoi?.olympiade_id || null);
+  // Dates figées par un Pass Tournoi (voir lib/achats.js, passActif).
+  const datesVerrouillees = !estBrouillon && Boolean(tournoi?.debloque);
 
   // Tant que le tournoi n'a pas été créé, la liste d'équipes ne vit qu'en
   // mémoire : un retour arrière (geste, bouton système ou bouton "Retour")
@@ -169,6 +202,13 @@ export default function GestionEquipes() {
     if (t) {
       setNomEdit(t.nom);
       setDateEdit(t.date_debut);
+      setPlusieursJours(Boolean(t.date_fin));
+      setDateFinEdit(t.date_fin || '');
+      if (t.heure_fin_journee) {
+        const [h, m] = t.heure_fin_journee.split(':').map(Number);
+        setFinJourneeH(h);
+        setFinJourneeM(m);
+      }
       if (t.nombre_terrains) setNombreTerrains(t.nombre_terrains);
       if (t.heure_premier_match) {
         const [h, m] = t.heure_premier_match.split(':').map(Number);
@@ -222,6 +262,75 @@ export default function GestionEquipes() {
     }, [charger])
   );
 
+  // Nouvelle épreuve d'une olympiade : on part de toutes ses équipes
+  // (l'organisateur retire celles qui ne participent pas à ce sport).
+  useEffect(() => {
+    if (!estBrouillon || !olympiadeParam) return;
+    supabase.from('olympiade_equipes').select('*').eq('olympiade_id', olympiadeParam).order('created_at')
+      .then(({ data }) => {
+        if (!data?.length) return;
+        setEquipes((liste) => (liste.length ? liste : data.map((e) => ({ id: `brouillon-${e.id}`, nom: e.nom }))));
+      });
+  }, [estBrouillon, olympiadeParam]);
+
+  // Équipe commune de l'olympiade portant ce nom (créée si besoin).
+  async function idsEquipesOlympiade(noms) {
+    const { data: existantes, error } = await supabase
+      .from('olympiade_equipes').select('*').eq('olympiade_id', olympiadeId);
+    if (error) throw error;
+    const parNom = new Map((existantes || []).map((e) => [normaliser(e.nom), e.id]));
+    const manquantes = [...new Set(noms.filter((n) => !parNom.has(normaliser(n))))];
+    if (manquantes.length) {
+      const { data: creees, error: erreurCreation } = await supabase
+        .from('olympiade_equipes')
+        .insert(manquantes.map((nom) => ({ olympiade_id: olympiadeId, nom })))
+        .select();
+      if (erreurCreation) throw erreurCreation;
+      (creees || []).forEach((e) => parNom.set(normaliser(e.nom), e.id));
+    }
+    return noms.map((n) => parNom.get(normaliser(n)));
+  }
+
+  // Met à jour le calendrier des poules sans perdre les scores (voir
+  // planMiseAJourPoules) : nouvelles équipes placées dans une poule, matchs
+  // à venir replanifiés avec les réglages enregistrés. Retourne le plan.
+  async function mettreAJourCalendrier() {
+    const { data: tournoiBase, error: erreurTournoi } = await supabase.from('tournois').select('*').eq('id', id).single();
+    if (erreurTournoi) throw erreurTournoi;
+    const [{ data: poulesBase }, { data: equipesBase }, { data: matchsBase }] = await Promise.all([
+      supabase.from('poules').select('*').eq('tournoi_id', id).order('nom'),
+      supabase.from('equipes').select('*').eq('tournoi_id', id).order('created_at'),
+      supabase.from('matchs').select('*').eq('tournoi_id', id),
+    ]);
+    const matchsPoule = (matchsBase || []).filter((m) => estPhaseDePoule(m.phase));
+    const { data: resultatsBase } = matchsPoule.length
+      ? await supabase.from('resultats').select('*').in('match_id', matchsPoule.map((m) => m.id))
+      : { data: [] };
+    const plan = planMiseAJourPoules(
+      poulesBase || [],
+      equipesBase || [],
+      matchsPoule.map((m) => ({ ...m, resultat: (resultatsBase || []).find((r) => r.match_id === m.id) })),
+      id,
+      reglagesDepuisTournoi(tournoiBase)
+    );
+
+    const parPoule = {};
+    plan.affectations.forEach((a) => { (parPoule[a.pouleId] = parPoule[a.pouleId] || []).push(a.equipeId); });
+    for (const [pouleId, ids] of Object.entries(parPoule)) {
+      const { error } = await supabase.from('equipes').update({ poule_id: pouleId }).in('id', ids);
+      if (error) throw error;
+    }
+    if (plan.matchsASupprimer.length) {
+      const { error } = await supabase.from('matchs').delete().in('id', plan.matchsASupprimer);
+      if (error) throw error;
+    }
+    if (plan.matchsAInserer.length) {
+      const { error } = await supabase.from('matchs').insert(plan.matchsAInserer);
+      if (error) throw error;
+    }
+    return plan;
+  }
+
   // Insère des équipes en base. La base refuse la 13e équipe d'un tournoi
   // non débloqué (code OLY01, voir supabase/schema.sql) ; si l'utilisateur
   // est Pro, c'est que le serveur ne connaît pas encore son abonnement (ou
@@ -241,10 +350,6 @@ export default function GestionEquipes() {
 
   async function ajouterEquipe() {
     if (!nomEquipe.trim()) return;
-    // Deux équipes du même nom rendraient le calendrier et le classement
-    // illisibles : on compare sans tenir compte des majuscules ni des espaces
-    // (même règle que l'espace organisateur du site).
-    const normaliser = (n) => n.trim().replace(/\s+/g, ' ').toLowerCase();
     if (equipes.some((e) => normaliser(e.nom) === normaliser(nomEquipe))) {
       Alert.alert(t('equipes.nomEnDoubleTitre'), t('equipes.nomEnDoubleMessage', { nom: nomEquipe.trim() }));
       return;
@@ -265,7 +370,25 @@ export default function GestionEquipes() {
       Keyboard.dismiss();
       return;
     }
-    const { error } = await insererEquipes({ tournoi_id: id, nom: nomEquipe.trim() });
+    // Tableau à élimination directe lancé : une équipe de plus n'y aurait
+    // pas sa place (même règle que le retrait d'une équipe).
+    if (tableauLance) {
+      Alert.alert(t('equipes.ajoutImpossibleTitre'), t('equipes.ajoutImpossibleTableau'));
+      return;
+    }
+    const nom = nomEquipe.trim();
+    let olympiadeEquipeId = null;
+    if (olympiadeId) {
+      try {
+        [olympiadeEquipeId] = await idsEquipesOlympiade([nom]);
+      } catch (e) {
+        Alert.alert(t('commun.erreur'), messageErreur(e, t));
+        return;
+      }
+    }
+    const { error } = await insererEquipes({
+      tournoi_id: id, nom, ...(olympiadeEquipeId ? { olympiade_equipe_id: olympiadeEquipeId } : {}),
+    });
     if (error?.code === 'OLY01') {
       // Limite gratuite appliquée par la base (déblocage non connu du
       // serveur) : même parcours que la limite vérifiée par l'app.
@@ -278,6 +401,20 @@ export default function GestionEquipes() {
     }
     setNomEquipe('');
     Keyboard.dismiss();
+    // Calendrier déjà généré : la nouvelle équipe rejoint une poule et ses
+    // matchs sont ajoutés, sans toucher aux scores déjà saisis.
+    if (calendrierGenere && formatTournoi !== 'elimination_directe') {
+      try {
+        const plan = await mettreAJourCalendrier();
+        const poule = plan.affectations.find((a) => a.equipeId)?.pouleNom;
+        Alert.alert(
+          t('equipes.ajouteeAuCalendrierTitre'),
+          t('equipes.ajouteeAuCalendrierMessage', { nom, poule: poule ? libellePhase(poule, t) : '', n: plan.matchsAInserer.length })
+        );
+      } catch (e) {
+        Alert.alert(t('commun.erreur'), messageErreur(e, t));
+      }
+    }
     charger();
   }
 
@@ -320,6 +457,8 @@ export default function GestionEquipes() {
     return {
       nom: nomEdit,
       date_debut: dateEdit,
+      date_fin: dateFinEffective,
+      heure_fin_journee: dateFinEffective ? `${pad(finJourneeH)}:${pad(finJourneeM)}` : null,
       nombre_terrains: nombreTerrains,
       heure_premier_match: `${pad(heureH)}:${pad(heureM)}`,
       duree_match: dureeMatch,
@@ -342,15 +481,34 @@ export default function GestionEquipes() {
     ? finEstimeePremierePhase(equipes.length, formatTournoi, nombrePoules, reglagesDeGeneration())
     : null;
   const heureFinEstimee = finEstimee ? `${pad(finEstimee.getHours())}:${pad(finEstimee.getMinutes())}` : '';
-  const finLeLendemain = Boolean(finEstimee) && joursApresDebut(finEstimee, dateEdit) > 0;
+  const finLeLendemain = Boolean(finEstimee) && joursApresDebut(finEstimee, dernierJour(dateEdit, dateFinEffective)) > 0;
+  // Plusieurs jours : on précise le jour de fin ("sam. 8 nov.").
+  const jourFinEstime = finEstimee && dateFinEffective
+    ? finEstimee.toLocaleDateString(langue === 'en' ? 'en-US' : 'fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })
+    : '';
+
+  // Date de fin choisie mais incohérente : on le dit avant d'enregistrer.
+  function datesInvalides() {
+    if (plusieursJours && !(dateFinEdit && dateFinEdit > dateEdit)) {
+      Alert.alert(t('equipes.dateFinInvalideTitre'), t('equipes.dateFinInvalideMessage'));
+      return true;
+    }
+    return false;
+  }
+
+  function horairesOntChange() {
+    if (!tournoi) return false;
+    const apres = reglagesActuels();
+    return CLES_HORAIRES.some((cle) => valeurComparable(cle, tournoi[cle]) !== valeurComparable(cle, apres[cle]));
+  }
 
   // Demande confirmation avant de générer un calendrier qui finirait le
   // lendemain ; sinon lance directement l'action.
   function confirmerSiDebordement(action, libelleContinuer) {
     if (!finLeLendemain) { action(); return; }
     Alert.alert(
-      t('equipes.debordementTitre'),
-      t('equipes.debordementMessage', { heure: heureFinEstimee }),
+      t(dateFinEffective ? 'equipes.debordementTitrePlusieursJours' : 'equipes.debordementTitre'),
+      t(dateFinEffective ? 'equipes.debordementMessagePlusieursJours' : 'equipes.debordementMessage', { heure: heureFinEstimee, jour: jourFinEstime }),
       [
         { text: t('commun.annuler'), style: 'cancel' },
         { text: libelleContinuer, onPress: action },
@@ -367,14 +525,40 @@ export default function GestionEquipes() {
   }
 
   async function sauvegarderReglages() {
+    if (datesInvalides()) return;
     if (estBrouillon) {
       await creerTournoiEtEquipes();
       return;
     }
+    const replanifierPossible = calendrierGenere && !tableauLance && formatTournoi !== 'elimination_directe' && horairesOntChange();
     setEnCours(true);
     try {
       const { error } = await supabase.from('tournois').update(reglagesActuels()).eq('id', id);
       if (error) throw error;
+
+      // Horaires changés en cours de route : on propose de replanifier les
+      // matchs à venir, les matchs joués gardent leur horaire et leur score.
+      if (replanifierPossible) {
+        setEnCours(false);
+        Alert.alert(t('equipes.replanifierTitre'), t('equipes.replanifierMessage'), [
+          { text: t('equipes.garderLesHoraires'), style: 'cancel', onPress: allerAuCalendrier },
+          {
+            text: t('equipes.replanifier'),
+            onPress: async () => {
+              setEnCours(true);
+              try {
+                await mettreAJourCalendrier();
+                allerAuCalendrier();
+              } catch (e) {
+                Alert.alert(t('commun.erreur'), messageErreur(e, t));
+              } finally {
+                setEnCours(false);
+              }
+            },
+          },
+        ]);
+        return;
+      }
 
       // Premier enregistrement (aucun match encore généré) : on génère le
       // calendrier automatiquement dès que possible, pour ne pas obliger
@@ -403,6 +587,7 @@ export default function GestionEquipes() {
       Alert.alert(t('equipes.champsManquantsTitre'), t('equipes.champsManquantsMessage'));
       return;
     }
+    if (datesInvalides()) return;
     if (equipes.length === 0) {
       Alert.alert(
         t(sportTournoi === 'tennis' ? 'equipes.aucunJoueurTitre' : 'equipes.aucuneEquipeTitre'),
@@ -433,6 +618,7 @@ export default function GestionEquipes() {
             mode_departage: departageEliminationParam || 'prolongations_tab',
             code_acces: genererCodeAcces(),
             organisateur_id: session.user.id,
+            ...(olympiadeId ? { olympiade_id: olympiadeId } : {}),
           })
           .select()
           .single());
@@ -458,8 +644,11 @@ export default function GestionEquipes() {
         }
       }
 
+      const idsOlympiade = olympiadeId ? await idsEquipesOlympiade(equipes.map((e) => e.nom)) : [];
       const { data: equipesInserees, error: erreurEquipes } = await insererEquipes(
-        equipes.map((e) => ({ tournoi_id: nouvelId, nom: e.nom }))
+        equipes.map((e, i) => ({
+          tournoi_id: nouvelId, nom: e.nom, ...(olympiadeId ? { olympiade_equipe_id: idsOlympiade[i] } : {}),
+        }))
       );
       if (erreurEquipes?.code === 'OLY01') {
         // Plus de 12 équipes mais déblocage non confirmé par le serveur
@@ -516,6 +705,8 @@ export default function GestionEquipes() {
     const reglagesTournoi = reglagesActuels();
     return {
       dateDebut: dateEdit,
+      dateFin: dateFinEffective,
+      heureFinJournee: reglagesTournoi.heure_fin_journee,
       heureDebut: reglagesTournoi.heure_premier_match,
       dureeCreneauMinutes: dureeMatch + (miTemps ? dureeMiTemps : 0) + tempsPause,
       dureeMatchMinutes: dureeMatch + (miTemps ? dureeMiTemps : 0),
@@ -592,7 +783,8 @@ export default function GestionEquipes() {
 
   async function supprimerTournoi() {
     setEnCours(true);
-    const { error } = await supabase.from('tournois').delete().eq('id', id);
+    // Corbeille : récupérable 30 jours depuis « Mon profil », puis effacé.
+    const { error } = await supabase.rpc('mettre_tournoi_a_la_corbeille', { p_tournoi_id: id });
     setEnCours(false);
     if (error) {
       Alert.alert(t('commun.erreur'), messageErreur(error, t));
@@ -602,7 +794,7 @@ export default function GestionEquipes() {
     if (tournoi?.code_acces) {
       await retirerTournoiSuivi(tournoi.code_acces);
     }
-    router.replace('/');
+    router.replace(olympiadeId ? `/olympiade/${olympiadeId}` : '/');
   }
 
   if (!estBrouillon && !tournoi) return null;
@@ -640,9 +832,7 @@ export default function GestionEquipes() {
         </View>
         <Text style={styles.soustitre}>
           {t(`sports.${sportTournoi}.label`)}
-          {sportTournoi === 'tennis' && tennisDoubleActif ? ` · ${t('creerTournoi.double')}` : ''} · {new Date(`${dateEdit}T00:00:00`).toLocaleDateString(langue === 'en' ? 'en-US' : 'fr-FR', {
-            day: 'numeric', month: 'long', year: 'numeric',
-          })}
+          {sportTournoi === 'tennis' && tennisDoubleActif ? ` · ${t('creerTournoi.double')}` : ''} · {formaterPeriode(dateEdit, dateFinEffective, langue === 'en' ? 'en-US' : 'fr-FR')}
         </Text>
 
         <Pressable onPress={() => setModifierInfos(!modifierInfos)} hitSlop={8}>
@@ -657,19 +847,36 @@ export default function GestionEquipes() {
             <TextInput style={styles.input} value={nomEdit} onChangeText={setNomEdit} returnKeyType="done" />
             <Text style={[styles.carteLabel, { marginTop: 14 }]}>{t('equipes.date')}</Text>
             {/* Date figée une fois un Pass Tournoi appliqué (voir lib/achats.js, passActif). */}
-            {!estBrouillon && tournoi?.debloque ? (
+            {datesVerrouillees ? (
               <>
                 <Text style={styles.input}>
-                  {new Date(`${dateEdit}T00:00:00`).toLocaleDateString(langue === 'en' ? 'en-US' : 'fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                  {formaterPeriode(dateEdit, dateFinEffective, langue === 'en' ? 'en-US' : 'fr-FR')}
                 </Text>
                 <Text style={[styles.avertissement, { textAlign: 'left' }]}>
                   {t('equipes.dateVerrouillee', {
-                    fin: new Date(`${finDuPass(dateEdit)}T00:00:00`).toLocaleDateString(langue === 'en' ? 'en-US' : 'fr-FR', { day: 'numeric', month: 'long' }),
+                    fin: new Date(`${finDuPass(dernierJour(dateEdit, dateFinEffective))}T00:00:00`).toLocaleDateString(langue === 'en' ? 'en-US' : 'fr-FR', { day: 'numeric', month: 'long' }),
                   })}
                 </Text>
               </>
             ) : (
-              <SelecteurDate value={dateEdit} onChange={setDateEdit} />
+              <>
+                <SelecteurDate value={dateEdit} onChange={setDateEdit} />
+                <Text style={[styles.carteLabel, { marginTop: 14 }]}>{t('equipes.plusieursJours')}</Text>
+                <View style={styles.ligneChoix}>
+                  <View style={{ flex: 1 }}>
+                    <CarteSelectionnable label={t('commun.non')} selectionnee={!plusieursJours} onPress={() => setPlusieursJours(false)} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <CarteSelectionnable label={t('commun.oui')} selectionnee={plusieursJours} onPress={() => setPlusieursJours(true)} />
+                  </View>
+                </View>
+                {plusieursJours && (
+                  <>
+                    <Text style={[styles.carteLabel, { marginTop: 10 }]}>{t('equipes.dateDeFin')}</Text>
+                    <SelecteurDate value={dateFinEdit} onChange={setDateFinEdit} />
+                  </>
+                )}
+              </>
             )}
           </View>
         )}
@@ -718,6 +925,18 @@ export default function GestionEquipes() {
           <Text style={styles.carteAide}>{t('equipes.terrainsAide')}</Text>
           <Stepper valeur={nombreTerrains} onChange={setNombreTerrains} min={1} styles={styles} />
         </View>
+
+        {dateFinEffective && (
+          <View style={styles.carte}>
+            <Text style={styles.carteLabel}>{t('equipes.finDesMatchsChaqueJour')}</Text>
+            <Text style={styles.carteAide}>{t('equipes.finDesMatchsChaqueJourAide')}</Text>
+            <View style={styles.ligneRoues}>
+              <RouePicker valeurs={HEURES} valeur={finJourneeH} onChange={setFinJourneeH} formatValeur={(v) => pad(v)} />
+              <Text style={styles.deuxPoints}>:</Text>
+              <RouePicker valeurs={MINUTES} valeur={finJourneeM} onChange={setFinJourneeM} formatValeur={(v) => pad(v)} />
+            </View>
+          </View>
+        )}
 
         {formatTournoi !== 'elimination_directe' && (
           <View style={styles.carte}>
@@ -916,8 +1135,10 @@ export default function GestionEquipes() {
         {finEstimee && (
           <Text style={[styles.estimationFin, finLeLendemain && styles.estimationFinAlerte]}>
             {finLeLendemain
-              ? t('equipes.finLendemain', { heure: heureFinEstimee })
-              : t(formatTournoi === 'elimination_directe' ? 'equipes.finPremierTour' : 'equipes.finPoules', { heure: heureFinEstimee })}
+              ? t(dateFinEffective ? 'equipes.finApresDernierJour' : 'equipes.finLendemain', { heure: heureFinEstimee, jour: jourFinEstime })
+              : dateFinEffective
+                ? t(formatTournoi === 'elimination_directe' ? 'equipes.finPremierTourJour' : 'equipes.finPoulesJour', { heure: heureFinEstimee, jour: jourFinEstime })
+                : t(formatTournoi === 'elimination_directe' ? 'equipes.finPremierTour' : 'equipes.finPoules', { heure: heureFinEstimee })}
           </Text>
         )}
 
@@ -932,6 +1153,10 @@ export default function GestionEquipes() {
               : (enCours ? t('equipes.sauvegardeEnCours') : t('equipes.sauvegarder'))}
           </Text>
         </Pressable>
+
+        {!estBrouillon && calendrierGenere && !tableauLance && formatTournoi !== 'elimination_directe' && (
+          <Text style={styles.avertissement}>{t('equipes.aideSauvegarder')}</Text>
+        )}
 
         {!estBrouillon && (
           <>

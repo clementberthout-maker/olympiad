@@ -993,3 +993,330 @@ grant select, insert, update, delete on
   tournoi_organisateurs, invitations_organisateur,
   passes_tournoi_utilises, abonnements_pro, avertissements_inactivite
 to authenticated, service_role;
+
+-- ============================================================
+-- MIGRATION — Plusieurs jours, corbeille et olympiades (26/10/2026)
+-- ============================================================
+-- Retours du premier testeur Android (SUIVI-PROJET.md, H37 à H39).
+-- À exécuter en une fois dans l'éditeur SQL de Supabase.
+
+-- ------------------------------------------------------------
+-- 1. Tournoi sur plusieurs jours (H37)
+-- ------------------------------------------------------------
+-- date_fin : dernier jour du tournoi (null = un seul jour, date_debut).
+-- heure_fin_journee : heure après laquelle aucun match ne finit, chaque
+-- jour ; les matchs suivants reprennent le lendemain à heure_premier_match
+-- (voir calculerCreneaux dans lib/generation.js).
+alter table tournois add column if not exists date_fin date;
+alter table tournois add column if not exists heure_fin_journee time;
+alter table tournois drop constraint if exists tournois_date_fin_check;
+alter table tournois add constraint tournois_date_fin_check
+  check (date_fin is null or date_fin >= date_debut);
+
+-- Le Pass Tournoi reste valable 5 jours après le DERNIER jour du tournoi.
+create or replace function limiter_equipes()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_tournoi tournois%rowtype;
+  v_nombre int;
+begin
+  -- La clé service_role et l'éditeur SQL ne sont pas limités.
+  if coalesce(auth.role(), '') not in ('anon', 'authenticated') then
+    return new;
+  end if;
+
+  -- "for update" : deux ajouts simultanés ne peuvent pas dépasser la limite.
+  select * into v_tournoi from tournois where id = new.tournoi_id for update;
+  if not found then
+    return new;
+  end if;
+
+  -- Pass Tournoi encore valable (dernier jour du tournoi + 5 jours, inclus).
+  if v_tournoi.debloque and coalesce(v_tournoi.date_fin, v_tournoi.date_debut) + 5 >= current_date then
+    return new;
+  end if;
+
+  if exists (
+    select 1 from abonnements_pro
+    where user_id = v_tournoi.organisateur_id
+      and (expire_le is null or expire_le > now())
+  ) then
+    return new;
+  end if;
+
+  select count(*) into v_nombre from equipes where tournoi_id = new.tournoi_id;
+  if v_nombre >= 12 then
+    raise exception 'Limite de 12 équipes atteinte pour ce tournoi (version gratuite)'
+      using errcode = 'OLY01';
+  end if;
+  return new;
+end;
+$$;
+
+-- Les dates d'un tournoi débloqué par un Pass ne changent plus (début et fin).
+create or replace function proteger_date_tournoi()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+begin
+  if coalesce(auth.role(), '') in ('anon', 'authenticated')
+     and old.debloque
+     and (new.date_debut is distinct from old.date_debut
+          or new.date_fin is distinct from old.date_fin) then
+    raise exception 'La date d''un tournoi débloqué par un Pass Tournoi ne peut plus être modifiée'
+      using errcode = 'OLY02';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists proteger_date_tournoi on tournois;
+create trigger proteger_date_tournoi
+  before update of date_debut, date_fin on tournois
+  for each row execute function proteger_date_tournoi();
+
+-- ------------------------------------------------------------
+-- 2. Olympiades multisports (H39)
+-- ------------------------------------------------------------
+-- Une olympiade regroupe plusieurs épreuves (une par sport, chacune est un
+-- tournoi normal avec son calendrier) et des équipes communes. Le
+-- classement général additionne, pour chaque épreuve terminée, les points
+-- du barème selon la place obtenue (bareme[1] pour le 1er, bareme[2] pour
+-- le 2e… ; 0 au-delà). Réservée aux comptes Pro (création).
+create table if not exists olympiades (
+  id uuid primary key default uuid_generate_v4(),
+  nom text not null,
+  date_debut date not null,
+  date_fin date,
+  code_acces text not null unique,
+  bareme int[] not null default '{10,8,6,5,4,3,2,1}',
+  organisateur_id uuid references auth.users(id) on delete cascade not null,
+  supprime_le timestamptz,
+  created_at timestamptz default now(),
+  constraint olympiades_date_fin_check check (date_fin is null or date_fin >= date_debut)
+);
+
+create table if not exists olympiade_equipes (
+  id uuid primary key default uuid_generate_v4(),
+  olympiade_id uuid references olympiades(id) on delete cascade not null,
+  nom text not null,
+  created_at timestamptz default now()
+);
+create unique index if not exists olympiade_equipes_nom_unique
+  on olympiade_equipes (olympiade_id, lower(nom));
+
+-- Épreuve d'une olympiade, et lien de chaque équipe d'épreuve vers
+-- l'équipe commune de l'olympiade.
+alter table tournois add column if not exists olympiade_id uuid references olympiades(id) on delete cascade;
+alter table equipes add column if not exists olympiade_equipe_id uuid references olympiade_equipes(id) on delete cascade;
+create index if not exists tournois_olympiade_id on tournois (olympiade_id);
+
+-- Abonnement Pro actif connu du serveur (voir abonnements_pro).
+create or replace function est_pro_actif(p_uid uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from abonnements_pro
+    where user_id = p_uid and (expire_le is null or expire_le > now())
+  );
+$$;
+revoke execute on function est_pro_actif(uuid) from public, anon;
+grant execute on function est_pro_actif(uuid) to authenticated;
+
+alter table olympiades enable row level security;
+alter table olympiade_equipes enable row level security;
+
+-- Lecture publique (suivi par code), sauf une olympiade dans la corbeille,
+-- que seul son organisateur voit encore.
+drop policy if exists "Lecture des olympiades" on olympiades;
+create policy "Lecture des olympiades" on olympiades for select
+  using (supprime_le is null or organisateur_id = auth.uid());
+drop policy if exists "Organisateur Pro cree une olympiade" on olympiades;
+create policy "Organisateur Pro cree une olympiade" on olympiades for insert
+  with check (auth.uid() = organisateur_id and est_pro_actif(auth.uid()));
+drop policy if exists "Organisateur modifie son olympiade" on olympiades;
+create policy "Organisateur modifie son olympiade" on olympiades for update
+  using (auth.uid() = organisateur_id);
+drop policy if exists "Organisateur supprime son olympiade" on olympiades;
+create policy "Organisateur supprime son olympiade" on olympiades for delete
+  using (auth.uid() = organisateur_id);
+
+drop policy if exists "Lecture publique des equipes d'olympiade" on olympiade_equipes;
+create policy "Lecture publique des equipes d'olympiade" on olympiade_equipes for select
+  using (true);
+drop policy if exists "Organisateur gere les equipes d'olympiade" on olympiade_equipes;
+create policy "Organisateur gere les equipes d'olympiade" on olympiade_equipes for all
+  using (auth.uid() = (select organisateur_id from olympiades where id = olympiade_id))
+  with check (auth.uid() = (select organisateur_id from olympiades where id = olympiade_id));
+
+-- Une épreuve ne se crée que dans une olympiade dont on est l'organisateur.
+drop policy if exists "Organisateur cree son tournoi" on tournois;
+create policy "Organisateur cree son tournoi" on tournois for insert
+  with check (
+    auth.uid() = organisateur_id
+    and (olympiade_id is null or exists (
+      select 1 from olympiades o where o.id = olympiade_id and o.organisateur_id = auth.uid()
+    ))
+  );
+
+-- ------------------------------------------------------------
+-- 3. Corbeille (H38)
+-- ------------------------------------------------------------
+-- Un tournoi ou une olympiade supprimé reste 30 jours dans la corbeille
+-- (supprime_le renseigné) : invisible pour le public, récupérable par son
+-- organisateur depuis « Mon profil », puis effacé pour de bon la nuit.
+alter table tournois add column if not exists supprime_le timestamptz;
+
+-- Tournoi visible du public s'il n'est pas dans la corbeille, ni dans une
+-- olympiade elle-même dans la corbeille (la policy des olympiades s'applique
+-- à la sous-requête). L'organisateur principal voit toujours les siens.
+drop policy if exists "Lecture publique des tournois" on tournois;
+create policy "Lecture publique des tournois" on tournois for select
+  using (
+    organisateur_id = auth.uid()
+    or (
+      supprime_le is null
+      and (olympiade_id is null or exists (select 1 from olympiades o where o.id = olympiade_id))
+    )
+  );
+
+-- supprime_le ne change que par les deux fonctions ci-dessous, qui
+-- vérifient les droits (et pas par une simple modification du tournoi).
+create or replace function proteger_corbeille()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+begin
+  if coalesce(auth.role(), '') in ('anon', 'authenticated')
+     and new.supprime_le is distinct from old.supprime_le
+     and coalesce(current_setting('olympiad.corbeille', true), '') <> '1' then
+    raise exception 'Passer par la corbeille pour supprimer ou restaurer'
+      using errcode = '42501';
+  end if;
+  return new;
+end;
+$$;
+revoke execute on function proteger_corbeille() from public, anon, authenticated;
+
+drop trigger if exists proteger_corbeille on tournois;
+create trigger proteger_corbeille
+  before update of supprime_le on tournois
+  for each row execute function proteger_corbeille();
+drop trigger if exists proteger_corbeille on olympiades;
+create trigger proteger_corbeille
+  before update of supprime_le on olympiades
+  for each row execute function proteger_corbeille();
+
+-- Met un tournoi dans la corbeille (même droit que la suppression).
+create or replace function mettre_tournoi_a_la_corbeille(p_tournoi_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not a_le_droit(p_tournoi_id, 'supprimer_le_tournoi') then
+    raise exception 'Tu n''as pas le droit de supprimer ce tournoi' using errcode = '42501';
+  end if;
+  perform set_config('olympiad.corbeille', '1', true);
+  update tournois set supprime_le = now() where id = p_tournoi_id and supprime_le is null;
+end;
+$$;
+
+-- Sort un tournoi de la corbeille (organisateur principal seulement).
+create or replace function restaurer_tournoi(p_tournoi_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not exists (select 1 from tournois where id = p_tournoi_id and organisateur_id = auth.uid()) then
+    raise exception 'Tournoi introuvable' using errcode = '42501';
+  end if;
+  perform set_config('olympiad.corbeille', '1', true);
+  update tournois set supprime_le = null where id = p_tournoi_id;
+end;
+$$;
+
+create or replace function mettre_olympiade_a_la_corbeille(p_olympiade_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not exists (select 1 from olympiades where id = p_olympiade_id and organisateur_id = auth.uid()) then
+    raise exception 'Olympiade introuvable' using errcode = '42501';
+  end if;
+  perform set_config('olympiad.corbeille', '1', true);
+  update olympiades set supprime_le = now() where id = p_olympiade_id and supprime_le is null;
+end;
+$$;
+
+create or replace function restaurer_olympiade(p_olympiade_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not exists (select 1 from olympiades where id = p_olympiade_id and organisateur_id = auth.uid()) then
+    raise exception 'Olympiade introuvable' using errcode = '42501';
+  end if;
+  perform set_config('olympiad.corbeille', '1', true);
+  update olympiades set supprime_le = null where id = p_olympiade_id;
+end;
+$$;
+
+revoke execute on function mettre_tournoi_a_la_corbeille(uuid) from public, anon;
+revoke execute on function restaurer_tournoi(uuid) from public, anon;
+revoke execute on function mettre_olympiade_a_la_corbeille(uuid) from public, anon;
+revoke execute on function restaurer_olympiade(uuid) from public, anon;
+grant execute on function mettre_tournoi_a_la_corbeille(uuid) to authenticated;
+grant execute on function restaurer_tournoi(uuid) to authenticated;
+grant execute on function mettre_olympiade_a_la_corbeille(uuid) to authenticated;
+grant execute on function restaurer_olympiade(uuid) to authenticated;
+
+-- Effacement définitif après 30 jours, chaque nuit à 3 h 30 (UTC). Les
+-- épreuves d'une olympiade partent avec elle (cascade).
+select cron.schedule(
+  'corbeille-quotidienne',
+  '30 3 * * *',
+  $cron$
+  delete from olympiades where supprime_le < now() - interval '30 days';
+  delete from tournois where supprime_le < now() - interval '30 days';
+  $cron$
+);
+
+-- La suppression du compte efface aussi ses olympiades.
+create or replace function supprimer_donnees_compte(p_uid uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  delete from tournoi_organisateurs where user_id = p_uid;
+  delete from olympiades where organisateur_id = p_uid;
+  delete from tournois where organisateur_id = p_uid;
+  delete from profils where id = p_uid;
+  delete from auth.users where id = p_uid;
+end;
+$$;
+revoke execute on function supprimer_donnees_compte(uuid) from public, anon, authenticated;
+
+-- Accès Data API des nouvelles tables (règle du 21/10 : grants dans la
+-- même migration que la table).
+grant select on olympiades, olympiade_equipes to anon;
+grant select, insert, update, delete on olympiades, olympiade_equipes to authenticated, service_role;
