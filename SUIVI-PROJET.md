@@ -430,6 +430,12 @@ OLYMPIAD sert à organiser des tournois sportifs amateurs. L'organisateur crée 
 - **Tout est en ligne :** `main` = `origin/main`, et les fichiers de `docs/` publiés sur GitHub Pages sont identiques octet par octet au code local (HTML, CSS, JS, polices).
 - **Vérifié en ligne** (espace en mode démo uniquement) : aucun nouvel onglet, mentions légales liées dans le pied, polices servies par le site (aucune requête Google), politique (conservation) et CGU (rétractation) au 26/10, saisie et phase finale depuis le grand écran (payant en gratuit), sélecteurs date/heure/nombre (réglages et assistant), pause déjeuner verrouillée, « Retirer la photo », fenêtre des offres à la 13e équipe, offres de l'accueil cliquables, vue spectateur dans la même page, olympiade, plusieurs jours, corbeille.
 - **Corrigé :** les textes du Pass disaient « 5 jours après la date du tournoi » ; ils disent maintenant « après le dernier jour » (FR/EN), comme la règle du 26/10 : accueil (`index.html`, `site.js`), fenêtres des offres du site et de l'espace, CGU article 3 (les deux dates sont figées). Vérifié sur le serveur local.
+- **Espace organisateur, retours de Clément :**
+  - Panneau « Ton tournoi, aussi sur ordinateur » de la connexion et bandeau du tournoi (fil, nom, code, boutons, onglets) : ils restaient sombres en thème clair. Couleurs passées en variables `--bandeau-*` dans `espace/espace.css` (clair ou sombre selon le thème).
+  - Match en direct : les noms d'équipes se décalaient. La classe `.direct` de `site.css` (pastille « EN DIRECT ») s'appliquait à la carte et son point prenait la première case de la grille. Neutralisée sur `.match.direct`.
+  - « Voir les offres » (fenêtre « Fonction premium », tableau de bord, olympiade réservée au Pro) ouvre la fenêtre des offres dans l'espace, sans renvoyer à l'accueil du site (Pro présélectionné pour l'olympiade).
+  - Bug trouvé au passage : la fenêtre « Réservé à OLYMPIAD Pro » (nouvelle olympiade en compte gratuit) se refermait aussitôt. Corrigé.
+  - Vérifié sur le serveur local en mode démo (clair et sombre, positions des cartes en direct, trois boutons « Voir les offres »), aucune erreur.
 - **App :** mêmes textes corrigés dans `lib/traductions.js` (`passTournoiDescription`, `mentionsAbonnement`, FR/EN). Syntaxe vérifiée ; à livrer au build 9 (H41).
 
 ## 3. Ce qu'il reste à faire
@@ -563,6 +569,7 @@ Une ligne par modification, la plus récente en haut.
 
 | Date | Modification |
 |------|--------------|
+| 2026-10-26 | Espace : connexion et bandeau du tournoi qui suivent le thème clair, noms d'équipes alignés sur un match en direct, offres affichées dans l'espace (« Voir les offres »), fenêtre « Réservé à OLYMPIAD Pro » qui se refermait |
 | 2026-10-26 | App : textes du Pass « 5 jours après le dernier jour » dans `lib/traductions.js` (FR/EN), à livrer au build 9 (H41) |
 | 2026-10-26 | État des lieux du site en ligne : tout est publié et vérifié ; textes du Pass corrigés (« 5 jours après le dernier jour ») sur le site, l'espace et les CGU ; textes de l'app à aligner (H41) |
 | 2026-10-26 | Build 8 Android lancé sur EAS (`versionCode` 8, lots 1 à 3 du testeur), notes de version FR/EN prêtes |

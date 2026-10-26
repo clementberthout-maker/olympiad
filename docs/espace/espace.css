@@ -1,6 +1,41 @@
 /* OLYMPIAD — Espace organisateur. S'appuie sur ../site.css (couleurs,
    polices, boutons, en-tête) et ajoute la mise en page de l'application. */
 
+/* Panneau de la connexion et bandeau du tournoi : sombres en thème sombre,
+   clairs en thème clair (mêmes règles que les couleurs de ../site.css). */
+:root {
+  --bandeau-fond: #0b0f18;
+  --bandeau-texte: #f3f2ed;
+  --bandeau-attenue: #9aa0ac;
+  --bandeau-gris: #808693;
+  --bandeau-surface: #181d26;
+  --bandeau-surface-2: #212730;
+  --bandeau-bordure: #2d333d;
+  --bandeau-accent: #ebb517;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bandeau-fond: #e7ebf3;
+    --bandeau-texte: #11161f;
+    --bandeau-attenue: #5b606a;
+    --bandeau-gris: #7a808b;
+    --bandeau-surface: #fcfdff;
+    --bandeau-surface-2: #eef1f7;
+    --bandeau-bordure: #d3d8e0;
+    --bandeau-accent: #9a6700;
+  }
+}
+:root[data-theme="light"] {
+  --bandeau-fond: #e7ebf3;
+  --bandeau-texte: #11161f;
+  --bandeau-attenue: #5b606a;
+  --bandeau-gris: #7a808b;
+  --bandeau-surface: #fcfdff;
+  --bandeau-surface-2: #eef1f7;
+  --bandeau-bordure: #d3d8e0;
+  --bandeau-accent: #9a6700;
+}
+
 body.page-espace { min-height: 100vh; display: flex; flex-direction: column; }
 .page-espace main { flex: 1; }
 .espace-titre-entete { font-family: var(--titre); font-size: 18px; letter-spacing: 0.06em; color: var(--texte-attenue); padding-top: 3px; margin-left: 4px; }
@@ -38,9 +73,9 @@ body.page-espace { min-height: 100vh; display: flex; flex-direction: column; }
 
 /* ---------- Connexion ---------- */
 .auth { display: grid; grid-template-columns: 1.05fr 1fr; min-height: calc(100vh - 68px); }
-.auth-marque { position: relative; overflow: hidden; background: #0b0f18; color: #f3f2ed; padding: 64px 56px; display: flex; flex-direction: column; justify-content: center; }
+.auth-marque { position: relative; overflow: hidden; background: var(--bandeau-fond); color: var(--bandeau-texte); padding: 64px 56px; display: flex; flex-direction: column; justify-content: center; }
 .auth-marque::before { content: ""; position: absolute; inset: -30% -30% auto auto; width: 700px; height: 700px; border-radius: 50%; background: radial-gradient(circle, rgba(235, 181, 23, 0.22), transparent 62%); animation: lueur 9s ease-in-out infinite alternate; }
-.auth-marque::after { content: ""; position: absolute; inset: 0; opacity: 0.35; background-image: linear-gradient(#2d333d 1px, transparent 1px), linear-gradient(90deg, #2d333d 1px, transparent 1px); background-size: 48px 48px; mask-image: radial-gradient(ellipse at 70% 30%, #000 5%, transparent 70%); -webkit-mask-image: radial-gradient(ellipse at 70% 30%, #000 5%, transparent 70%); }
+.auth-marque::after { content: ""; position: absolute; inset: 0; opacity: 0.35; background-image: linear-gradient(var(--bandeau-bordure) 1px, transparent 1px), linear-gradient(90deg, var(--bandeau-bordure) 1px, transparent 1px); background-size: 48px 48px; mask-image: radial-gradient(ellipse at 70% 30%, #000 5%, transparent 70%); -webkit-mask-image: radial-gradient(ellipse at 70% 30%, #000 5%, transparent 70%); }
 @keyframes lueur { to { transform: translate(-80px, 60px); } }
 .auth-marque > * { position: relative; z-index: 1; }
 .egaliseur { display: flex; align-items: flex-end; gap: 10px; height: 90px; margin-bottom: 34px; }
@@ -53,11 +88,11 @@ body.page-espace { min-height: 100vh; display: flex; flex-direction: column; }
 @keyframes egaliseurBarre { to { transform: scaleY(0.45); } }
 .egaliseur i { transform-origin: bottom; }
 .auth-marque h1 { font-size: clamp(46px, 5.4vw, 78px); margin: 0 0 18px; line-height: 0.92; }
-.auth-marque h1 em { font-style: normal; color: #ebb517; }
-.auth-marque p { color: #9aa0ac; font-size: 17px; max-width: 30em; margin: 0 0 26px; }
+.auth-marque h1 em { font-style: normal; color: var(--bandeau-accent); }
+.auth-marque p { color: var(--bandeau-attenue); font-size: 17px; max-width: 30em; margin: 0 0 26px; }
 .auth-points { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
 .auth-points li { display: flex; gap: 12px; align-items: center; font-weight: 500; }
-.auth-points li span { width: 32px; height: 32px; border-radius: 9px; display: grid; place-items: center; background: rgba(235, 181, 23, 0.14); color: #ebb517; flex-shrink: 0; }
+.auth-points li span { width: 32px; height: 32px; border-radius: 9px; display: grid; place-items: center; background: rgba(235, 181, 23, 0.14); color: var(--bandeau-accent); flex-shrink: 0; }
 .auth-points li svg { width: 17px; height: 17px; }
 .auth-formulaire { display: flex; align-items: center; justify-content: center; padding: 48px 24px; }
 .carte-auth { width: 100%; max-width: 440px; }
@@ -189,34 +224,34 @@ body.page-espace { min-height: 100vh; display: flex; flex-direction: column; }
 .resume-calendrier .alerte-debordement { flex-basis: 100%; margin: 0; font-size: 13.5px; font-weight: 600; color: var(--danger); }
 
 /* ---------- Page tournoi ---------- */
-.entete-tournoi { position: relative; overflow: hidden; background: #0b0f18; color: #f3f2ed; border-bottom: 1px solid var(--bordure); }
+.entete-tournoi { position: relative; overflow: hidden; background: var(--bandeau-fond); color: var(--bandeau-texte); border-bottom: 1px solid var(--bordure); }
 .entete-tournoi::before { content: ""; position: absolute; inset: -60% -10% auto auto; width: 620px; height: 620px; border-radius: 50%; background: radial-gradient(circle, rgba(235, 181, 23, 0.2), transparent 62%); }
 .entete-tournoi .page { padding-top: 30px; padding-bottom: 0; position: relative; }
-.fil { font-size: 14px; color: #9aa0ac; margin-bottom: 14px; display: flex; gap: 8px; align-items: center; }
-.fil a { color: #9aa0ac; text-decoration: none; }
-.fil a:hover { color: #f3f2ed; }
+.fil { font-size: 14px; color: var(--bandeau-attenue); margin-bottom: 14px; display: flex; gap: 8px; align-items: center; }
+.fil a { color: var(--bandeau-attenue); text-decoration: none; }
+.fil a:hover { color: var(--bandeau-texte); }
 .fil svg { width: 14px; height: 14px; }
 .titre-tournoi { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
-.titre-tournoi .ico-sport { width: 64px; height: 64px; border-radius: 18px; display: grid; place-items: center; background: rgba(235, 181, 23, 0.15); color: #ebb517; }
+.titre-tournoi .ico-sport { width: 64px; height: 64px; border-radius: 18px; display: grid; place-items: center; background: rgba(235, 181, 23, 0.15); color: var(--bandeau-accent); }
 .titre-tournoi .ico-sport svg { width: 36px; height: 36px; }
 .titre-tournoi h1 { font-size: clamp(40px, 5vw, 66px); margin: 0; line-height: 0.95; animation: none; }
-.infos-tournoi { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; color: #9aa0ac; font-size: 14px; margin: 12px 0 22px; }
-.indicateur-direct { display: inline-flex; align-items: center; gap: 7px; font-weight: 700; font-size: 12px; letter-spacing: 0.06em; color: #808693; }
+.infos-tournoi { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; color: var(--bandeau-attenue); font-size: 14px; margin: 12px 0 22px; }
+.indicateur-direct { display: inline-flex; align-items: center; gap: 7px; font-weight: 700; font-size: 12px; letter-spacing: 0.06em; color: var(--bandeau-gris); }
 .indicateur-direct::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
-.indicateur-direct.connecte { color: #4ade80; }
+.indicateur-direct.connecte { color: var(--succes); }
 .indicateur-direct.connecte::before { animation: pulse 1.6s infinite; box-shadow: 0 0 0 4px rgba(74, 222, 128, 0.15); }
-.puce-code { display: inline-flex; align-items: center; gap: 8px; padding: 5px 6px 5px 12px; border-radius: 99px; background: #181d26; border: 1px solid #2d333d; color: #f3f2ed; font-weight: 600; }
+.puce-code { display: inline-flex; align-items: center; gap: 8px; padding: 5px 6px 5px 12px; border-radius: 99px; background: var(--bandeau-surface); border: 1px solid var(--bandeau-bordure); color: var(--bandeau-texte); font-weight: 600; }
 .puce-code b { font-family: var(--titre); font-size: 19px; letter-spacing: 0.15em; font-weight: 400; padding-top: 2px; }
-.puce-code button { border: 0; background: #212730; color: #ebb517; border-radius: 99px; height: 28px; padding: 0 10px; cursor: pointer; font-size: 12px; font-weight: 700; }
+.puce-code button { border: 0; background: var(--bandeau-surface-2); color: var(--bandeau-accent); border-radius: 99px; height: 28px; padding: 0 10px; cursor: pointer; font-size: 12px; font-weight: 700; }
 .actions-tournoi { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 22px; }
-.action-t { display: inline-flex; align-items: center; gap: 8px; height: 42px; padding: 0 16px; border-radius: 11px; border: 1px solid #2d333d; background: #181d26; color: #f3f2ed; cursor: pointer; font-weight: 600; font-size: 14px; transition: border-color 0.2s, transform 0.2s var(--ease); text-decoration: none; }
+.action-t { display: inline-flex; align-items: center; gap: 8px; height: 42px; padding: 0 16px; border-radius: 11px; border: 1px solid var(--bandeau-bordure); background: var(--bandeau-surface); color: var(--bandeau-texte); cursor: pointer; font-weight: 600; font-size: 14px; transition: border-color 0.2s, transform 0.2s var(--ease); text-decoration: none; }
 .action-t:hover { border-color: #ebb517; transform: translateY(-1px); }
-.action-t svg { width: 18px; height: 18px; color: #ebb517; }
-.action-t .cadenas { width: 13px; height: 13px; color: #808693; }
+.action-t svg { width: 18px; height: 18px; color: var(--bandeau-accent); }
+.action-t .cadenas { width: 13px; height: 13px; color: var(--bandeau-gris); }
 .onglets-tournoi { display: flex; gap: 4px; position: relative; overflow-x: auto; scrollbar-width: none; }
-.onglets-tournoi a { padding: 12px 18px 14px; text-decoration: none; color: #9aa0ac; font-weight: 600; font-size: 15px; border-bottom: 3px solid transparent; transition: color 0.2s, border-color 0.3s; white-space: nowrap; }
-.onglets-tournoi a:hover { color: #f3f2ed; }
-.onglets-tournoi a.actif { color: #f3f2ed; border-bottom-color: #ebb517; }
+.onglets-tournoi a { padding: 12px 18px 14px; text-decoration: none; color: var(--bandeau-attenue); font-weight: 600; font-size: 15px; border-bottom: 3px solid transparent; transition: color 0.2s, border-color 0.3s; white-space: nowrap; }
+.onglets-tournoi a:hover { color: var(--bandeau-texte); }
+.onglets-tournoi a.actif { color: var(--bandeau-texte); border-bottom-color: #ebb517; }
 .contenu-onglet { animation: vueEntree 0.45s var(--ease) both; }
 .barre-outils { display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 18px; }
 .segments { display: inline-flex; background: var(--surface); border: 1px solid var(--bordure); border-radius: 12px; padding: 4px; position: relative; }
@@ -226,6 +261,10 @@ body.page-espace { min-height: 100vh; display: flex; flex-direction: column; }
 .badge-direct { color: var(--danger); font-weight: 700; font-size: 11px; letter-spacing: 0.06em; display: inline-flex; align-items: center; gap: 5px; }
 .badge-direct::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; animation: pulse 1.6s infinite; }
 .match.direct { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent); }
+/* La classe .direct de ../site.css (pastille « EN DIRECT ») ne doit pas toucher la carte :
+   son point ::before prenait la première case de la grille et décalait les équipes. */
+.match.direct { font-weight: inherit; letter-spacing: normal; white-space: normal; }
+.match.direct::before { content: none; }
 .segments-statut { display: flex; margin: 18px 0 6px; }
 .segments-statut button { flex: 1; }
 .aide-statut { font-size: 12.5px; color: var(--texte-attenue); margin: 6px 0 0; }

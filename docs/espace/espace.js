@@ -365,7 +365,7 @@ async function vueTableau() {
     <div class="bloc-lateral cascade">
       <div class="encart" style="--i:2"><h3>${tr('Rejoindre comme co-organisateur', 'Join as a co-organizer')}</h3><p>${tr('Un organisateur t\'a donné un code d\'invitation ? Saisis-le pour aider à gérer son tournoi.', 'An organizer gave you an invitation code? Enter it to help run their tournament.')}</p>
         <form class="ligne-formulaire" id="form-rejoindre"><input class="code-saisie" id="code-invitation" maxlength="12" placeholder="••••••••" autocomplete="off" aria-label="${tr('Code d\'invitation', 'Invitation code')}"><button class="bouton petit" type="submit">${tr('Rejoindre', 'Join')}</button></form></div>
-      <div class="encart" style="--i:3"><h3>${tr('Sur ton téléphone aussi', 'On your phone too')}</h3><p>${tr('Tout ce que tu fais ici apparaît aussitôt dans l\'application OLYMPIAD, et inversement. Les achats (Pass Tournoi, Pro) se font dans l\'app.', 'Everything you do here shows up instantly in the OLYMPIAD app, and vice versa. Purchases (Tournament Pass, Pro) are made in the app.')}</p><a class="lien-discret" href="index.html#offres">${tr('Voir les offres', 'See plans')}</a></div>
+      <div class="encart" style="--i:3"><h3>${tr('Sur ton téléphone aussi', 'On your phone too')}</h3><p>${tr('Tout ce que tu fais ici apparaît aussitôt dans l\'application OLYMPIAD, et inversement. Les achats (Pass Tournoi, Pro) se font dans l\'app.', 'Everything you do here shows up instantly in the OLYMPIAD app, and vice versa. Purchases (Tournament Pass, Pro) are made in the app.')}</p><button type="button" class="lien-discret" data-action="voir-offres">${tr('Voir les offres', 'See plans')}</button></div>
     </div>
   </div>`);
 }
@@ -994,16 +994,20 @@ function ouvrirQR() {
 function messagePremium(raison) {
   ouvrirFenetre(`<h2>${tr('Fonction premium', 'Premium feature')}</h2><p class="sous">${{ pdf: tr('L\'export PDF du programme fait', 'PDF export of the schedule is'), ecran: tr('La vue grand écran fait', 'The big-screen view is') }[raison] || tr('Les co-organisateurs font', 'Co-organizers are')} ${tr('partie du Pass Tournoi et d\'OLYMPIAD Pro.', 'part of the Tournament Pass and OLYMPIAD Pro.')}</p>
     <div class="encart"><p style="margin:0">${tr('Les achats se font dans l\'application OLYMPIAD sur iPhone ou Android. Une fois le tournoi débloqué (ou ton abonnement Pro actif), la fonction est disponible ici aussi, avec le même compte.', 'Purchases are made in the OLYMPIAD app on iPhone or Android. Once the tournament is unlocked (or your Pro subscription is active), the feature is available here too, with the same account.')}</p></div>
-    <div class="actions-fenetre"><a class="bouton secondaire petit" href="index.html#offres">${tr('Voir les offres', 'See plans')}</a><button class="bouton petit" data-action="fermer-fenetre">OK</button></div>`);
+    <div class="actions-fenetre"><button type="button" class="bouton secondaire petit" data-action="voir-offres">${tr('Voir les offres', 'See plans')}</button><button class="bouton petit" data-action="fermer-fenetre">OK</button></div>`);
 }
 // Limite gratuite atteinte : présente les offres. Les achats passent par l'App Store
 // ou Google Play (RevenueCat) dans l'app ; le site ne peut rien encaisser lui-même.
 // enCreation : le tournoi n'existe pas encore (assistant), un Pass ne peut pas s'y appliquer.
-function fenetreOffres({ enCreation = false } = {}) {
+// limite : false quand on vient de « Voir les offres » (fonction premium, tableau de bord),
+// sans le message sur les 12 équipes ; offre : carte présélectionnée.
+function fenetreOffres({ enCreation = false, limite = true, offre: preselection = null } = {}) {
   const offre = (id, nom, prix, desc, vedette) => `<button type="button" class="carte-offre ${vedette ? 'vedette' : ''}" data-action="choisir-offre" data-offre="${id}" aria-pressed="false">
     ${vedette ? `<span class="ruban">${tr('Pour les clubs', 'For clubs')}</span>` : ''}<b>${nom}</b><span class="prix-offre">${prix}</span><span class="desc">${desc}</span><span class="choisir">${tr('Choisir', 'Choose')}${ico('fleche')}</span></button>`;
   ouvrirFenetre(`<h2>${tr('Passe à la vitesse supérieure', 'Go further')}</h2>
-    <p class="sous">${tr(`La version gratuite s'arrête à ${LIMITE_GRATUITE} équipes par tournoi. Choisis une offre pour en ajouter autant que tu veux.`, `The free plan stops at ${LIMITE_GRATUITE} teams per tournament. Pick a plan to add as many as you like.`)}</p>
+    <p class="sous">${limite
+    ? tr(`La version gratuite s'arrête à ${LIMITE_GRATUITE} équipes par tournoi. Choisis une offre pour en ajouter autant que tu veux.`, `The free plan stops at ${LIMITE_GRATUITE} teams per tournament. Pick a plan to add as many as you like.`)
+    : tr(`Équipes illimitées, grand écran, export PDF et co-organisateurs : choisis l'offre qui te convient. La version gratuite reste limitée à ${LIMITE_GRATUITE} équipes par tournoi.`, `Unlimited teams, big screen, PDF export and co-organizers: pick the plan that suits you. The free plan stays limited to ${LIMITE_GRATUITE} teams per tournament.`)}</p>
     <div class="cartes-offres">
       ${offre('pass', tr('Pass Tournoi', 'Tournament Pass'), tr('9,99 € · achat unique', '€9.99 · one-time purchase'), tr('Équipes illimitées, grand écran, export PDF et co-organisateurs pour ce tournoi, jusqu\'à 5 jours après son dernier jour.', 'Unlimited teams, big screen, PDF export and co-organizers for this tournament, until 5 days after its last day.'))}
       ${offre('pro', 'OLYMPIAD Pro', tr('59,99 € / an (Saison) ou 14,99 € / mois', '€59.99 / year (Season) or €14.99 / month'), tr('Toutes les fonctions premium, sur tous tes tournois. L\'annuel revient à 5 € / mois. Résiliable à tout moment.', 'Every premium feature, on all your tournaments. Yearly comes to €5 / month. Cancel anytime.'), true)}
@@ -1012,6 +1016,7 @@ function fenetreOffres({ enCreation = false } = {}) {
     <p class="mention-offres">${tr('Prix TTC pour la France ; le prix exact dans ton pays est affiché dans l\'application avant tout achat. Paiement via l\'App Store ou Google Play.', 'Prices include VAT for France; the exact price in your country is shown in the app before any purchase. Payment through the App Store or Google Play.')}</p>
     <div class="actions-fenetre"><button class="bouton secondaire petit" data-action="fermer-fenetre">${tr('Plus tard', 'Later')}</button></div>`, (f) => {
     f.dataset.enCreation = enCreation ? '1' : '';
+    if (preselection) etapesOffre(preselection);
   });
 }
 function etapesOffre(id) {
@@ -1253,8 +1258,10 @@ async function vueFormOlympiade(id) {
     try { const brut = await donnees.chargerOlympiade(id); o = brut?.olympiade; equipes = brut?.equipesOlympiade || []; } catch (e) { toast(messageErreur(e), 'erreur'); }
     if (!o) { location.hash = '#/'; return; }
   } else if (!etat.pro) {
-    location.replace('#/');
-    ouvrirFenetre(`<h2>${tr('Réservé à OLYMPIAD Pro', 'OLYMPIAD Pro only')}</h2><p class="sous">${tr('Les olympiades multisports (plusieurs sports, mêmes équipes, un classement général) font partie de l\'abonnement Pro, qui s\'achète dans l\'application mobile.', 'Multi-sport olympiads (several sports, same teams, one overall ranking) are part of the Pro subscription, bought in the mobile app.')}</p><div class="actions-fenetre"><a class="bouton secondaire petit" href="index.html#offres">${tr('Voir les offres', 'See plans')}</a><button class="bouton petit" data-action="fermer-fenetre">OK</button></div>`);
+    // replaceState plutôt que location.replace : le changement de route fermerait la fenêtre.
+    history.replaceState(null, '', '#/');
+    await vueTableau();
+    ouvrirFenetre(`<h2>${tr('Réservé à OLYMPIAD Pro', 'OLYMPIAD Pro only')}</h2><p class="sous">${tr('Les olympiades multisports (plusieurs sports, mêmes équipes, un classement général) font partie de l\'abonnement Pro, qui s\'achète dans l\'application mobile.', 'Multi-sport olympiads (several sports, same teams, one overall ranking) are part of the Pro subscription, bought in the mobile app.')}</p><div class="actions-fenetre"><button type="button" class="bouton secondaire petit" data-action="voir-offres" data-offre="pro">${tr('Voir les offres', 'See plans')}</button><button class="bouton petit" data-action="fermer-fenetre">OK</button></div>`);
     return;
   }
   const d = new Date(); d.setDate(d.getDate() + (((6 - d.getDay() + 7) % 7) || 7));
@@ -1493,6 +1500,7 @@ document.addEventListener('click', async (e) => {
     }
     case 'creer-tournoi': creerTournoi(cible); break;
     case 'choisir-offre': etapesOffre(cible.dataset.offre); break;
+    case 'voir-offres': fenetreOffres({ limite: false, offre: cible.dataset.offre || null }); break;
     // Tournoi
     case 'vue-matchs': etat.vueMatchs = cible.dataset.valeur; rendreOnglet(); break;
     case 'saisir': ouvrirSaisie(cible.dataset.match); break;
