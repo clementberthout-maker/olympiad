@@ -129,3 +129,14 @@ Scores « en cours » et calendrier mis à jour en direct pour tous. Phase final
 `<en-US>`
 In-progress scores and schedule updated live for everyone. Fairer knockout draw, estimated end time. Better use of multiple fields: group matches fill every field, and the final is played at the same time as the third-place match. Redesigned plans screen, with the yearly "Season" subscription. The Tournament Pass is valid until 5 days after the tournament, whose date can then no longer change. Various fixes.
 `</en-US>`
+
+## Notes de version (build 8)
+
+Nom de la release : `8 (1.0.0)`. À coller dans la Play Console (500 caractères maximum par langue).
+
+`<fr-FR>`
+Nouveau : olympiades multisports (Pro) avec classement général, tournois sur plusieurs jours, corbeille de 30 jours. Ajouter une équipe en cours de tournoi garde les scores. Finale à égalité : tirs au but obligatoires. Mot de passe sans majuscule automatique, lien « Se connecter » en haut de l'inscription, noms d'équipe en double refusés, matchs plus visiblement cliquables, QR code séparé de la carte. Grand écran payant, corrections diverses.
+`</fr-FR>`
+`<en-US>`
+New: multi-sport olympiads (Pro) with an overall ranking, tournaments over several days, 30-day trash. Adding a team mid-tournament keeps the scores. Tied final: penalty shootout required. No automatic capital letter in passwords, "Sign in" link at the top of sign-up, duplicate team names refused, matches more clearly tappable, QR code separate from the card. Paid big screen, various fixes.
+`</en-US>`
