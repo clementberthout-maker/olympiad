@@ -8,7 +8,7 @@
 import { donnees, MODE_DEMO } from './donnees.js';
 import {
   repartirEnPoules, genererCalendrierPoules, genererPremierTourEliminationDirecte, genererPhaseFinaleDepuisPoules,
-  genererTourSuivant, qualifiesParTeteDeSerie, joursApresDebut, genererFinaleEtTroisiemePlace, resultatsAutoPourExempts, idEquipeGagnante, estPhaseDePoule,
+  genererTourSuivant, qualifiesParTeteDeSerie, joursApresDebut, genererFinaleEtTroisiemePlace, resultatsAutoPourExempts, idEquipeGagnante, matchEliminationDecide, estPhaseDePoule,
   grouperParPhase, grouperParTerrain, NOM_MATCH_TROISIEME_PLACE,
 } from './moteur/generation.js';
 import { calculerClassement } from './moteur/classement.js';
@@ -595,7 +595,7 @@ function analyser(c) {
   const principales = phasesElim.filter((p) => p.nom !== NOM_MATCH_TROISIEME_PLACE);
   let derniere = null;
   principales.forEach((p) => { const d = Math.max(...p.matchs.map((m) => new Date(m.created_at).getTime())); if (!derniere || d > derniere.d) derniere = { ...p, d }; });
-  const derniereTerminee = derniere ? derniere.matchs.every((m) => m.resultat?.statut === 'termine') : false;
+  const derniereTerminee = derniere ? derniere.matchs.every(matchEliminationDecide) : false;
   const estFinale = derniere?.nom === 'Finale';
   const peutTourSuivant = derniereTerminee && !estFinale;
   const troisieme = phasesElim.find((p) => p.nom === NOM_MATCH_TROISIEME_PLACE);
@@ -603,7 +603,7 @@ function analyser(c) {
   const finale = estFinale ? derniere.matchs[0] : null;
   const vainqueur = derniereTerminee && estFinale ? idEquipeGagnante(finale) : null;
   const deuxieme = vainqueur && finale.equipe_b_id ? (vainqueur === finale.equipe_a_id ? finale.equipe_b_id : finale.equipe_a_id) : null;
-  const troisiemeTermine = troisieme ? troisieme.matchs.every((m) => m.resultat?.statut === 'termine') : false;
+  const troisiemeTermine = troisieme ? troisieme.matchs.every(matchEliminationDecide) : false;
   const troisiemeId = troisiemeTermine ? idEquipeGagnante(troisieme.matchs[0]) : null;
   const poulesTerminees = c.poules.length > 0 && phasesPoule.length === c.poules.length && phasesPoule.every((p) => p.matchs.every((m) => m.resultat?.statut === 'termine'));
   const peutPhaseFinale = c.tournoi.format === 'mixte' && phasesElim.length === 0 && poulesTerminees;

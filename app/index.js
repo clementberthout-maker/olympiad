@@ -231,18 +231,13 @@ export default function Accueil() {
       </View>
       <Text style={styles.soustitre}>{t('accueil.sousTitre')}</Text>
 
-      <View style={styles.rangeeActions}>
-        <Pressable style={styles.boutonActionPrincipale} onPress={() => router.push('/choisir-sport')}>
-          <Text style={styles.texteActionPrincipale} numberOfLines={1} adjustsFontSizeToFit>
-            {t('accueil.creerUnTournoi')}
-          </Text>
-        </Pressable>
-        <Pressable style={styles.boutonActionSecondaire} onPress={() => router.push('/rejoindre')}>
-          <Text style={styles.texteActionSecondaire} numberOfLines={1} adjustsFontSizeToFit>
-            {t('accueil.rejoindre')}
-          </Text>
-        </Pressable>
-      </View>
+      {/* Mêmes boutons, l'un sous l'autre, que l'accueil non connecté. */}
+      <Pressable style={styles.boutonPrincipal} onPress={() => router.push('/choisir-sport')}>
+        <Text style={styles.texteBoutonPrincipal}>{t('accueil.creerUnTournoi')}</Text>
+      </Pressable>
+      <Pressable style={styles.boutonSecondaire} onPress={() => router.push('/rejoindre')}>
+        <Text style={styles.texteBoutonSecondaire}>{t('accueil.rejoindreUnTournoi')}</Text>
+      </Pressable>
 
       {mesTournois.length > 0 && (
         <>
@@ -262,9 +257,13 @@ export default function Accueil() {
             scrollEnabled={false}
             renderItem={({ item }) => {
               const statut = statutTournoi(item.date_debut);
+              // Le QR code est un bouton à part, à côté de la carte (et non
+              // dedans) : en touchant la carte un peu à droite, on ouvrait
+              // le QR code au lieu du tournoi.
               return (
+                <View style={styles.ligneCarte}>
                 <Pressable
-                  style={styles.carteTournoi}
+                  style={[styles.carteTournoi, styles.carteAvecQr]}
                   onPress={() => router.push(`/tournoi/${item.id}/calendrier`)}
                 >
                   <MaterialCommunityIcons
@@ -286,15 +285,17 @@ export default function Accueil() {
                       {LABEL_STATUT[statut]}
                     </Text>
                   </View>
-                  <Pressable
-                    style={styles.boutonQrCarte}
-                    onPress={() => router.push(`/tournoi/${item.id}/qrcode`)}
-                    hitSlop={8}
-                  >
-                    <Ionicons name="qr-code-outline" size={18} color={couleurs.texteAttenue} />
-                  </Pressable>
                   <Text style={styles.chevron}>›</Text>
                 </Pressable>
+                <Pressable
+                  style={styles.boutonQrCarte}
+                  onPress={() => router.push(`/tournoi/${item.id}/qrcode`)}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('accueil.qrCode')}
+                >
+                  <Ionicons name="qr-code-outline" size={20} color={couleurs.texte} />
+                </Pressable>
+                </View>
               );
             }}
           />
@@ -328,22 +329,6 @@ function creerStyles(c) {
   return StyleSheet.create({
     container: { flexGrow: 1, padding: 24, backgroundColor: c.fond },
     enteteAccueil: { alignItems: 'flex-end', marginBottom: 4 },
-    rangeeActions: { flexDirection: 'row', gap: 10, marginTop: 8 },
-    boutonActionPrincipale: {
-      flex: 1, backgroundColor: c.accent, borderRadius: 10, paddingVertical: 13, alignItems: 'center',
-    },
-    texteActionPrincipale: {
-      color: c.accentEncre, fontFamily: POLICE_TITRE, fontSize: 15.5, letterSpacing: 0.3,
-      textTransform: 'uppercase',
-    },
-    boutonActionSecondaire: {
-      flex: 1, borderWidth: 1, borderColor: c.bordure, backgroundColor: c.surface2,
-      borderRadius: 10, paddingVertical: 13, alignItems: 'center',
-    },
-    texteActionSecondaire: {
-      color: c.texte, fontFamily: POLICE_TITRE, fontSize: 15.5, letterSpacing: 0.3,
-      textTransform: 'uppercase',
-    },
     logo: {
       flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 10,
     },
@@ -406,16 +391,16 @@ function creerStyles(c) {
     texteBadgeStatut_aujourdhui: { color: c.accent },
     texteBadgeStatut_avenir: { color: c.texteAttenue },
     texteBadgeStatut_termine: { color: c.texteAttenue },
+    ligneCarte: { flexDirection: 'row', gap: 8, marginBottom: 8 },
+    carteAvecQr: { flex: 1, marginBottom: 0 },
     boutonQrCarte: {
-      width: 32,
-      height: 32,
-      borderRadius: 8,
+      width: 52,
+      borderRadius: 10,
       backgroundColor: c.surface2,
       borderWidth: 1,
       borderColor: c.bordure,
       alignItems: 'center',
       justifyContent: 'center',
-      marginRight: 10,
     },
     boutonOublier: {
       width: 32,

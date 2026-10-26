@@ -16,6 +16,7 @@ import {
   NOM_MATCH_TROISIEME_PLACE,
   resultatsAutoPourExempts,
   idEquipeGagnante,
+  matchEliminationDecide,
   grouperParTerrain,
 } from '../../../lib/generation';
 import { genererHtmlProgramme } from '../../../lib/exportProgramme';
@@ -224,7 +225,23 @@ export default function Calendrier() {
     });
   }
 
-  async function genererPhaseFinale() {
+  // Équipes à égalité parfaite (points, différence, marqués) de part et
+  // d'autre de la dernière place qualificative d'une poule : rien ne les
+  // départage, le classement retient alors l'ordre d'inscription.
+  function egalitesALaQualification() {
+    const n = tournoi.nombre_qualifies_par_poule;
+    return poulesAvecClassement().flatMap(({ classement }) => {
+      const dernier = classement[n - 1];
+      const premierElimine = classement[n];
+      if (!dernier || !premierElimine) return [];
+      const egaux = dernier.points === premierElimine.points
+        && dernier.diff_buts === premierElimine.diff_buts
+        && dernier.buts_pour === premierElimine.buts_pour;
+      return egaux ? [`${dernier.equipe.nom} / ${premierElimine.equipe.nom}`] : [];
+    });
+  }
+
+  function genererPhaseFinale() {
     if (equipesQualifiees < 2) {
       Alert.alert(
         t('calendrier.pasAssezQualifiesTitre'),
@@ -232,6 +249,22 @@ export default function Calendrier() {
       );
       return;
     }
+    const egalites = egalitesALaQualification();
+    if (egalites.length) {
+      Alert.alert(
+        t('calendrier.egaliteParfaiteTitre'),
+        t('calendrier.egaliteParfaiteMessage', { equipes: egalites.join('\n') }),
+        [
+          { text: t('commun.annuler'), style: 'cancel' },
+          { text: t('calendrier.egaliteParfaiteContinuer'), onPress: lancerPhaseFinale },
+        ]
+      );
+      return;
+    }
+    lancerPhaseFinale();
+  }
+
+  async function lancerPhaseFinale() {
     setEnCours(true);
     try {
       const reglages = reglagesDepuisTournoi(tournoi, matchsBruts);
@@ -288,7 +321,7 @@ export default function Calendrier() {
   }
 
   const dernierePhaseTerminee = dernierePhaseElim
-    ? dernierePhaseElim.matchs.every((m) => m.resultat?.statut === 'termine')
+    ? dernierePhaseElim.matchs.every(matchEliminationDecide)
     : false;
   const estFinale = dernierePhaseElim?.nom === 'Finale';
   const peutGenererTourSuivant = dernierePhaseTerminee && !estFinale;
@@ -311,7 +344,7 @@ export default function Calendrier() {
 
   const phaseTroisiemePlace = phasesElim.find(({ nom }) => nom === NOM_MATCH_TROISIEME_PLACE);
   const troisiemePlaceTerminee = phaseTroisiemePlace
-    ? phaseTroisiemePlace.matchs.every((m) => m.resultat?.statut === 'termine')
+    ? phaseTroisiemePlace.matchs.every(matchEliminationDecide)
     : false;
   const troisiemeId = troisiemePlaceTerminee ? idEquipeGagnante(phaseTroisiemePlace.matchs[0]) : null;
   const nomTroisieme = troisiemeId ? equipes.find((e) => e.id === troisiemeId)?.nom : null;
@@ -349,7 +382,12 @@ export default function Calendrier() {
           <Ionicons name="share-outline" size={22} color={couleurs.texte} />
         </Pressable>
       </View>
-      <Text style={styles.soustitre}>{t('calendrier.toucheUnMatch')}</Text>
+      {phases.length > 0 && (
+        <View style={styles.bandeauAide}>
+          <Ionicons name="hand-left-outline" size={18} color={couleurs.accent} />
+          <Text style={styles.texteBandeauAide}>{t('calendrier.toucheUnMatch')}</Text>
+        </View>
+      )}
 
       {tournoi.nombre_terrains > 1 && phases.length > 0 && (
         <BasculeVue
@@ -412,6 +450,8 @@ export default function Calendrier() {
                 ) : (
                   <Text style={styles.aVenir}>{t('calendrier.aVenir')}</Text>
                 )}
+                {/* Le chevron montre que la ligne s'ouvre (saisie du score). */}
+                <Ionicons name="chevron-forward" size={16} color={couleurs.texteAttenue} style={styles.chevronMatch} />
               </Pressable>
             );
           })}
@@ -554,7 +594,12 @@ function creerStyles(c) {
     texteOptionPartage: { fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 15, color: c.texte },
     boutonModifier: { alignItems: 'center', marginTop: 28 },
     lienModifier: { fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 13, color: c.lien },
-    soustitre: { fontFamily: POLICE_TEXTE, fontSize: 12.5, color: c.texteAttenue, marginBottom: 20 },
+    bandeauAide: {
+      flexDirection: 'row', alignItems: 'center', gap: 10,
+      backgroundColor: c.accent + '14', borderWidth: 1, borderColor: c.accent + '55',
+      borderRadius: 10, paddingVertical: 10, paddingHorizontal: 12, marginBottom: 20,
+    },
+    texteBandeauAide: { flex: 1, fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 13, color: c.texte },
     vide: { fontFamily: POLICE_TEXTE, fontSize: 13, color: c.texteAttenue },
     sectionTitre: { fontFamily: POLICE_TITRE, fontSize: 18, letterSpacing: 0.2, color: c.texte, marginTop: 8, marginBottom: 10 },
     groupe: { marginBottom: 22 },
@@ -572,7 +617,8 @@ function creerStyles(c) {
       padding: 12,
       marginBottom: 6,
     },
-    infoMatch: { flexShrink: 1 },
+    infoMatch: { flex: 1, flexShrink: 1, marginRight: 8 },
+    chevronMatch: { marginLeft: 8 },
     equipes: { fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 14, color: c.texte },
     horaire: { fontFamily: POLICE_TEXTE, fontSize: 12, color: c.texteAttenue, marginTop: 2 },
     score: { fontFamily: POLICE_TITRE, fontSize: 17, color: c.texte },

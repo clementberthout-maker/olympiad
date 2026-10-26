@@ -342,6 +342,8 @@ export default function Profil() {
           value={ancienMotDePasse}
           onChangeText={setAncienMotDePasse}
           secureTextEntry
+          autoCapitalize="none"
+          autoCorrect={false}
         />
         <Text style={styles.label}>{t('profil.nouveauMotDePasse')}</Text>
         <TextInput
@@ -349,6 +351,8 @@ export default function Profil() {
           value={motDePasse}
           onChangeText={setMotDePasse}
           secureTextEntry
+          autoCapitalize="none"
+          autoCorrect={false}
         />
         <Text style={styles.label}>{t('profil.confirmerLeNouveauMotDePasse')}</Text>
         <TextInput
@@ -356,6 +360,8 @@ export default function Profil() {
           value={confirmationMotDePasse}
           onChangeText={setConfirmationMotDePasse}
           secureTextEntry
+          autoCapitalize="none"
+          autoCorrect={false}
         />
         <Pressable style={styles.boutonSecondaire} onPress={changerMotDePasse} disabled={enCoursMotDePasse}>
           <Text style={styles.texteBoutonSecondaire}>

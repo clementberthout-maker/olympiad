@@ -79,10 +79,10 @@ export default function ReinitialiserMotDePasse() {
         <Text style={styles.soustitre}>{t('reinitialiserMotDePasse.sousTitre')}</Text>
 
         <Text style={styles.label}>{t('reinitialiserMotDePasse.nouveauMotDePasse')}</Text>
-        <TextInput style={styles.input} value={motDePasse} onChangeText={setMotDePasse} secureTextEntry />
+        <TextInput style={styles.input} value={motDePasse} onChangeText={setMotDePasse} secureTextEntry autoCapitalize="none" autoCorrect={false} />
 
         <Text style={styles.label}>{t('reinitialiserMotDePasse.confirmerLeMotDePasse')}</Text>
-        <TextInput style={styles.input} value={confirmation} onChangeText={setConfirmation} secureTextEntry />
+        <TextInput style={styles.input} value={confirmation} onChangeText={setConfirmation} secureTextEntry autoCapitalize="none" autoCorrect={false} />
 
         <Pressable style={styles.bouton} onPress={valider} disabled={enCours}>
           <Text style={styles.texteBouton}>{enCours ? t('reinitialiserMotDePasse.enregistrementEnCours') : t('reinitialiserMotDePasse.valider')}</Text>

@@ -93,13 +93,18 @@ export default function SaisieResultat() {
   const avecPointsBonus = match && match.tournoi?.points_bonus && estPhaseDePoule(match.phase);
 
   function validerResultat() {
-    if (termine && estElimination && egalite) {
-      if (scoreTabA === scoreTabB) {
+    // On teste l'égalité réelle (et non `egalite`, qui attend un premier
+    // appui sur un compteur) : sinon un 0-0 validé sans toucher aux scores
+    // était enregistré sans tirs au but, et la finale désignait un vainqueur.
+    const egaliteReelle = scoreA === scoreB;
+    if (termine && estElimination && egaliteReelle) {
+      if (!debute || scoreTabA === scoreTabB) {
+        setDebute(true); // affiche le bloc tirs au but s'il était masqué
         Alert.alert(t('saisie.matchEliminationTitre'), t('saisie.matchEliminationMessage'));
         return;
       }
     }
-    enregistrer(scoreA, scoreB, termine && estElimination && egalite);
+    enregistrer(scoreA, scoreB, termine && estElimination && egaliteReelle);
   }
 
   async function enregistrer(a, b, avecTab) {

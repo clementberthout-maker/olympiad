@@ -241,6 +241,14 @@ export default function GestionEquipes() {
 
   async function ajouterEquipe() {
     if (!nomEquipe.trim()) return;
+    // Deux équipes du même nom rendraient le calendrier et le classement
+    // illisibles : on compare sans tenir compte des majuscules ni des espaces
+    // (même règle que l'espace organisateur du site).
+    const normaliser = (n) => n.trim().replace(/\s+/g, ' ').toLowerCase();
+    if (equipes.some((e) => normaliser(e.nom) === normaliser(nomEquipe))) {
+      Alert.alert(t('equipes.nomEnDoubleTitre'), t('equipes.nomEnDoubleMessage', { nom: nomEquipe.trim() }));
+      return;
+    }
     if (equipes.length >= LIMITE_EQUIPES_GRATUIT && !debloque) {
       router.push({
         pathname: '/paywall',

@@ -61,6 +61,21 @@ export default function Inscription() {
 
     setEnCours(false);
 
+    // Adresse déjà inscrite : Supabase ne renvoie pas d'erreur (pour ne pas
+    // révéler qu'un compte existe) mais un utilisateur sans "identities", et
+    // aucun e-mail n'est envoyé. On oriente alors vers la connexion.
+    if (!data.session && data.user && data.user.identities?.length === 0) {
+      Alert.alert(
+        t('inscription.emailDejaUtiliseTitre'),
+        t('inscription.emailDejaUtiliseMessage'),
+        [
+          { text: t('commun.annuler'), style: 'cancel' },
+          { text: t('inscription.seConnecter'), onPress: () => router.replace('/connexion') },
+        ]
+      );
+      return;
+    }
+
     if (data.session) {
       router.replace('/choisir-sport');
     } else {
@@ -81,6 +96,14 @@ export default function Inscription() {
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
       <Text style={styles.titre}>{t('inscription.titre')}</Text>
       <Text style={styles.soustitre}>{t('inscription.sousTitre')}</Text>
+
+      {/* En haut de l'écran : un organisateur déjà inscrit qui touche
+          « Créer mon tournoi » sans s'être connecté doit le voir tout de
+          suite, plutôt que de recréer un compte. */}
+      <Pressable style={styles.bandeauConnexion} onPress={() => router.replace('/connexion')}>
+        <Text style={styles.texteBandeauConnexion}>{t('inscription.dejaUnCompte')}</Text>
+        <Text style={styles.lienBandeauConnexion}>{t('inscription.seConnecter')} ›</Text>
+      </Pressable>
 
       <Text style={styles.label}>{t('inscription.nom')}</Text>
       <TextInput style={styles.input} value={nom} onChangeText={setNom} returnKeyType="next" placeholderTextColor={couleurs.texteAttenue} />
@@ -125,11 +148,6 @@ export default function Inscription() {
           acceptation des conditions d'utilisation. */}
       <Text style={styles.mentions}>{t('inscription.mentionsAgeEtConditions')}</Text>
       <LiensLegaux />
-      <View style={{ height: 20 }} />
-
-      <Pressable onPress={() => router.replace('/connexion')}>
-        <Text style={styles.lien}>{t('inscription.dejaInscrit')}</Text>
-      </Pressable>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -174,7 +192,14 @@ function creerStyles(c) {
       marginBottom: 16,
     },
     texteBouton: { color: c.accentEncre, fontFamily: POLICE_TITRE, fontSize: 17, letterSpacing: 0.4 },
-    lien: { fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 13, color: c.lien, textAlign: 'center' },
+    bandeauConnexion: {
+      flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+      backgroundColor: c.surface, borderWidth: 1, borderColor: c.bordure,
+      borderLeftWidth: 3, borderLeftColor: c.accent, borderRadius: 10,
+      paddingVertical: 12, paddingHorizontal: 14, marginBottom: 6,
+    },
+    texteBandeauConnexion: { fontFamily: POLICE_TEXTE, fontSize: 13.5, color: c.texte, flexShrink: 1 },
+    lienBandeauConnexion: { fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 13.5, color: c.lien, marginLeft: 8 },
     mentions: { fontFamily: POLICE_TEXTE, fontSize: 11.5, lineHeight: 16, color: c.texteAttenue, textAlign: 'center' },
   });
 }

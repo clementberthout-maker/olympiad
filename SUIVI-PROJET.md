@@ -3,7 +3,7 @@
 > Fichier tenu à jour automatiquement par Claude à chaque modification du projet
 > (voir `CLAUDE.md` et le hook `.claude/hooks/verifier-suivi.sh`).
 
-**Dernière mise à jour :** 21 octobre 2026
+**Dernière mise à jour :** 26 octobre 2026
 
 ---
 
@@ -219,6 +219,34 @@ OLYMPIAD sert à organiser des tournois sportifs amateurs. L'organisateur crée 
 - Pistes étudiées pour remplacer OLYMPIAD (racine « olymp- » à éviter, art. L141-5 du Code du sport) : PODIAD, TOURNIAD, STADION, AGORIA…
 - Premières vérifications sur STADION et AGORIA : les deux sont déjà pris. STADION est le nom d'une agence numérique sportive londonienne. AGORIA est celui de la fédération belge de la technologie, et aussi d'un DJ. Leurs domaines .app, .fr et .com sont enregistrés. Variantes proposées : STADIOS, AGORAE, AGORENA.
 - Le 16/10, vérification de STADIOS, STADIONA et AGORAE (recherche web et registres des domaines). Aucune entreprise ni appli trouvée à ces noms exacts. **STADIONA** est la seule dont `stadiona.app` et `stadiona.fr` sont libres (`.com` pris). Les domaines .app, .fr et .com de STADIOS et d'AGORAE sont tous pris. Une agence londonienne s'appelle déjà « Stadion », donc STADIONA lui ressemble un peu. Marques INPI et EUIPO pas encore vérifiées.
+- Le 21/10, nouvelles pistes vérifiées (recherche web et registres des domaines) :
+  - **DUELIA** : aucune appli à ce nom, `duelia.app` et `duelia.fr` libres.
+  - **TROPHEA** : aucune appli à ce nom, `trophea.app` libre.
+  - **DUELIO** : une appli de quiz porte déjà ce nom.
+  - **AGORIA** : déjà pris, voir plus haut.
+  - **SQUADO, SQUADA, SQUADIA** : très proches de Squadi, une plateforme australienne de gestion de compétitions (scores en direct, calendriers), et d'autres applis « squad ». À éviter.
+- Le 21/10, contrôle de tous les noms proposés (registres des domaines, App Store FR et US, recherche web) :
+  - **Domaines .com, .app et .fr tous libres, rien trouvé :** PODIAD, TOURNIAD, CHAMPIAD, MATCHIAD, MIXIAD, NEMEAD, ISTHMIAD, PYTHIAD.
+  - **.app et .fr libres :** AGORENA, POLYAD, MULTIAD, MIXATHLON, XATHLON, KICKTOUR, SIFFLO, KICKOFFY.
+  - **.fr seul libre :** OMNIAD (beaucoup de marques « Omni » dans la publicité).
+  - **.app seul libre :** MYATHLON, STADIUMO, HERAIA, FANION, BRACKO (une appli Bracko existe déjà).
+  - **Noms autour de SQUAD (21/10) :**
+    - Les trois domaines sont libres et aucune appli n'a été trouvée pour SQUADIAD, SQUADYS, SQUADATHLON et SQUADVS. Pour SQUADARENA, SQUADTOUR, SQUADORA et SQUADMIX, le `.app` et le `.fr` sont libres.
+    - Le secteur est saturé d'applis sportives « squad » : Squadi, Squadius (ligues de foot amateur), Squad-up! (tournois), Squadd. Une marque « SQUAD GAME » est en cours de dépôt aux États-Unis en classe 41. Le risque de confusion reste plus élevé qu'avec les noms en -IAD.
+  - **AGORIA et ATHLIA (23/10) :** à écarter. AGORIA : fédération belge de la technologie, un DJ, une appli « Agoria by Sinoia », tous les domaines pris. ATHLIA : domaines .com, .app et .fr pris (`athlia.com` actif), et des noms très proches en sport et fitness (Athli, AthliAI, Athlyts, Athliance).
+  - **Familles AGORA et ATHL- (23/10) :**
+    - Domaines .com, .app et .fr libres, et aucune appli trouvée : AGORIANA, PNYXIA, ATHLIAD, ATHLIZIA, ATHLORYA.
+    - .app et .fr libres : AGORELIA, AGORAD, AGORIO, ATHLONIA, ATHLYA, ATHLIZO, ATHLEXA, ATHLENIA, ATHLIVO.
+    - AGORIAD : .com et .app libres, mais le .fr est pris.
+    - Déjà utilisés : ATHLORA (appli de musculation) et ATHLETO (Athleto Studios).
+  - **Noms neufs avec .com libre (23/10) :** TOURNIVA, TOURNIKO, TOURNEZO, VAINQO, VAINKA, VAINQORA, JOUTIO, JOUTEO, JOUTIX, JOUTLY, JOUTARO, RIVALIKA, BRACKEON, BRACKETIZ, POULIVA, POULIKA, LIGIKA, EQUIPIZ, FANIOZ, FANIOKA, SIFFLIX, MATCHYZ. Pour tous, le .fr est libre aussi, et le .app aussi (sauf 3 noms non vérifiés, limite de requêtes). Aucune appli à ces noms sur l'App Store.
+  - **2e série de noms neufs, .com, .app et .fr libres (23/10), aucune appli homonyme :** PODALIO, PODIUMIZ, MEDALKA, TROPHIVA, TROPHIZO, VICTRIKA, VICTORIZO, LAUZIO, COUPIKA, COUPIZA, MATCHURO, MATCHIKO, MATCHEZO, AMATCHIO, DUELIZO, AFFRONTIZ, COMBIKO, STADIZO, ARENKIO, TRIBUNIZ, GRADINZO, FILETIO, FILETKA, BALLIKA, GOALIKA, KICKIZA, MAILLIKA, TEAMIZA, CAPITANIZ, SCORKEO, DIREKTIZ. COACHIZ : .fr pris.
+  - **3e série de noms neufs, .com, .app et .fr libres (24/10), aucune appli homonyme :** RENCONTRIO, RENCONTIKA, RASSEMBLIO, COPAINO, COPAINZ, KERMESSIO, GUINGUO, CLANIKA, CLANIZO, EKIPIKA, TRIBUZO, FINALIKA, FINALEZO, PROLONGIZ, MITEMPSO, PENALTIKA, ESSAIKO, PANIEKO, SMASHIZ, DRIBLIKO, FRAPPIKA, ARBITRIKA, SIFFLIKA, TOURNEZIO, ROUNDIKA, ETAPIKA, GROUPIKO, TABLIKO, CALENDIKA. CHALLENGIZ : .app pris. TIROBUT : .fr pris.
+  - **4e série et fichier récapitulatif (24/10) :** nouveaux noms avec .com, .app et .fr libres, aucune appli homonyme (OLAKIO, ALLEZKO, TIFOZIO, HOURRIO, CHAMPIKO, SAISONIO, PARTIDIKO, SPIELIKO…). Toutes les propositions depuis le 15/10 sont regroupées dans `NOMS-APPLICATION.md`, avec la short-list et les prochaines étapes. Le même jour, le fichier ne garde plus que les noms disponibles (.com libre et aucune appli homonyme). Série sans sonorité italienne ajoutée (JOUTADE, MATCHONS, TOURNKRAFT…). Série dans le style SPARTIAD ajoutée (SPARTIAD libre, mais marque SPARTAN défendue en classe 41 par Spartan Race). Finalistes : SPARTIAD, SPARTORIA et SPARTENA (trois domaines libres, rien trouvé sur les bases de marques consultées par Clément ; SPORTENA écarté : .com et marque pris). Aperçu du logo et de l'écran d'accueil pour chacun dans `APERCU-NOMS.html`.
+  - **Noms tirés des expressions du sport (24/10), .com, .app et .fr libres, aucune appli homonyme :** 37 noms dans `NOMS-APPLICATION.md` (section 8), dont MITEMPA (troisième mi-temps), SETMATCHO (jeu, set et match), BRAKETO (bracket), KIKOFO (kick-off), HATRIKA (hat-trick).
+  - **Variantes d'OLAMATCH (26/10) :** `olamatch.com` pris (réservé le 08/09/2026 chez Hostinger, parqué), .fr et .app libres. 34 variantes avec .com, .app et .fr libres et aucune appli homonyme (OLAMATCHS, OLAMATCHO, OLATOURNOI, OLAKUP…). « Ola » est aussi la marque Ola Cabs, à vérifier dans TMview.
+  - **FIXTR (23/10) :** à écarter. Une appli iOS « Fixtr: Football Widgets » (scores, calendriers, classements de foot) existe depuis février 2026. `fixtr.com` et `fixtr.app` sont pris, seul `fixtr.fr` est libre. Les noms en « fixture » sont aussi très nombreux sur les stores.
+  - **Tous les domaines pris :** ATHLIA, TOURNEO, PLATEAU, TOUCHLINE, SCORIO, LIVEO, WHISTLY, TABLO, RONDO, FIXTR, GRILLO, VERSUS, VERSA, CUPIO, LAURIER, ÉTOILE.
 
 ### Intro 3D validée, puis retirée du site (15 octobre)
 - **Validée** par Clément le 15 octobre dans sa dernière version (avatar Rocketbox). **Consigne : ne plus modifier l'animation 3D.**
@@ -381,6 +409,16 @@ OLYMPIAD sert à organiser des tournois sportifs amateurs. L'organisateur crée 
 - **Grand écran payant aussi sur le site** : cadenas sur le bouton « Grand écran » de l'espace organisateur et message « Fonction premium » (aussi par l'adresse directe `#/tournoi/…/ecran`) ; simulateur (cadenas, écran d'achat, ouverture après un achat simulé) ; offres de l'accueil (« Vue grand écran » barrée en gratuit, ajoutée au Pass) ; textes du Pass et de l'offre gratuite (FR/EN). Vérifié en local : espace en démo gratuit puis Pro, simulateur avant et après achat, aucune erreur.
 - **CGU** (article 3, au 21/10) et **fiche Google Play** (`store/fiche-google-play.md`) : grand écran ajouté aux fonctions du Pass. Fiche à recoller dans la Play Console.
 
+### Retours du premier testeur Android, lot 1 (26 octobre)
+- **Finale gagnée sans tirs au but (bug) :** un 0-0 validé « Terminé » sans toucher aux compteurs était enregistré sans tirs au but, et l'équipe B était déclarée vainqueur. La saisie exige maintenant les tirs au but dans ce cas (`saisie.js`). `idEquipeGagnante` ne désigne plus de vainqueur si l'égalité n'est pas départagée, et le tour suivant, le podium et le grand écran attendent un match départagé (`matchEliminationDecide`, app et espace ; moteur `docs/espace/moteur/` recopié). Une finale déjà enregistrée ainsi redemande ses tirs au but.
+- **Majuscule automatique dans le mot de passe (bug) :** `autoCapitalize="none"` ajouté aux champs du changement de mot de passe (`profil.js`) et de la réinitialisation.
+- **Inscription :** bandeau « Tu as déjà un compte ? Se connecter » en haut de l'écran (le lien du bas est retiré). Adresse déjà inscrite : message clair et bouton « Se connecter » (Supabase n'envoyait aucun e-mail, sans erreur).
+- **Équipes :** deux équipes ne peuvent plus porter le même nom dans l'app (majuscules et espaces ignorés), comme dans l'espace.
+- **Calendrier :** bandeau d'aide « Touche un match pour saisir ou modifier son score » plus visible, et chevron sur chaque match. Avant de générer la phase finale, alerte si des équipes sont à égalité parfaite à la limite de qualification (l'ordre d'inscription les départage).
+- **Accueil :** le bouton QR code est sorti de la carte du tournoi (on l'ouvrait en touchant la carte à droite). Mêmes boutons l'un sous l'autre, connecté ou non. Sous-titre qui dit l'objectif : « L'appli de l'organisateur : calendrier, scores et classements en direct ».
+- **Fiche Google Play** (`store/fiche-google-play.md`) : description courte et début de la description complète précisent que c'est un outil pour l'organisateur. À recoller dans la Play Console.
+- Fichiers modifiés vérifiés à la compilation (esbuild) et moteur testé ; pas encore testé sur téléphone. **À livrer dans le prochain build.**
+
 ## 3. Ce qu'il reste à faire
 
 Légende : `[ ]` à faire · `[x]` fait
@@ -423,7 +461,7 @@ Légende : `[ ]` à faire · `[x]` fait
   - Configurer les URL de redirection pour l'app (`olympiad://`). *Préparé le 15/10 : Site URL `compte-confirme.html` et `olympiad://**`, voir `supabase/emails/README.md`. Page en ligne le 15/10 (commits poussés, vérifiée : « Adresse confirmée » et « Lien expiré »). Reste à saisir dans Supabase.*
   - Brancher un envoi d'emails SMTP personnalisé : le service d'emails par défaut est très limité en production. *Préparé le 15/10 : SMTP Gmail et modèles FR/EN dans `supabase/emails/`. Configuré et testé le 15/10 (inscription et mot de passe oublié, dans l'aperçu web). Ménage fait le 15/10 (compte `+test` supprimé, `localhost:8083` retiré des Redirect URLs). Reste : vérifier le mot de passe oublié sur un vrai téléphone (premiers testeurs).*
 - [ ] **C14. Nom de domaine et e-mail pro :** *Budget et options détaillés le 15/10 dans `BUDGET-PROJET.md`.* Vérifier d'abord le risque sur le nom (« olympiade » protégé par le CNOSF, art. L141-5 du Code du sport). Puis acheter `olympiad-app.com`, créer `support@olympiad-app.com` (Zoho Mail conseillé), configurer SPF/DKIM/DMARC, brancher le domaine sur GitHub Pages et mettre à jour `lib/liensLegaux.js` et l'URL de support. Facultatif : e-mails Supabase envoyés depuis le domaine (Brevo ou Resend).
-- [ ] **C14b. Choisir le nouveau nom (avant C14) :** vérifier les marques sur INPI et TMview (classes 9 et 41), les stores, les domaines et les réseaux sociaux. Ensuite, renommer l'app (nom affiché, logo, textes, fiches des stores, site). L'identifiant `com.clement.olympiad` peut rester.
+- [ ] **C14b. Choisir le nouveau nom (avant C14) :** *Toutes les propositions et leurs contrôles sont dans `NOMS-APPLICATION.md` (24/10).* *Finalistes le 24/10 : SPARTIAD, SPARTORIA, SPARTENA (aperçu dans `APERCU-NOMS.html`). Choix resserré ensuite entre SPARTIAD et SPARTENA ; SPARTIADE vérifié, ses trois domaines sont libres. Puis 36 noms dans l'esprit de SPARTENA sans « Spart- » (HOPLENA, VICTENA, TOURNENA…), tous libres sur les 3 domaines.* *Puis 37 noms tirés des expressions du sport (MITEMPA, SETMATCHO, BRAKETO, KIKOFO, HATRIKA…), tous libres sur les 3 domaines.* *OLAMATCH : .com pris le 08/09/2026 ; variantes libres (OLAMATCHS, OLAMATCHO, OLATOURNOI…) le 26/10. Reste : choisir, réserver les domaines, déposer la marque à l'INPI.* vérifier les marques sur INPI et TMview (classes 9 et 41), les stores, les domaines et les réseaux sociaux. Ensuite, renommer l'app (nom affiché, logo, textes, fiches des stores, site). L'identifiant `com.clement.olympiad` peut rester.
 - [ ] **C15. Avant la sortie publique :** passer Supabase en Pro (un projet gratuit se met en pause après 7 jours sans activité, sans sauvegarde) ; s'inscrire à l'App Store Small Business Program (commission 15 % au lieu de 30 %) ; choisir l'adresse publique de développeur (affichée par Apple et Google) ; créer une micro-entreprise dès les premières ventes régulières.
 - [ ] **C16. Conformité légale, à finir avant la sortie publique :**
   - [x] Supprimer automatiquement les comptes inactifs depuis 3 ans (promis dans la politique du 20/10) : tâche planifiée Supabase (`pg_cron`) qui envoie l'e-mail d'avertissement 30 jours avant, puis appelle la suppression. *Fait le 20/10 : migration exécutée, Edge Function `comptes-inactifs` déployée, secrets et Vault configurés, simulation et appel par `pg_net` testés.*
@@ -493,6 +531,13 @@ Légende : `[ ]` à faire · `[x]` fait
 - [x] **G33. Petits défauts :** *Fait le 16/10 pour l'app, le site et l'espace (« Bonjour » sans prénom vient du profil vide). Profil du compte démo complété le 20/10.* titre de l'onglet du site resté en français en anglais, et « Football · 8 équipes » non traduit dans le téléphone de l'accueil ; « Bonjour » sans prénom dans l'espace (profil du compte démo vide : le remplir pour Google et Apple) ; « Quart de finale générée » (masculin) ; « fin des premier tour » (simulateur) ; tennis affiché « 1 pt nul » alors qu'il n'y a pas de nul ; code d'accès en minuscules dans l'app, en majuscules sur le site ; « Vous faites partie de quelle équipe ? » (vouvoiement) dans l'app ; doublon d'équipe ignoré sans message dans l'espace ; dates passées sélectionnables ; pas de lien « Signaler » sur le suivi public du site ; ni liens légaux dans le profil de l'espace ; « Voir un tournoi en direct » du site remplace le tournoi du simulateur sans prévenir ; match pour la 3e place activé par défaut dans le simulateur mais pas dans l'app.
 - [x] **G34. Plusieurs terrains mal utilisés :** *Corrigé le 20/10 (app, espace, site) ; à livrer au prochain build.* des terrains restaient vides entre deux journées de poule, et la finale se jouait après la 3e place même avec 2 terrains.
 
+### H. Retours du premier testeur Android (26/10)
+- [ ] **H35. Lot 1 à tester sur le prochain build :** finale 0-0 (tirs au but exigés, aucun vainqueur avant), majuscule du mot de passe, bandeau « Se connecter » de l'inscription, adresse déjà inscrite, nom d'équipe en double, chevrons et bandeau du calendrier, alerte d'égalité parfaite, QR code à côté de la carte. Recoller la fiche Google Play.
+- [ ] **H36. Ajouter ou retirer une équipe en cours de tournoi sans perdre les scores :** aujourd'hui « Enregistrer » ne crée pas de matchs pour une équipe ajoutée, et « Régénérer » efface tous les résultats. Faire une régénération qui garde les matchs joués ou en cours et ne recalcule que les matchs à venir (poules seulement, interdit une fois la phase finale lancée). App et `docs/espace/moteur/`.
+- [ ] **H37. Tournoi sur plusieurs jours :** colonne `date_fin` (migration avec ses `grant`), champ « Date de fin » à la création et dans les réglages, statut « En cours » entre les deux dates (`statutTournoi` de l'accueil), créneaux répartis sur plusieurs jours dans `generation.js`. Revoir la durée du Pass Tournoi (aujourd'hui `date_debut + 5` jours) pour la caler sur `date_fin`.
+- [ ] **H38. Corbeille (facultatif) :** un tournoi supprimé reste récupérable 30 jours avant d'être effacé (aujourd'hui la suppression est définitive, et une sauvegarde Supabase ne permet pas de restaurer le tournoi d'une seule personne).
+- [ ] **H39. Olympiade multisports (après la sortie, version 1.1) :** un niveau « Olympiade » qui regroupe plusieurs épreuves (une par sport, chacune avec son calendrier), des équipes communes, un barème de points par place (par exemple 10/8/6…) et un classement général cumulé. Adapter les écrans, le grand écran, le suivi public et l'espace. Possible argument de l'offre Pro.
+
 **Priorité conseillée :** commence par A1 à A4 (du code, sans dépendance extérieure) et, en parallèle, ouvre les comptes développeur (C9). La validation des comptes et le test fermé Google sont ce qui prend le plus de temps.
 
 ---
@@ -503,6 +548,25 @@ Une ligne par modification, la plus récente en haut.
 
 | Date | Modification |
 |------|--------------|
+| 2026-10-26 | Retours du testeur Android, lot 1 : finale sans tirs au but, majuscule du mot de passe, inscription, noms d'équipe en double, calendrier, accueil, fiche Play ; lots 2 et 3 ajoutés (section H) |
+| 2026-10-26 | Nom : variantes d'OLAMATCH (.com pris) vérifiées ; 34 libres (OLAMATCHS, OLAMATCHO, OLATOURNOI…) ajoutées à `NOMS-APPLICATION.md` |
+| 2026-10-24 | Nom : 37 noms tirés des expressions du sport ajoutés à `NOMS-APPLICATION.md` (MITEMPA, SETMATCHO, BRAKETO, KIKOFO, HATRIKA…), tous libres |
+| 2026-10-24 | Nom : 36 noms en -ENA sans « Spart- » ajoutés à `NOMS-APPLICATION.md` (HOPLENA, VICTENA, TOURNENA, LEONIDENA…), tous libres |
+| 2026-10-24 | Nom : choix resserré entre SPARTIAD et SPARTENA ; SPARTIADE vérifié (.com, .app et .fr libres, aucune appli) |
+| 2026-10-24 | Nom : aperçu de SPARTIAD, SPARTORIA et SPARTENA (logo, icône, fiche store, écran d'accueil) dans `APERCU-NOMS.html` |
+| 2026-10-24 | Nom : série style SPARTIAD (SPARTIAD, VICTIAD, FANIAD, ARENIAD, CUPIAD…) ajoutée à `NOMS-APPLICATION.md` ; SPORTA et FANA pris |
+| 2026-10-24 | Nom : série sans sonorité italienne (JOUTADE, MATCHONS, TOURNKRAFT…) ajoutée à `NOMS-APPLICATION.md` |
+| 2026-10-24 | `NOMS-APPLICATION.md` : noms indisponibles retirés (gardés : .com libre et aucune appli homonyme) |
+| 2026-10-24 | Nom : 4e série de noms neufs ; toutes les propositions regroupées dans `NOMS-APPLICATION.md` |
+| 2026-10-24 | Nom : 3e série de noms neufs avec .com libre (RENCONTRIO, COPAINO, MITEMPSO…) |
+| 2026-10-23 | Nom : 2e série de 32 noms neufs avec .com libre (PODALIO, TROPHIVA, MATCHURO…) |
+| 2026-10-23 | Nom : 22 noms neufs avec .com libre (TOURNIVA, VAINQO, JOUTIO…), aucune appli homonyme |
+| 2026-10-23 | Nom : listes AGORA et ATHL- vérifiées ; AGORIANA, PNYXIA, ATHLIAD, ATHLIZIA et ATHLORYA ont leurs 3 domaines libres |
+| 2026-10-23 | Nom : AGORIA et ATHLIA revérifiés, à écarter (domaines pris, noms proches déjà utilisés) |
+| 2026-10-23 | Nom : FIXTR vérifié, à écarter (appli « Fixtr: Football Widgets » déjà sur l'App Store) |
+| 2026-10-21 | Nom : noms autour de SQUAD vérifiés ; SQUADIAD, SQUADYS, SQUADATHLON et SQUADVS ont leurs 3 domaines libres, mais le secteur « squad » est saturé |
+| 2026-10-21 | Nom : contrôle de tous les noms proposés ; 8 noms en -IAD ont leurs domaines .com, .app et .fr libres (PODIAD, TOURNIAD, CHAMPIAD, NEMEAD…) |
+| 2026-10-21 | Nom : AGORIA, TROPHEA, DUELIO, DUELIA, SQUADO, SQUADA, SQUADIA vérifiés ; DUELIA et TROPHEA les plus libres |
 | 2026-10-21 | Grand écran payant sur le site (espace, simulateur, offres), CGU art. 3 et fiche Play à jour ; écran d'achat du build 7 vérifié |
 | 2026-10-21 | App : vue grand écran payante, cadenas sur les options payantes, écrans au-dessus de la barre système Android, logo centré sur Android (prochain build) |
 | 2026-10-21 | Grants Data API explicites ajoutés dans `schema.sql` (changement Supabase du 30/10) |
