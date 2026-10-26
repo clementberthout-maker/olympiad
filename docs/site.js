@@ -66,7 +66,7 @@
     's.sur': '5 sports', 's.titre': 'Every sport has its rules', 's.intro': 'Scoring, wording and tiebreakers adapt automatically to the chosen sport.',
     'o.sur': 'Plans', 'o.titre': 'Free to get started', 'o.intro': 'Unlock one tournament or all of them, only when you need it.',
     'o.g': 'Free', 'o.g1': 'Up to 12 teams per tournament', 'o.g2': 'Schedule, scores and live tracking', 'o.g3': 'QR code and access code', 'o.g7': 'Big screen view', 'o.g4': '5 sports, knockout stages and podium', 'o.g5': 'PDF export', 'o.g6': 'Co-organizers',
-    'o.p': 'Tournament Pass', 'o.pprix': '€9.99 · one-time purchase, for one tournament', 'o.p1': 'Unlimited teams', 'o.p2': 'PDF export of the schedule', 'o.p6': 'Big screen view', 'o.p3': 'Co-organizers', 'o.p4': 'No subscription', 'o.p5': 'Valid until 5 days after the tournament date',
+    'o.p': 'Tournament Pass', 'o.pprix': '€9.99 · one-time purchase, for one tournament', 'o.p1': 'Unlimited teams', 'o.p2': 'PDF export of the schedule', 'o.p6': 'Big screen view', 'o.p3': 'Co-organizers', 'o.p4': 'No subscription', 'o.p5': 'Valid until 5 days after the last day of the tournament',
     'o.ruban': 'For clubs', 'o.proprix': '€59.99 / year (Season) or €14.99 / month', 'o.pro1': 'Every premium feature', 'o.pro2': 'On all your tournaments', 'o.pro3': 'Ideal for clubs that organize often', 'o.pro4': 'Cancel anytime', 'o.pro5': 'Season: just €5 / month, 67% less than monthly',
     'o.gcta': 'Get started', 'o.pcta': 'Choose the Pass', 'o.procta': 'Go Pro',
     'o.mention': 'Prices include VAT for France; the exact price in your country is shown in the app before any purchase. Payment through the App Store or Google Play; the Pro subscription renews automatically unless cancelled at least 24 hours before the end of the period. See the <a href="conditions-utilisation.html">terms of use</a>.',
@@ -968,7 +968,7 @@
       return `${barreNav()}
         <h2 class="s-titre">${tr('Passe au niveau supérieur', 'Level up')}</h2>
         <p class="s-sous">${accroches[raison] || accroches.defaut}</p>
-        ${offre('pass', tr('Pass Tournoi', 'Tournament Pass'), tr('Débloque équipes illimitées, grand écran, export PDF et co-organisateurs pour ce tournoi, jusqu\'à 5 jours après sa date.', 'Unlocks unlimited teams, big screen, PDF export and co-organizers for this tournament, until 5 days after its date.'), tr('9,99 € · achat unique', '€9.99 · one-time purchase'))}
+        ${offre('pass', tr('Pass Tournoi', 'Tournament Pass'), tr('Débloque équipes illimitées, grand écran, export PDF et co-organisateurs pour ce tournoi, jusqu\'à 5 jours après son dernier jour.', 'Unlocks unlimited teams, big screen, PDF export and co-organizers for this tournament, until 5 days after its last day.'), tr('9,99 € · achat unique', '€9.99 · one-time purchase'))}
         ${offre('pro-an', tr('OLYMPIAD Pro (annuel) · Saison', 'OLYMPIAD Pro (yearly) · Season'), tr('Toutes les fonctionnalités premium, pour tous tes tournois. Le plus avantageux.', 'Every premium feature, for all your tournaments. Best value.'), tr('59,99 € / an · soit 5 € / mois, 67 % de moins', '€59.99 / year · just €5 / month, 67% less'), true)}
         ${offre('pro-mois', tr('OLYMPIAD Pro (mensuel)', 'OLYMPIAD Pro (monthly)'), tr('Le même abonnement, payé chaque mois.', 'The same subscription, paid every month.'), tr('14,99 € / mois', '€14.99 / month'))}
         <button class="s-lien" data-a="restaurer">${tr('Restaurer mes achats', 'Restore purchases')}</button>
@@ -1892,7 +1892,7 @@
     fenetreOffre.innerHTML = `<button class="fermer-offre" type="button" data-offre-action="fermer" aria-label="${tr('Fermer', 'Close')}">${ico('croix')}</button>
       <p class="surtitre">${pass ? tr('Achat unique', 'One-time purchase') : tr('Abonnement mensuel ou annuel', 'Monthly or yearly subscription')}</p>
       <h2 id="titre-fenetre-offre">${pass ? tr('Pass Tournoi', 'Tournament Pass') : 'OLYMPIAD Pro'}</h2>
-      <p class="sous">${pass ? tr('Équipes illimitées, grand écran, export PDF et co-organisateurs pour un tournoi, jusqu\'à 5 jours après sa date.', 'Unlimited teams, big screen, PDF export and co-organizers for one tournament, until 5 days after its date.') : tr('Toutes les fonctions premium, sur tous tes tournois. Résiliable à tout moment.', 'Every premium feature, on all your tournaments. Cancel anytime.')}</p>
+      <p class="sous">${pass ? tr('Équipes illimitées, grand écran, export PDF et co-organisateurs pour un tournoi, jusqu\'à 5 jours après son dernier jour.', 'Unlimited teams, big screen, PDF export and co-organizers for one tournament, until 5 days after its last day.') : tr('Toutes les fonctions premium, sur tous tes tournois. Résiliable à tout moment.', 'Every premium feature, on all your tournaments. Cancel anytime.')}</p>
       <div class="encart-offre">
         <h3>${tr('Ça se passe dans l\'app', 'It happens in the app')}</h3>
         <ol>${etapes.map((e) => `<li>${esc(e)}</li>`).join('')}</ol>

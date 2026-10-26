@@ -1005,7 +1005,7 @@ function fenetreOffres({ enCreation = false } = {}) {
   ouvrirFenetre(`<h2>${tr('Passe à la vitesse supérieure', 'Go further')}</h2>
     <p class="sous">${tr(`La version gratuite s'arrête à ${LIMITE_GRATUITE} équipes par tournoi. Choisis une offre pour en ajouter autant que tu veux.`, `The free plan stops at ${LIMITE_GRATUITE} teams per tournament. Pick a plan to add as many as you like.`)}</p>
     <div class="cartes-offres">
-      ${offre('pass', tr('Pass Tournoi', 'Tournament Pass'), tr('9,99 € · achat unique', '€9.99 · one-time purchase'), tr('Équipes illimitées, grand écran, export PDF et co-organisateurs pour ce tournoi, jusqu\'à 5 jours après sa date.', 'Unlimited teams, big screen, PDF export and co-organizers for this tournament, until 5 days after its date.'))}
+      ${offre('pass', tr('Pass Tournoi', 'Tournament Pass'), tr('9,99 € · achat unique', '€9.99 · one-time purchase'), tr('Équipes illimitées, grand écran, export PDF et co-organisateurs pour ce tournoi, jusqu\'à 5 jours après son dernier jour.', 'Unlimited teams, big screen, PDF export and co-organizers for this tournament, until 5 days after its last day.'))}
       ${offre('pro', 'OLYMPIAD Pro', tr('59,99 € / an (Saison) ou 14,99 € / mois', '€59.99 / year (Season) or €14.99 / month'), tr('Toutes les fonctions premium, sur tous tes tournois. L\'annuel revient à 5 € / mois. Résiliable à tout moment.', 'Every premium feature, on all your tournaments. Yearly comes to €5 / month. Cancel anytime.'), true)}
     </div>
     <div id="etapes-offre" class="encart etapes-offre" hidden></div>
