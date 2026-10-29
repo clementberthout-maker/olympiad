@@ -1320,3 +1320,109 @@ revoke execute on function supprimer_donnees_compte(uuid) from public, anon, aut
 -- même migration que la table).
 grant select on olympiades, olympiade_equipes to anon;
 grant select, insert, update, delete on olympiades, olympiade_equipes to authenticated, service_role;
+
+-- ============================================================
+-- MIGRATION — Tournoi archivé en lecture seule (29/10/2026)
+-- ============================================================
+-- SUIVI-PROJET.md, H42. Un tournoi débloqué par un Pass Tournoi dont le
+-- Pass a pris fin (dernier jour du tournoi + 5 jours), et dont
+-- l'organisateur n'est pas Pro, ne peut plus être modifié : ni le tournoi,
+-- ni ses poules, équipes, matchs et résultats. Il reste consultable et
+-- peut passer par la corbeille. Sinon, un même Pass servirait à refaire un
+-- autre tournoi (nouvelles équipes, régénération). L'app et l'espace web
+-- proposent « Dupliquer en nouveau tournoi » à la place.
+-- À exécuter en une fois dans l'éditeur SQL de Supabase.
+
+-- true si ce tournoi est archivé (même règle que tournoiEnLectureSeule
+-- dans lib/achats.js et enLectureSeule dans docs/espace/espace.js).
+create or replace function tournoi_en_lecture_seule(p_tournoi_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select coalesce((
+    select t.debloque
+      and coalesce(t.date_fin, t.date_debut) + 5 < current_date
+      and not est_pro_actif(t.organisateur_id)
+    from tournois t where t.id = p_tournoi_id
+  ), false);
+$$;
+revoke execute on function tournoi_en_lecture_seule(uuid) from public, anon;
+grant execute on function tournoi_en_lecture_seule(uuid) to authenticated;
+
+-- Le tournoi lui-même : seule la corbeille (mettre_tournoi_a_la_corbeille,
+-- restaurer_tournoi) peut encore le toucher.
+create or replace function proteger_tournoi_archive()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if coalesce(auth.role(), '') in ('anon', 'authenticated')
+     and coalesce(current_setting('olympiad.corbeille', true), '') <> '1'
+     and tournoi_en_lecture_seule(old.id) then
+    raise exception 'Ce tournoi est archivé : son Pass Tournoi a pris fin, il ne peut plus être modifié'
+      using errcode = 'OLY03';
+  end if;
+  return new;
+end;
+$$;
+revoke execute on function proteger_tournoi_archive() from public, anon, authenticated;
+
+drop trigger if exists proteger_tournoi_archive on tournois;
+create trigger proteger_tournoi_archive
+  before update on tournois
+  for each row execute function proteger_tournoi_archive();
+
+-- Poules, équipes, matchs et résultats d'un tournoi archivé. Pendant la
+-- suppression d'un tournoi (cascade), il n'existe déjà plus : rien ne bloque.
+create or replace function proteger_contenu_archive()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_tournoi_id uuid;
+begin
+  if coalesce(auth.role(), '') not in ('anon', 'authenticated') then
+    return coalesce(new, old);
+  end if;
+
+  if tg_table_name = 'resultats' then
+    select m.tournoi_id into v_tournoi_id from matchs m
+    where m.id = case when tg_op = 'DELETE' then old.match_id else new.match_id end;
+  elsif tg_op = 'DELETE' then
+    v_tournoi_id := old.tournoi_id;
+  else
+    v_tournoi_id := new.tournoi_id;
+  end if;
+
+  if v_tournoi_id is not null and tournoi_en_lecture_seule(v_tournoi_id) then
+    raise exception 'Ce tournoi est archivé : son Pass Tournoi a pris fin, il ne peut plus être modifié'
+      using errcode = 'OLY03';
+  end if;
+  return coalesce(new, old);
+end;
+$$;
+revoke execute on function proteger_contenu_archive() from public, anon, authenticated;
+
+drop trigger if exists proteger_contenu_archive on poules;
+create trigger proteger_contenu_archive
+  before insert or update or delete on poules
+  for each row execute function proteger_contenu_archive();
+drop trigger if exists proteger_contenu_archive on equipes;
+create trigger proteger_contenu_archive
+  before insert or update or delete on equipes
+  for each row execute function proteger_contenu_archive();
+drop trigger if exists proteger_contenu_archive on matchs;
+create trigger proteger_contenu_archive
+  before insert or update or delete on matchs
+  for each row execute function proteger_contenu_archive();
+drop trigger if exists proteger_contenu_archive on resultats;
+create trigger proteger_contenu_archive
+  before insert or update or delete on resultats
+  for each row execute function proteger_contenu_archive();

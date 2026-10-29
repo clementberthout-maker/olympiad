@@ -28,7 +28,7 @@ import SelecteurDate from '../../../components/SelecteurDate';
 import IndicateurEtapes from '../../../components/IndicateurEtapes';
 import { useTheme } from '../../../lib/ThemeContext';
 import { useLangue } from '../../../lib/LangueContext';
-import { useAchats, tournoiEstDebloque, finDuPass } from '../../../lib/achats';
+import { useAchats, tournoiEstDebloque, tournoiEnLectureSeule, finDuPass } from '../../../lib/achats';
 import { POLICE_TITRE, POLICE_TEXTE, POLICE_TEXTE_SEMIBOLD } from '../../../lib/theme';
 
 // Limite d'équipes/joueurs par tournoi en version gratuite — voir
@@ -84,7 +84,7 @@ export default function GestionEquipes() {
     id, modifier,
     sport: sportParam, nom: nomParam, date: dateParam, dateFin: dateFinParam, format: formatParam,
     departagePoule: departagePouleParam, departageElimination: departageEliminationParam,
-    tennisDouble: tennisDoubleParam, olympiade: olympiadeParam,
+    tennisDouble: tennisDoubleParam, olympiade: olympiadeParam, copieDe,
   } = useLocalSearchParams(); // id du tournoi ("nouveau" tant qu'il n'est pas encore créé)
   const router = useRouter();
   const { couleurs } = useTheme();
@@ -195,6 +195,41 @@ export default function GestionEquipes() {
     });
   }, [navigation, estBrouillon, sportTournoi, t]);
 
+  // Réglages enregistrés d'un tournoi (horaires, terrains, pauses...), pour
+  // un tournoi existant ou pour la copie d'un tournoi archivé (copieDe).
+  function appliquerReglages(t) {
+    if (t.heure_fin_journee) {
+      const [h, m] = t.heure_fin_journee.split(':').map(Number);
+      setFinJourneeH(h);
+      setFinJourneeM(m);
+    }
+    if (t.nombre_terrains) setNombreTerrains(t.nombre_terrains);
+    if (t.heure_premier_match) {
+      const [h, m] = t.heure_premier_match.split(':').map(Number);
+      setHeureH(h);
+      setHeureM(m);
+    }
+    if (t.duree_match) setDureeMatch(t.duree_match);
+    if (typeof t.mi_temps === 'boolean') setMiTemps(t.mi_temps);
+    if (t.duree_mi_temps) setDureeMiTemps(t.duree_mi_temps);
+    if (typeof t.temps_pause === 'number') setTempsPause(t.temps_pause);
+    if (typeof t.pause_dejeuner === 'boolean') setPauseDejeuner(t.pause_dejeuner);
+    if (t.heure_debut_pause) {
+      const [h, m] = t.heure_debut_pause.split(':').map(Number);
+      setPauseDebutH(h);
+      setPauseDebutM(m);
+    }
+    if (t.heure_fin_pause) {
+      const [h, m] = t.heure_fin_pause.split(':').map(Number);
+      setPauseFinH(h);
+      setPauseFinM(m);
+    }
+    if (t.nombre_qualifies_par_poule) setNombreQualifies(t.nombre_qualifies_par_poule);
+    if (typeof t.match_troisieme_place === 'boolean') setMatchTroisiemePlace(t.match_troisieme_place);
+    if (typeof t.points_bonus === 'boolean') setPointsBonus(t.points_bonus);
+    if (t.sets_gagnants) setSetsGagnants(t.sets_gagnants);
+  }
+
   const charger = useCallback(async () => {
     if (estBrouillon) return;
     const { data: t } = await supabase.from('tournois').select('*').eq('id', id).single();
@@ -204,36 +239,7 @@ export default function GestionEquipes() {
       setDateEdit(t.date_debut);
       setPlusieursJours(Boolean(t.date_fin));
       setDateFinEdit(t.date_fin || '');
-      if (t.heure_fin_journee) {
-        const [h, m] = t.heure_fin_journee.split(':').map(Number);
-        setFinJourneeH(h);
-        setFinJourneeM(m);
-      }
-      if (t.nombre_terrains) setNombreTerrains(t.nombre_terrains);
-      if (t.heure_premier_match) {
-        const [h, m] = t.heure_premier_match.split(':').map(Number);
-        setHeureH(h);
-        setHeureM(m);
-      }
-      if (t.duree_match) setDureeMatch(t.duree_match);
-      if (typeof t.mi_temps === 'boolean') setMiTemps(t.mi_temps);
-      if (t.duree_mi_temps) setDureeMiTemps(t.duree_mi_temps);
-      if (typeof t.temps_pause === 'number') setTempsPause(t.temps_pause);
-      if (typeof t.pause_dejeuner === 'boolean') setPauseDejeuner(t.pause_dejeuner);
-      if (t.heure_debut_pause) {
-        const [h, m] = t.heure_debut_pause.split(':').map(Number);
-        setPauseDebutH(h);
-        setPauseDebutM(m);
-      }
-      if (t.heure_fin_pause) {
-        const [h, m] = t.heure_fin_pause.split(':').map(Number);
-        setPauseFinH(h);
-        setPauseFinM(m);
-      }
-      if (t.nombre_qualifies_par_poule) setNombreQualifies(t.nombre_qualifies_par_poule);
-      if (typeof t.match_troisieme_place === 'boolean') setMatchTroisiemePlace(t.match_troisieme_place);
-      if (typeof t.points_bonus === 'boolean') setPointsBonus(t.points_bonus);
-      if (t.sets_gagnants) setSetsGagnants(t.sets_gagnants);
+      appliquerReglages(t);
     }
     const { data: eq } = await supabase
       .from('equipes')
@@ -261,6 +267,31 @@ export default function GestionEquipes() {
       charger();
     }, [charger])
   );
+
+  // Tournoi archivé (Pass expiré) : plus rien à modifier ici, retour au
+  // calendrier, qui propose de le dupliquer (voir lib/achats.js).
+  const lectureSeule = !estBrouillon && tournoiEnLectureSeule(tournoi, estPro);
+  useEffect(() => {
+    if (!lectureSeule) return;
+    Alert.alert(t('calendrier.archiveTitre'), t('erreurs.tournoiArchive'));
+    if (router.canGoBack()) router.back();
+    else router.replace(`/tournoi/${id}/calendrier`);
+  }, [lectureSeule]);
+
+  // Duplication d'un tournoi archivé (Pass expiré, voir calendrier.js) :
+  // mêmes équipes et mêmes réglages, dans un nouveau tournoi.
+  useEffect(() => {
+    if (!estBrouillon || !copieDe) return;
+    (async () => {
+      const { data: source } = await supabase.from('tournois').select('*').eq('id', copieDe).maybeSingle();
+      if (!source) return;
+      appliquerReglages(source);
+      const { count } = await supabase.from('poules').select('id', { count: 'exact', head: true }).eq('tournoi_id', copieDe);
+      if (count) setNombrePoules(count);
+      const { data: eq } = await supabase.from('equipes').select('nom').eq('tournoi_id', copieDe).order('created_at');
+      if (eq?.length) setEquipes((liste) => (liste.length ? liste : eq.map((e, i) => ({ id: `brouillon-copie-${i}`, nom: e.nom }))));
+    })();
+  }, [estBrouillon, copieDe]);
 
   // Nouvelle épreuve d'une olympiade : on part de toutes ses équipes
   // (l'organisateur retire celles qui ne participent pas à ce sport).
@@ -593,6 +624,12 @@ export default function GestionEquipes() {
         t(sportTournoi === 'tennis' ? 'equipes.aucunJoueurTitre' : 'equipes.aucuneEquipeTitre'),
         t(sportTournoi === 'tennis' ? 'equipes.aucunJoueurMessage' : 'equipes.aucuneEquipeMessage')
       );
+      return;
+    }
+    // Copie d'un tournoi de plus de 12 équipes (copieDe) sur un compte
+    // gratuit : même parcours que l'ajout d'une 13e équipe.
+    if (equipes.length > LIMITE_EQUIPES_GRATUIT && !debloque) {
+      router.push({ pathname: '/paywall', params: { raison: 'equipes' } });
       return;
     }
 

@@ -250,6 +250,13 @@ body.page-espace { min-height: 100vh; display: flex; flex-direction: column; }
 .action-t:hover { border-color: #ebb517; transform: translateY(-1px); }
 .action-t svg { width: 18px; height: 18px; color: var(--bandeau-accent); }
 .action-t .cadenas { width: 13px; height: 13px; color: var(--bandeau-gris); }
+/* Tournoi archivé (Pass expiré) : lecture seule */
+.bandeau-archive { display: flex; align-items: center; gap: 14px 16px; flex-wrap: wrap; padding: 14px 18px; border-radius: 14px; margin-bottom: 20px; background: var(--bandeau-surface); border: 1px solid var(--bandeau-bordure); }
+.bandeau-archive > svg { width: 22px; height: 22px; color: var(--bandeau-accent); flex-shrink: 0; }
+.bandeau-archive > div:first-of-type { flex: 1; min-width: 220px; }
+.bandeau-archive b { font-size: 15px; }
+.bandeau-archive p { margin: 2px 0 0; color: var(--bandeau-attenue); font-size: 13.5px; }
+.actions-archive { display: flex; gap: 8px; flex-wrap: wrap; }
 .onglets-tournoi { display: flex; gap: 4px; position: relative; overflow-x: auto; scrollbar-width: none; }
 .onglets-tournoi a { padding: 12px 18px 14px; text-decoration: none; color: var(--bandeau-attenue); font-weight: 600; font-size: 15px; border-bottom: 3px solid transparent; transition: color 0.2s, border-color 0.3s; white-space: nowrap; }
 .onglets-tournoi a:hover { color: var(--bandeau-texte); }

@@ -30,7 +30,8 @@ import BadgeEnDirect from '../../../components/BadgeEnDirect';
 import { useTheme } from '../../../lib/ThemeContext';
 import { useLangue } from '../../../lib/LangueContext';
 import { libellePhase } from '../../../lib/phases';
-import { useAchats, tournoiEstDebloque } from '../../../lib/achats';
+import { useAchats, tournoiEstDebloque, tournoiEnLectureSeule, finDuPass } from '../../../lib/achats';
+import { retirerTournoiSuivi } from '../../../lib/tournoisSuivis';
 import { POLICE_TITRE, POLICE_TEXTE, POLICE_TEXTE_SEMIBOLD } from '../../../lib/theme';
 
 // Petit cadenas en bout de ligne d'une option payante du menu « Partager ».
@@ -59,6 +60,9 @@ export default function Calendrier() {
   // Grand écran, export PDF et co-organisateurs : réservés à un tournoi
   // débloqué (Pass Tournoi valable ou compte Pro).
   const premiumVerrouille = !!tournoi && !tournoiEstDebloque(tournoi, estPro);
+  // Pass Tournoi expiré : tournoi archivé, consultable mais plus modifiable
+  // (voir lib/achats.js, tournoiEnLectureSeule).
+  const lectureSeule = !!tournoi && tournoiEnLectureSeule(tournoi, estPro);
   const [poules, setPoules] = useState([]);
   const [equipes, setEquipes] = useState([]);
   const [matchsBruts, setMatchsBruts] = useState([]);
@@ -185,6 +189,27 @@ export default function Calendrier() {
   // Après la création : retour à l'accueil, ou à l'olympiade pour une épreuve.
   function retourApresCreation() {
     router.replace(tournoi?.olympiade_id ? `/olympiade/${tournoi.olympiade_id}` : '/');
+  }
+
+  // Tournoi archivé : la suppression (corbeille) reste possible depuis le
+  // bandeau, l'écran « Modifier mon tournoi » n'étant plus proposé.
+  function confirmerSuppressionTournoi() {
+    Alert.alert(t('equipes.supprimerTournoiTitre'), t(tournoi?.sport === 'tennis' ? 'equipes.supprimerTournoiMessageJoueur' : 'equipes.supprimerTournoiMessage'), [
+      { text: t('commun.annuler'), style: 'cancel' },
+      {
+        text: t('commun.supprimer'),
+        style: 'destructive',
+        onPress: async () => {
+          const { error } = await supabase.rpc('mettre_tournoi_a_la_corbeille', { p_tournoi_id: id });
+          if (error) {
+            Alert.alert(t('commun.erreur'), messageErreur(error, t));
+            return;
+          }
+          if (tournoi?.code_acces) await retirerTournoiSuivi(tournoi.code_acces);
+          retourApresCreation();
+        },
+      },
+    ]);
   }
 
   async function insererMatchs(matchs) {
@@ -369,7 +394,29 @@ export default function Calendrier() {
           <Ionicons name="share-outline" size={22} color={couleurs.texte} />
         </Pressable>
       </View>
-      {phases.length > 0 && (
+      {lectureSeule && (
+        <View style={styles.bandeauArchive}>
+          <View style={styles.ligneArchive}>
+            <Ionicons name="lock-closed" size={18} color={couleurs.accent} />
+            <Text style={styles.titreArchive}>{t('calendrier.archiveTitre')}</Text>
+          </View>
+          <Text style={styles.texteArchive}>
+            {t('calendrier.archiveMessage', {
+              fin: formaterPeriode(finDuPass(tournoi.date_fin || tournoi.date_debut), null, langue === 'en' ? 'en-US' : 'fr-FR'),
+            })}
+          </Text>
+          <Pressable
+            style={styles.boutonGenerer}
+            onPress={() => router.push({ pathname: '/creer-tournoi', params: { sport: tournoi.sport, copieDe: id } })}
+          >
+            <Text style={styles.texteBoutonGenerer}>{t('calendrier.dupliquer')}</Text>
+          </Pressable>
+          <Pressable onPress={confirmerSuppressionTournoi} hitSlop={8} style={{ alignItems: 'center' }}>
+            <Text style={styles.lienSupprimer}>{t('equipes.supprimerCeTournoi')}</Text>
+          </Pressable>
+        </View>
+      )}
+      {phases.length > 0 && !lectureSeule && (
         <View style={styles.bandeauAide}>
           <Ionicons name="hand-left-outline" size={18} color={couleurs.accent} />
           <Text style={styles.texteBandeauAide}>{t('calendrier.toucheUnMatch')}</Text>
@@ -409,6 +456,7 @@ export default function Calendrier() {
               <Pressable
                 key={match.id}
                 style={styles.ligneMatch}
+                disabled={lectureSeule}
                 onPress={() => router.push(`/tournoi/${id}/saisie?matchId=${match.id}`)}
               >
                 <View style={styles.infoMatch}>
@@ -467,7 +515,7 @@ export default function Calendrier() {
         </View>
       )}
 
-      {peutGenererPhaseFinale && (
+      {peutGenererPhaseFinale && !lectureSeule && (
         <Pressable style={styles.boutonGenerer} onPress={genererPhaseFinale} disabled={enCours}>
           <Text style={styles.texteBoutonGenerer}>
             {enCours ? t('calendrier.generationEnCours') : t('calendrier.genererLaPhaseFinale')}
@@ -475,7 +523,7 @@ export default function Calendrier() {
         </Pressable>
       )}
 
-      {peutGenererTourSuivant && (
+      {peutGenererTourSuivant && !lectureSeule && (
         <Pressable style={styles.boutonGenerer} onPress={genererProchainTour} disabled={enCours}>
           <Text style={styles.texteBoutonGenerer}>
             {enCours
@@ -501,13 +549,15 @@ export default function Calendrier() {
         </>
       )}
 
-      <Pressable
-        style={styles.boutonModifier}
-        onPress={() => router.push(`/tournoi/${id}/equipes?modifier=1`)}
-        hitSlop={8}
-      >
-        <Text style={styles.lienModifier}>{t('calendrier.modifierMonTournoi')}</Text>
-      </Pressable>
+      {!lectureSeule && (
+        <Pressable
+          style={styles.boutonModifier}
+          onPress={() => router.push(`/tournoi/${id}/equipes?modifier=1`)}
+          hitSlop={8}
+        >
+          <Text style={styles.lienModifier}>{t('calendrier.modifierMonTournoi')}</Text>
+        </Pressable>
+      )}
       </ScrollView>
 
       <Modal visible={partageVisible} transparent animationType="fade" onRequestClose={() => setPartageVisible(false)}>
@@ -582,6 +632,14 @@ function creerStyles(c) {
     },
     texteOptionPartage: { fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 15, color: c.texte },
     boutonModifier: { alignItems: 'center', marginTop: 28 },
+    bandeauArchive: {
+      backgroundColor: c.surface, borderWidth: 1, borderColor: c.bordure,
+      borderRadius: 12, padding: 14, marginBottom: 20, gap: 10,
+    },
+    ligneArchive: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    titreArchive: { fontFamily: POLICE_TITRE, fontSize: 18, letterSpacing: 0.2, color: c.texte },
+    texteArchive: { fontFamily: POLICE_TEXTE, fontSize: 13, lineHeight: 19, color: c.texteAttenue },
+    lienSupprimer: { fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 13, color: c.danger },
     lienModifier: { fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 13, color: c.lien },
     bandeauAide: {
       flexDirection: 'row', alignItems: 'center', gap: 10,

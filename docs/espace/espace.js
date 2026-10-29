@@ -79,6 +79,7 @@ function statutTournoi(t) {
 // Messages d'erreur lisibles (voir aussi lib/erreurs.js de l'app)
 function messageErreur(e) {
   const m = (e && e.message) || '';
+  if (e && e.code === 'OLY03') return tr('Ce tournoi est archivé : son Pass Tournoi a pris fin, il ne peut plus être modifié. Duplique-le pour organiser un nouveau tournoi.', 'This tournament is archived: its Tournament Pass has ended, so it can no longer be edited. Duplicate it to run a new tournament.');
   if (e && e.code === 'OLY02') return tr('La date d\'un tournoi débloqué avec un Pass Tournoi ne peut plus être modifiée.', 'The date of a tournament unlocked with a Tournament Pass can no longer be changed.');
   if (e && e.code === 'OLY01') return tr(`La version gratuite est limitée à ${LIMITE_GRATUITE} équipes par tournoi. Débloque ce tournoi (Pass Tournoi) ou passe à OLYMPIAD Pro dans l'application mobile.`, `The free plan is limited to ${LIMITE_GRATUITE} teams per tournament. Unlock this tournament (Tournament Pass) or go Pro in the mobile app.`);
   if (/Invalid login credentials/i.test(m)) return tr('E-mail ou mot de passe incorrect.', 'Wrong email or password.');
@@ -623,7 +624,29 @@ async function chargerCourant(id) {
   const principal = c.tournoi.organisateur_id === uid();
   const ligne = principal || !uid() ? null : await donnees.droits(id, uid()).catch(() => null);
   c.droits = { principal, saisir: principal || Boolean(ligne?.peut_saisir_scores), gerer: principal || Boolean(ligne?.peut_gerer_le_tournoi), supprimer: principal || Boolean(ligne?.peut_supprimer_le_tournoi) };
+  // Pass expiré : plus de saisie, d'équipes, de réglages ni de régénération
+  // (la base refuse aussi, voir proteger_tournoi_archive dans supabase/schema.sql).
+  c.lectureSeule = enLectureSeule(c.tournoi);
+  if (c.lectureSeule) c.droits = { ...c.droits, saisir: false, gerer: false };
   return c;
+}
+// Tournoi débloqué par un Pass Tournoi expiré (et organisateur sans Pro) :
+// consultable, partageable et supprimable, mais plus modifiable, pour qu'un
+// même Pass ne serve pas à refaire un autre tournoi. « Dupliquer » repart
+// d'un nouveau tournoi (gratuit) avec les mêmes équipes et réglages.
+const enLectureSeule = (t) => Boolean(t?.debloque) && !passActif(t) && !etat.pro;
+function brouillonDepuisTournoi(c) {
+  const t = c.tournoi; const b = nouveauBrouillon();
+  const hm = (h) => (h ? String(h).slice(0, 5) : null);
+  return {
+    ...b, etape: 2, sport: t.sport, nom: t.nom, format: t.format, tennisDouble: Boolean(t.tennis_double),
+    departagePoule: t.critere_departage_poule || b.departagePoule, departageElim: t.mode_departage || b.departageElim,
+    equipes: c.equipes.map((e) => e.nom), nombrePoules: c.poules.length || b.nombrePoules, nombreTerrains: t.nombre_terrains || b.nombreTerrains,
+    heure: hm(t.heure_premier_match) || b.heure, dureeMatch: t.duree_match || b.dureeMatch, miTemps: Boolean(t.mi_temps), dureeMiTemps: t.duree_mi_temps || b.dureeMiTemps,
+    tempsPause: t.temps_pause ?? b.tempsPause, pauseDejeuner: Boolean(t.pause_dejeuner), debutPause: hm(t.heure_debut_pause) || b.debutPause, finPause: hm(t.heure_fin_pause) || b.finPause,
+    nombreQualifies: t.nombre_qualifies_par_poule || b.nombreQualifies, matchTroisiemePlace: t.match_troisieme_place ?? b.matchTroisiemePlace,
+    pointsBonus: Boolean(t.points_bonus), setsGagnants: t.sets_gagnants || b.setsGagnants, heureFinJournee: hm(t.heure_fin_journee) || b.heureFinJournee,
+  };
 }
 // Pass Tournoi valable jusqu'à 5 jours après le dernier jour du tournoi, inclus
 // (même règle que lib/achats.js de l'app et limiter_equipes dans la base).
@@ -700,12 +723,18 @@ function htmlEnteteTournoi(onglet) {
       <button class="action-t" data-action="pdf">${ico('pdf')}${tr('Export PDF', 'PDF export')}${verrou}</button>
       <a class="action-t" href="#/suivi/${esc(t.code_acces)}">${ico('oeil')}${tr('Vue spectateur', 'Spectator view')}</a>
     </div>
+    ${c.lectureSeule ? `<div class="bandeau-archive">${ico('cadenas')}<div><b>${tr('Tournoi archivé', 'Archived tournament')}</b><p>${tr(`Son Pass Tournoi a pris fin le ${formaterDate(finDuPass(dernierJour(t)))} : le tournoi reste consultable, mais ne peut plus être modifié. Pour un nouvel événement, duplique-le.`, `Its Tournament Pass ended on ${formaterDate(finDuPass(dernierJour(t)))}: the tournament can still be viewed but no longer edited. For a new event, duplicate it.`)}</p></div>
+      <div class="actions-archive"><button class="bouton petit" data-action="dupliquer-tournoi">${tr('Dupliquer en nouveau tournoi', 'Duplicate as a new tournament')}</button>${d.supprimer ? `<button class="bouton secondaire petit" data-action="supprimer-tournoi">${tr('Supprimer', 'Delete')}</button>` : ''}</div></div>` : ''}
     <nav class="onglets-tournoi">${onglets.map(([o, l]) => `<a href="#/tournoi/${t.id}/${o}" data-onglet="${o}" class="${o === onglet ? 'actif' : ''}">${l}</a>`).join('')}</nav>
   </div></section>`;
 }
 function rendreOnglet() {
   const zone = $('#contenu-tournoi');
   if (!zone || !etat.courant) return;
+  if (!etat.courant.droits.gerer && (etat.onglet === 'equipes' || etat.onglet === 'reglages')) {
+    etat.onglet = 'matchs';
+    history.replaceState(null, '', `#/tournoi/${etat.courant.tournoi.id}/matchs`);
+  }
   const html = { matchs: htmlMatchs, classement: htmlClassement, equipes: htmlEquipes, reglages: htmlReglages }[etat.onglet]();
   zone.innerHTML = `<div class="contenu-onglet">${html}</div>`;
   etat.majIds.clear();
@@ -1528,6 +1557,7 @@ document.addEventListener('click', async (e) => {
     }
     case 'creer-tournoi': creerTournoi(cible); break;
     case 'choisir-offre': etapesOffre(cible.dataset.offre); break;
+    case 'dupliquer-tournoi': if (etat.courant) { etat.brouillon = brouillonDepuisTournoi(etat.courant); location.hash = '#/nouveau'; } break;
     case 'voir-offres': fenetreOffres({ limite: false, offre: cible.dataset.offre || null }); break;
     // Tournoi
     case 'vue-matchs': etat.vueMatchs = cible.dataset.valeur; rendreOnglet(); break;

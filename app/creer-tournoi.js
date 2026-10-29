@@ -12,7 +12,9 @@ import { POLICE_TITRE, POLICE_TEXTE, POLICE_TEXTE_SEMIBOLD } from '../lib/theme'
 export default function CreerTournoi() {
   // Sport choisi sur l'écran précédent (voir choisir-sport.js) ; olympiade :
   // id de l'olympiade multisports dont ce tournoi sera une épreuve.
-  const { sport: sportParam, olympiade: olympiadeParam } = useLocalSearchParams();
+  // copieDe : tournoi archivé que l'on duplique (voir tournoi/[id]/calendrier.js) ;
+  // son nom, son format et ses départages sont repris, pas sa date.
+  const { sport: sportParam, olympiade: olympiadeParam, copieDe } = useLocalSearchParams();
   const sport = sportParam || 'football';
   const router = useRouter();
   const { couleurs } = useTheme();
@@ -49,6 +51,19 @@ export default function CreerTournoi() {
         : 'prolongations_tab'
   );
   const [reglagesAvancesOuverts, setReglagesAvancesOuverts] = useState(false);
+
+  useEffect(() => {
+    if (!copieDe) return;
+    supabase.from('tournois').select('nom, format, tennis_double, critere_departage_poule, mode_departage').eq('id', copieDe).maybeSingle()
+      .then(({ data }) => {
+        if (!data) return;
+        setNom((n) => n || data.nom);
+        if (data.format) setFormat(data.format);
+        setTennisDouble(Boolean(data.tennis_double));
+        if (data.critere_departage_poule) setDepartagePoule(data.critere_departage_poule);
+        if (data.mode_departage) setDepartageElimination(data.mode_departage);
+      });
+  }, [copieDe]);
 
   const formats = useMemo(() => ([
     { valeur: 'mixte', label: t('creerTournoi.formatMixte') },
@@ -101,6 +116,7 @@ export default function CreerTournoi() {
         tennisDouble: tennisDouble ? '1' : '0',
         ...(plusieursJours ? { dateFin } : {}),
         ...(olympiadeParam ? { olympiade: olympiadeParam } : {}),
+        ...(copieDe ? { copieDe } : {}),
       },
     });
   }
