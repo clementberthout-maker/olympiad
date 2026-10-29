@@ -240,6 +240,8 @@ body.page-espace { min-height: 100vh; display: flex; flex-direction: column; }
 .indicateur-direct::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
 .indicateur-direct.connecte { color: var(--succes); }
 .indicateur-direct.connecte::before { animation: pulse 1.6s infinite; box-shadow: 0 0 0 4px rgba(74, 222, 128, 0.15); }
+.indicateur-direct.avenir { color: var(--bandeau-accent); }
+.indicateur-direct.hors-ligne { color: var(--danger); }
 .puce-code { display: inline-flex; align-items: center; gap: 8px; padding: 5px 6px 5px 12px; border-radius: 99px; background: var(--bandeau-surface); border: 1px solid var(--bandeau-bordure); color: var(--bandeau-texte); font-weight: 600; }
 .puce-code b { font-family: var(--titre); font-size: 19px; letter-spacing: 0.15em; font-weight: 400; padding-top: 2px; }
 .puce-code button { border: 0; background: var(--bandeau-surface-2); color: var(--bandeau-accent); border-radius: 99px; height: 28px; padding: 0 10px; cursor: pointer; font-size: 12px; font-weight: 700; }

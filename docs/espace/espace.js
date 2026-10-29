@@ -29,6 +29,9 @@ const stock = {
 };
 const BASE = new URL('..', import.meta.url).href; // dossier du site (docs/)
 const LIMITE_GRATUITE = 12;
+// Olympiades multisports : bouton « Nouvelle olympiade » masqué à la demande de Clément
+// (29/10, priorité aux tournois). Mettre à true pour le remettre ; tout le reste du code est gardé.
+const OLYMPIADES_VISIBLES = false;
 
 let langue = stock.get('olympiad-langue') || ((navigator.language || 'fr').toLowerCase().startsWith('fr') ? 'fr' : 'en');
 const tr = (fr, en) => (langue === 'en' ? en : fr);
@@ -356,7 +359,7 @@ async function vueTableau() {
   return afficher(`<div class="page">
     <div class="entete-page">
       <div><h1>${salut}${p.prenom ? ` ${esc(p.prenom)}` : ''}</h1><p>${etat.tournois.length ? tr(`${etat.tournois.length} tournoi${etat.tournois.length > 1 ? 's' : ''} à gérer`, `${etat.tournois.length} tournament${etat.tournois.length > 1 ? 's' : ''} to manage`) : tr('Crée ton premier tournoi en quelques minutes.', 'Create your first tournament in a few minutes.')}${etat.pro ? ` · <span class="badge-pro">PRO</span>` : ''}</p></div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap"><a class="bouton secondaire" href="#/olympiade/nouvelle">${ico('coupe')}<span>${tr('Nouvelle olympiade', 'New olympiad')}</span></a><a class="bouton" href="#/nouveau">${ico('plus')}<span>${tr('Nouveau tournoi', 'New tournament')}</span></a></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">${OLYMPIADES_VISIBLES ? `<a class="bouton secondaire" href="#/olympiade/nouvelle">${ico('coupe')}<span>${tr('Nouvelle olympiade', 'New olympiad')}</span></a>` : ''}<a class="bouton" href="#/nouveau">${ico('plus')}<span>${tr('Nouveau tournoi', 'New tournament')}</span></a></div>
     </div>
     <div class="grille-tournois cascade">
       <a class="carte-tournoi carte-nouveau" href="#/nouveau" style="--i:0"><span class="plus">${ico('plus')}</span><h3>${tr('Nouveau tournoi', 'New tournament')}</h3><p>${tr('Sport, format, équipes : le calendrier se génère tout seul.', 'Sport, format, teams: the schedule builds itself.')}</p></a>
@@ -688,8 +691,8 @@ function htmlEnteteTournoi(onglet) {
     <div class="titre-tournoi"><span class="ico-sport">${ico(t.sport)}</span><h1 id="titre-t">${esc(t.nom)}</h1></div>
     <div class="infos-tournoi"><span>${nomSport(t.sport)} · ${formaterPeriode(t)}</span><span>${c.equipes.length} ${motEquipes(t)}</span>
       <span class="puce-code">${tr('Code', 'Code')} <b>${esc(String(t.code_acces).toUpperCase())}</b><button data-action="copier" data-texte="${esc(String(t.code_acces).toUpperCase())}">${tr('Copier', 'Copy')}</button></span>
-      <span class="indicateur-direct" id="indicateur-direct">${tr('CONNEXION…', 'CONNECTING…')}</span>
-      ${d.principal ? '' : `<span class="pastille-statut role" style="background:#181d26;color:#f3f2ed">${tr('Co-organisateur', 'Co-organizer')}</span>`}</div>
+      ${htmlIndicateurStatut(c)}
+      ${d.principal ? '' : `<span class="pastille-statut role" style="background:var(--bandeau-surface);color:var(--bandeau-texte)">${tr('Co-organisateur', 'Co-organizer')}</span>`}</div>
     <div class="actions-tournoi">
       <button class="action-t" data-action="qr">${ico('qr')}${tr('QR code', 'QR code')}</button>
       <a class="action-t" href="#/tournoi/${t.id}/ecran">${ico('ecran')}${tr('Grand écran', 'Big screen')}${verrou}</a>
@@ -838,6 +841,7 @@ function htmlReglages() {
 let minuteurRechargement = null;
 function abonnerTempsReel(id) {
   if (etat.desabonner) etat.desabonner();
+  etat.tempsReelConnecte = undefined;
   etat.desabonner = donnees.tempsReel(id, (table, evenement) => {
     if (table === 'resultats' && evenement && etat.courant) {
       const matchId = evenement.new?.match_id || evenement.old?.match_id;
@@ -846,9 +850,32 @@ function abonnerTempsReel(id) {
     clearTimeout(minuteurRechargement);
     minuteurRechargement = setTimeout(() => rechargerCourant(true), 250);
   }, (connecte) => {
-    const ind = $('#indicateur-direct');
-    if (ind) { ind.classList.toggle('connecte', connecte); ind.textContent = connecte ? tr('EN DIRECT', 'LIVE') : tr('HORS LIGNE', 'OFFLINE'); }
+    etat.tempsReelConnecte = connecte;
+    majIndicateurStatut();
   });
+}
+// Statut du tournoi dans le bandeau : à venir, en direct (jour du tournoi) ou terminé
+// (date passée, ou dernier match joué : plus aucun tour à générer).
+function statutEnteteTournoi(c) {
+  const [cls] = statutTournoi(c.tournoi);
+  const a = analyser(c);
+  const jouables = a.matchs.filter((m) => m.equipe_b_id);
+  const toutJoue = jouables.length > 0 && jouables.every((m) => m.resultat?.statut === 'termine');
+  if (cls === 'termine' || (toutJoue && !a.peutPhaseFinale && !a.peutTourSuivant)) return ['termine', tr('TERMINÉ', 'FINISHED')];
+  if (cls === 'avenir') return ['avenir', tr('À VENIR', 'UPCOMING')];
+  // Jour du tournoi : « en direct », ou « hors ligne » si le temps réel est coupé
+  return etat.tempsReelConnecte === false ? ['hors-ligne', tr('HORS LIGNE', 'OFFLINE')] : ['connecte', tr('EN DIRECT', 'LIVE')];
+}
+function htmlIndicateurStatut(c) {
+  const [cls, lib] = statutEnteteTournoi(c);
+  return `<span class="indicateur-direct ${cls}" id="indicateur-direct">${lib}</span>`;
+}
+function majIndicateurStatut() {
+  const ind = $('#indicateur-direct');
+  if (!ind || !etat.courant || !$('#page-tournoi')) return;
+  const [cls, lib] = statutEnteteTournoi(etat.courant);
+  ind.className = `indicateur-direct ${cls}`;
+  ind.textContent = lib;
 }
 async function rechargerCourant(depuisTempsReel) {
   if (!etat.courant) return;
@@ -867,6 +894,7 @@ async function rechargerCourant(depuisTempsReel) {
       if (zone) { const tmp = document.createElement('div'); tmp.innerHTML = htmlEnteteTournoi(etat.onglet); zone.replaceWith(tmp.firstElementChild); }
     }
     if (!(etat.onglet === 'reglages' && $('#form-reglages') && document.activeElement?.closest('#form-reglages'))) rendreOnglet();
+    majIndicateurStatut();
   }
   if ($('#vue-suivi')) rendreSuivi();
   if ($('#grand-ecran').classList.contains('ouvert')) rendreGrandEcran();

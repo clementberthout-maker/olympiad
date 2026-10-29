@@ -3,7 +3,7 @@
 > Fichier tenu à jour automatiquement par Claude à chaque modification du projet
 > (voir `CLAUDE.md` et le hook `.claude/hooks/verifier-suivi.sh`).
 
-**Dernière mise à jour :** 26 octobre 2026
+**Dernière mise à jour :** 29 octobre 2026
 
 ---
 
@@ -438,6 +438,12 @@ OLYMPIAD sert à organiser des tournois sportifs amateurs. L'organisateur crée 
   - Vérifié sur le serveur local en mode démo (clair et sombre, positions des cartes en direct, trois boutons « Voir les offres »), aucune erreur.
 - **App :** mêmes textes corrigés dans `lib/traductions.js` (`passTournoiDescription`, `mentionsAbonnement`, FR/EN). Syntaxe vérifiée ; à livrer au build 9 (H41).
 
+### Site et espace : retours de Clément (29 octobre)
+- **En-tête du site :** « Essayer en direct » passe en premier (bouton discret), « Espace organisateur » en dernier, sur fond ambre. Sous 1100 px, seul « Espace organisateur » reste (« Essayer » est dans le menu) ; sur téléphone, icône ambre seule.
+- **« Nouvelle olympiade » masqué** dans le tableau de bord de l'espace (priorité aux tournois sportifs). Code gardé : `OLYMPIADES_VISIBLES` à `true` dans `docs/espace/espace.js` pour le remettre. Carte « Olympiade multisports » de l'app non touchée (prochain build).
+- **Statut du tournoi dans le bandeau :** l'indicateur vert « EN DIRECT » (qui ne montrait que la connexion temps réel) affiche maintenant « À VENIR » avant la date, « EN DIRECT » le jour du tournoi (« HORS LIGNE » si le temps réel est coupé) et « TERMINÉ » une fois la date passée ou le dernier match joué (plus aucun tour à générer). Mis à jour à chaque score. Pastille « Co-organisateur » aux couleurs du thème.
+- Vérifié sur le serveur local (en-tête à 1280, 1024 et 375 px ; les trois statuts en démo, tournoi joué jusqu'au podium), aucune erreur.
+
 ## 3. Ce qu'il reste à faire
 
 Légende : `[ ]` à faire · `[x]` fait
@@ -551,6 +557,7 @@ Légende : `[ ]` à faire · `[x]` fait
 - [x] **G34. Plusieurs terrains mal utilisés :** *Corrigé le 20/10 (app, espace, site) ; à livrer au prochain build.* des terrains restaient vides entre deux journées de poule, et la finale se jouait après la 3e place même avec 2 terrains.
 
 ### H. Retours du premier testeur Android (26/10)
+- [ ] **H42. Tournoi débloqué réutilisé (29/10, à décider) :** après un Pass, la date est figée mais réglages, équipes et régénération restent libres, donc un tournoi passé peut resservir. Le serveur bloque déjà la 13e équipe et les fonctions premium après la fin du Pass. Proposition : tournoi en lecture seule une fois le Pass expiré (réglages, équipes, régénération et saisie bloqués, base comprise), avec un bouton « Dupliquer en nouveau tournoi ». App, espace et `schema.sql`.
 - [ ] **H35. Lot 1 à tester sur le prochain build :** finale 0-0 (tirs au but exigés, aucun vainqueur avant), majuscule du mot de passe, bandeau « Se connecter » de l'inscription, adresse déjà inscrite, nom d'équipe en double, chevrons et bandeau du calendrier, alerte d'égalité parfaite, QR code à côté de la carte. Recoller la fiche Google Play. *Fait le 26/10.*
 - [ ] **H40. Mettre en ligne les lots 2 et 3 (26/10) :** *Migration SQL exécutée par Clément le 26/10 (tâche `corbeille-quotidienne` créée), commit poussé : espace web en ligne. Edge Function `valider-pass-tournoi` redéployée et fiche Google Play recollée par Clément le 26/10. Reste : prochain build et tests sur téléphone (étape 4).* 1) exécuter la migration « Plusieurs jours, corbeille et olympiades » (fin de `supabase/schema.sql`) dans l'éditeur SQL ; 2) redéployer l'Edge Function `valider-pass-tournoi` depuis le tableau de bord ; 3) recoller la fiche Google Play ; 4) prochain build, puis tester sur téléphone : ajout d'équipe en cours, plusieurs jours, corbeille, olympiade (avec un compte Pro). L'espace web est déjà en ligne au push : ne pas pousser avant l'étape 1, sinon ses requêtes sur les nouvelles colonnes échouent.
 - [ ] **H41. Textes du Pass dans l'app (build 9) :** *Corrigé le 26/10 dans `lib/traductions.js` (FR/EN, « les dates du tournoi » figées) ; reste à livrer au build 9 et à vérifier sur l'écran d'achat.* `lib/traductions.js` disait encore « jusqu'à 5 jours après sa date » (`passTournoiDescription`, `mentionsAbonnement`, FR et EN). Écrire « après son dernier jour », comme le site et les CGU (corrigés le 26/10). La règle elle-même est déjà juste (`lib/achats.js`).
@@ -569,6 +576,7 @@ Une ligne par modification, la plus récente en haut.
 
 | Date | Modification |
 |------|--------------|
+| 2026-10-29 | Site : « Espace organisateur » en bouton ambre à droite de « Essayer en direct » ; espace : « Nouvelle olympiade » masqué, statut À venir / En direct / Terminé dans le bandeau du tournoi ; réemploi d'un tournoi débloqué à décider (H42) |
 | 2026-10-26 | Espace : connexion et bandeau du tournoi qui suivent le thème clair, noms d'équipes alignés sur un match en direct, offres affichées dans l'espace (« Voir les offres »), fenêtre « Réservé à OLYMPIAD Pro » qui se refermait |
 | 2026-10-26 | App : textes du Pass « 5 jours après le dernier jour » dans `lib/traductions.js` (FR/EN), à livrer au build 9 (H41) |
 | 2026-10-26 | État des lieux du site en ligne : tout est publié et vérifié ; textes du Pass corrigés (« 5 jours après le dernier jour ») sur le site, l'espace et les CGU ; textes de l'app à aligner (H41) |

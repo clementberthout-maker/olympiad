@@ -117,23 +117,23 @@ h1, h2, h3, .titre { font-family: var(--titre); font-weight: 400; letter-spacing
 .pastille:hover { border-color: var(--accent); }
 .pastille:active { transform: scale(0.94); }
 .pastille svg { width: 18px; height: 18px; }
+/* En-tête : « Essayer en direct » en bouton discret, « Espace organisateur » en bouton ambre (à droite) */
 .cta-entete {
-  height: 40px; padding: 0 16px; border-radius: 10px; border: 0; cursor: pointer;
-  background: var(--accent); color: var(--accent-encre);
-  font-family: var(--titre); font-size: 19px; letter-spacing: 0.04em; text-decoration: none;
-  display: inline-flex; align-items: center; padding-top: 2px;
-  transition: transform 0.2s var(--ease), box-shadow 0.2s;
-}
-.cta-entete:hover { transform: translateY(-1px); box-shadow: 0 8px 24px var(--lueur); }
-.lien-espace {
-  height: 40px; padding: 0 14px; border-radius: 10px; display: inline-flex; align-items: center; gap: 8px;
+  height: 40px; padding: 0 14px; border-radius: 10px; display: inline-flex; align-items: center;
   border: 1px solid var(--bordure); background: var(--surface); color: var(--texte); text-decoration: none; font-weight: 600; font-size: 14px;
   transition: border-color 0.2s, transform 0.2s var(--ease);
 }
-.lien-espace:hover { border-color: var(--accent); transform: translateY(-1px); }
+.cta-entete:hover { border-color: var(--accent); transform: translateY(-1px); }
+.lien-espace {
+  height: 40px; padding: 0 16px; border-radius: 10px; border: 0; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
+  background: var(--accent); color: var(--accent-encre);
+  font-family: var(--titre); font-size: 19px; letter-spacing: 0.04em; text-decoration: none; padding-top: 2px;
+  transition: transform 0.2s var(--ease), box-shadow 0.2s;
+}
+.lien-espace:hover { transform: translateY(-1px); box-shadow: 0 8px 24px var(--lueur); }
 .lien-espace, .cta-entete { white-space: nowrap; flex-shrink: 0; }
-@media (max-width: 1100px) { .lien-espace span { display: none; } .lien-espace { padding: 0 11px; } .nav-principale a { padding: 8px 9px; } }
-.lien-espace svg { width: 18px; height: 18px; color: var(--accent); }
+@media (max-width: 1100px) { .cta-entete { display: none; } .nav-principale a { padding: 8px 9px; } }
+.lien-espace svg { width: 18px; height: 18px; color: var(--accent-encre); margin-top: -2px; }
 
 /* Espace organisateur */
 .espace { display: grid; grid-template-columns: 1fr 1.05fr; gap: 48px; align-items: center; }
