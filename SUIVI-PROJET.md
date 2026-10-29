@@ -459,6 +459,11 @@ OLYMPIAD sert à organiser des tournois sportifs amateurs. L'organisateur crée 
 - Vérifié en mode démo (ordinateur et téléphone, filtres, saisie depuis le fil, phase finale, vue spectateur), aucune erreur.
 - **App (prochain build) :** mêmes vues. Nouveaux composants `FilJournee` (créneaux, filtres en pastilles qui défilent, jauge, matchs en direct encadrés) et `TableauFinal` (une colonne par tour qu'on fait glisser, tours à venir en pointillés) ; `ClassementPoule` refait en compact (J, Diff, Pts, forme, ligne des qualifiés, sans défilement horizontal, aussi sur le grand écran). Branchés sur le calendrier (`tournoi/[id]/calendrier.js`, bascule poule/terrain retirée) et le suivi public (`suivi/[code]`, onglets Calendrier et Classement). Textes FR/EN (`fil.*`, `classementPoule.forme`). Bundle Android compilé sans erreur ; pas encore vu sur téléphone.
 
+### Téléphone du haut de l'accueil plus réaliste (29 octobre)
+- Trois propositions présentées (maquette locale, supprimée ensuite) ; Clément a choisi la 1 : un vrai téléphone incliné.
+- **Coque** dessinée en CSS (`docs/site.css`) : métal avec reflets, îlot, boutons latéraux, barre d'état (heure, réseau, batterie), reflet sur la vitre, barre d'accueil, ombre au sol. Il suit toujours la souris.
+- **Écran** : la nouvelle interface de l'app en « fil de la journée » (pastilles de filtres, jauge, créneaux terminé / en cours / à venir, matchs en direct encadrés) ; les scores en direct changent toujours seuls et la bulle « But ! » suit (`docs/site.js`). L'ancien onglet Classement du téléphone est retiré. FR/EN, rendu identique en thème clair et sombre (l'écran reste sombre comme l'app), vérifié sur ordinateur et téléphone, aucune erreur.
+
 ## 3. Ce qu'il reste à faire
 
 Légende : `[ ]` à faire · `[x]` fait
@@ -592,6 +597,7 @@ Une ligne par modification, la plus récente en haut.
 
 | Date | Modification |
 |------|--------------|
+| 2026-10-29 | Site : téléphone du haut de l'accueil plus réaliste (coque, îlot, reflet) avec l'écran « fil de la journée » animé |
 | 2026-10-29 | App : fil de la journée, classement compact et tableau final dans le calendrier et le suivi public (composants `FilJournee`, `TableauFinal`, `ClassementPoule`), à livrer au prochain build (H43) |
 | 2026-10-29 | Espace : matchs en « fil de la journée » (créneaux, filtres), classement compact avec forme et ligne des qualifiés, tableau final avec les tours à venir ; app à suivre (H43) |
 | 2026-10-29 | Migration « Tournoi archivé en lecture seule » exécutée dans Supabase (H42) |

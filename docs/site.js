@@ -50,7 +50,7 @@
     'nav.essayer': 'Try it', 'nav.fonctions': 'Features', 'nav.sports': 'Sports', 'nav.offres': 'Plans', 'nav.aide': 'Help', 'nav.cta': 'Try it live',
     'heros.etiquette': 'Amateur sports tournaments · live', 'heros.l1': 'Run', 'heros.l2': 'your tournament.', 'heros.l3': 'Everyone follows.',
     'heros.accroche': 'OLYMPIAD builds your schedule, lets you enter scores from the sideline and shows results in real time to teams and spectators with a simple QR code. No account needed for them.',
-    'tel.titre': 'U13 Spring Cup', 'tel.meta': 'Football · 8 teams', 'tel.direct': 'LIVE', 'tel.matchs': 'Matches', 'tel.classement': 'Standings',
+    'tel.titre': 'U13 Spring Cup', 'tel.meta': 'Football · 8 teams', 'tel.direct': 'LIVE',
     'heros.cta': 'Create a tournament now', 'heros.cta2': 'Watch a live tournament', 'heros.bientot': 'Coming soon on', 'heros.badge': 'Soon',
     'heros.bulle1': 'updated for 48 spectators', 'heros.bulle2': 'QR code scanned', 'heros.bulle2b': 'no account, nothing to set up',
     'comment.sur': 'On the day', 'comment.titre': 'Three steps. Zero spreadsheets.', 'comment.intro': 'From the team list to the podium, everything is handled from your phone.',
@@ -104,6 +104,7 @@
     rendreMissions();
     if (typeof rafraichir === 'function') rafraichir();
     rendreGrandEcran();
+    document.dispatchEvent(new Event('olympiad-langue'));
   }
   function changerLangue(l) {
     langue = l || (langue === 'fr' ? 'en' : 'fr');
@@ -1780,40 +1781,41 @@
     $('#essayer').scrollIntoView({ behavior: mouvementReduit ? 'auto' : 'smooth' });
   });
 
-  // Téléphone animé du héros
+  // Téléphone animé du héros : écran « fil de la journée » de l'app (créneaux
+  // horaires, créneau en cours mis en avant, scores en direct qui changent)
   const DEMO = {
-    equipes: [{ id: 'a', nom: 'Les Aigles' }, { id: 'b', nom: 'FC Rivière' }, { id: 'c', nom: 'Étoile Sud' }, { id: 'd', nom: 'US Collines' }],
-    matchs: [{ id: 'm1', equipe_a_id: 'a', equipe_b_id: 'b', h: '14:30', t: 1 }, { id: 'm2', equipe_a_id: 'c', equipe_b_id: 'd', h: '14:30', t: 2 }, { id: 'm3', equipe_a_id: 'a', equipe_b_id: 'c', h: '14:45', t: 1 }, { id: 'm0', equipe_a_id: 'b', equipe_b_id: 'd', h: '14:15', t: 1 }],
-    resultats: [{ match_id: 'm0', score_a: 2, score_b: 2, statut: 'termine' }, { match_id: 'm1', score_a: 1, score_b: 0, statut: 'en_cours' }, { match_id: 'm2', score_a: 0, score_b: 1, statut: 'en_cours' }],
+    equipes: [{ id: 'a', nom: 'Les Aigles' }, { id: 'b', nom: 'FC Rivière' }, { id: 'c', nom: 'Étoile Sud' }, { id: 'd', nom: 'US Collines' }, { id: 'e', nom: 'Stade Bocage' }, { id: 'f', nom: 'Racing Vallée' }],
+    matchs: [
+      { id: 'm0', equipe_a_id: 'b', equipe_b_id: 'd', h: '14:00', p: 'A' }, { id: 'm4', equipe_a_id: 'e', equipe_b_id: 'f', h: '14:00', p: 'B' },
+      { id: 'm1', equipe_a_id: 'a', equipe_b_id: 'b', h: '14:30', p: 'A' }, { id: 'm2', equipe_a_id: 'c', equipe_b_id: 'd', h: '14:30', p: 'A' },
+      { id: 'm3', equipe_a_id: 'a', equipe_b_id: 'c', h: '14:45', p: 'A' }, { id: 'm5', equipe_a_id: 'e', equipe_b_id: 'b', h: '14:45', p: 'B' },
+      { id: 'm6', equipe_a_id: 'f', equipe_b_id: 'd', h: '15:00', p: 'B' },
+    ],
+    resultats: [{ match_id: 'm0', score_a: 2, score_b: 2, statut: 'termine' }, { match_id: 'm4', score_a: 0, score_b: 3, statut: 'termine' }, { match_id: 'm1', score_a: 1, score_b: 0, statut: 'en_cours' }, { match_id: 'm2', score_a: 0, score_b: 1, statut: 'en_cours' }],
   };
   let flashDemo = null;
   function rendreDemo() {
     const nom = (id) => DEMO.equipes.find((e) => e.id === id).nom;
-    $('#demo-matchs').innerHTML = DEMO.matchs.filter((m) => m.id !== 'm0').map((m) => {
-      const r = DEMO.resultats.find((x) => x.match_id === m.id);
-      const sc = r ? `<span class="${flashDemo === `${m.id}a` ? 'flash' : ''}">${r.score_a}</span>-<span class="${flashDemo === `${m.id}b` ? 'flash' : ''}">${r.score_b}</span>` : `<small style="font-family:var(--corps);font-size:12px;color:#808693">${tr('À venir', 'Upcoming')}</small>`;
-      return `<div class="demo-match ${r && r.statut === 'en_cours' ? 'live' : ''}"><div><b>${nom(m.equipe_a_id)} · ${nom(m.equipe_b_id)}</b><small>${r && r.statut === 'en_cours' ? tr('● En cours', '● Live') : m.h} · ${tr('terrain', 'field')} ${m.t}</small></div><span class="sc">${sc}</span></div>`;
-    }).join('');
-    const c = calculerClassement(DEMO.equipes, DEMO.matchs, DEMO.resultats, 'diff_buts', 'football', true);
-    $('#demo-classement').innerHTML = `<div class="demo-table"><h4>${tr('Classement · Poule A', 'Standings · Group A')}</h4><div class="demo-ligne tete"><span>#</span><span>${tr('Équipe', 'Team')}</span><span>${tr('J', 'P')}</span><span>Diff</span><b style="color:#808693">Pts</b></div>${c.map((s, i) => `<div class="demo-ligne"><span>${i + 1}</span><span>${s.equipe.nom}</span><span>${s.joues}</span><span>${s.diff_buts > 0 ? '+' : ''}${s.diff_buts}</span><b>${s.points}</b></div>`).join('')}</div>`;
-    const seg = $('#demo-seg');
-    $$('span', seg)[0].textContent = tr('Matchs', 'Matches');
-    $$('span', seg)[1].textContent = tr('Classement', 'Standings');
+    const res = (m) => DEMO.resultats.find((x) => x.match_id === m.id);
+    const heures = [...new Set(DEMO.matchs.map((m) => m.h))];
+    const joues = DEMO.resultats.filter((r) => r.statut === 'termine').length;
+    const courant = heures.find((h) => DEMO.matchs.some((m) => m.h === h && res(m)?.statut !== 'termine'));
+    $('#demo-matchs').innerHTML = `<div class="tel-pastilles"><span class="on">${tr('Tous', 'All')}</span><span>${tr('Poule A', 'Group A')}</span><span>${tr('Poule B', 'Group B')}</span><span>${tr('Terrain 1', 'Field 1')}</span></div>
+      <div class="tel-jauge"><b><i style="width:${Math.round((joues / DEMO.matchs.length) * 100)}%"></i></b><span>${tr(`${joues} / ${DEMO.matchs.length} matchs joués`, `${joues} / ${DEMO.matchs.length} matches played`)}</span></div>`
+      + heures.map((h) => {
+        const ms = DEMO.matchs.filter((m) => m.h === h);
+        const passe = ms.every((m) => res(m)?.statut === 'termine');
+        const enCours = h === courant && ms.some((m) => res(m)?.statut === 'en_cours');
+        return `<div class="tel-creneau ${passe ? 'passe' : ''} ${h === courant ? 'courant' : ''}"><div class="tel-heure">${h}${passe ? `<small>${tr('TERMINÉ', 'DONE')}</small>` : enCours ? `<small>${tr('EN COURS', 'LIVE NOW')}</small>` : ''}</div>`
+          + ms.map((m) => {
+            const r = res(m);
+            const g = r?.statut === 'termine' && r.score_a !== r.score_b ? (r.score_a > r.score_b ? 'a' : 'b') : '';
+            const sc = r ? `<span class="${flashDemo === `${m.id}a` ? 'flash' : ''}">${r.score_a}</span> - <span class="${flashDemo === `${m.id}b` ? 'flash' : ''}">${r.score_b}</span>` : `<small>${tr('À venir', 'Upcoming')}</small>`;
+            return `<div class="tel-match ${r?.statut === 'en_cours' ? 'enjeu' : ''}"><span class="tel-p">${m.p}</span><span class="tel-e ${g === 'a' ? 'g' : ''}">${nom(m.equipe_a_id)}</span><span class="tel-s">${sc}</span><span class="tel-e b ${g === 'b' ? 'g' : ''}">${nom(m.equipe_b_id)}</span></div>`;
+          }).join('') + '</div>';
+      }).join('');
   }
-  let tickDemo = 0;
   function animerDemo() {
-    tickDemo++;
-    const seg = $('#demo-seg');
-    const montrerClassement = tickDemo % 4 === 3;
-    if (montrerClassement) {
-      seg.classList.add('droite'); $$('span', seg)[0].classList.remove('actif'); $$('span', seg)[1].classList.add('actif');
-      $('#demo-matchs').hidden = true; $('#demo-classement').hidden = false;
-      requestAnimationFrame(() => $('#demo-classement').classList.remove('cache'));
-      rendreDemo();
-      return;
-    }
-    seg.classList.remove('droite'); $$('span', seg)[1].classList.remove('actif'); $$('span', seg)[0].classList.add('actif');
-    $('#demo-classement').hidden = true; $('#demo-classement').classList.add('cache'); $('#demo-matchs').hidden = false;
     const enCours = DEMO.resultats.filter((r) => r.statut === 'en_cours');
     const r = enCours[Math.floor(Math.random() * enCours.length)];
     const cote = Math.random() < 0.5 ? 'a' : 'b';
@@ -1825,6 +1827,7 @@
     rendreDemo();
   }
   rendreDemo();
+  document.addEventListener('olympiad-langue', () => { flashDemo = null; rendreDemo(); });
   if (!mouvementReduit) setInterval(animerDemo, 2600);
 
   // Inclinaison du téléphone et lueur qui suivent la souris
@@ -1835,8 +1838,8 @@
     const r = heros.getBoundingClientRect();
     const x = (e.clientX - r.left) / r.width - 0.5;
     const y = (e.clientY - r.top) / r.height - 0.5;
-    tel.style.setProperty('--ry', `${-8 + x * 14}deg`);
-    tel.style.setProperty('--rx', `${4 - y * 10}deg`);
+    tel.style.setProperty('--ry', `${-14 + x * 18}deg`);
+    tel.style.setProperty('--rx', `${6 - y * 12}deg`);
     heros.style.setProperty('--px', `${x * 60}px`);
     heros.style.setProperty('--py', `${y * 60}px`);
   });

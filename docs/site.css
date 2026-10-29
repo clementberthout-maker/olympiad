@@ -229,50 +229,67 @@ h1 em { font-style: normal; color: var(--accent); }
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
 }
 
-/* Téléphone du héros (toujours sombre, comme les captures de l'app) */
-.scene-heros { position: relative; perspective: 1400px; }
+/* Téléphone du héros : coque réaliste (métal, îlot, boutons, reflet), écran
+   toujours sombre comme l'app, avec le « fil de la journée » animé (site.js) */
+.scene-heros { position: relative; perspective: 1500px; }
 .telephone {
-  width: 100%; max-width: 340px; margin: 0 auto; border-radius: 44px; padding: 12px;
-  background: #05070c; border: 1px solid #2d333d;
-  box-shadow: var(--ombre), 0 0 0 1px rgba(235, 181, 23, 0.08), inset 0 0 0 2px #10141c;
-  transform: rotateY(var(--ry, -8deg)) rotateX(var(--rx, 4deg));
+  position: relative; width: 100%; max-width: 318px; aspect-ratio: 300 / 620; margin: 0 auto; border-radius: 54px; padding: 11px;
+  background: linear-gradient(140deg, #4a4e55 0%, #1b1d21 22%, #2c2f35 48%, #121316 70%, #3d4047 100%);
+  box-shadow: inset 0 0 0 1.5px #6b7078, inset 0 0 0 4px #0b0c0e, 0 50px 90px -30px rgba(5, 8, 15, 0.6), 0 22px 40px -18px rgba(5, 8, 15, 0.45);
+  transform: rotateY(var(--ry, -14deg)) rotateX(var(--rx, 6deg)) rotateZ(1deg);
   transition: transform 0.8s var(--ease);
   transform-style: preserve-3d;
 }
-.ecran-demo { border-radius: 33px; background: #0b0f18; color: #f3f2ed; padding: 18px 16px 20px; overflow: hidden; min-height: 560px; }
-.ecran-demo .barre-etat { display: flex; justify-content: space-between; font-size: 12px; font-weight: 600; color: #f3f2ed; padding: 0 8px 12px; }
-.ecran-demo .entete-app { display: flex; align-items: center; gap: 6px; margin-bottom: 14px; }
-.ecran-demo .entete-app svg { width: 22px; height: 22px; }
-.ecran-demo .entete-app span { font-family: var(--titre); font-size: 20px; letter-spacing: 0.04em; }
-.ecran-demo .titre-tournoi { font-family: var(--titre); font-size: 26px; line-height: 1.05; }
-.ecran-demo .meta { font-size: 12px; color: #808693; margin: 2px 0 12px; display: flex; justify-content: space-between; }
+.telephone::after { content: ""; position: absolute; left: 12%; right: 12%; bottom: -46px; height: 34px; border-radius: 50%; background: radial-gradient(ellipse, rgba(5, 8, 15, 0.4), transparent 70%); filter: blur(6px); transform: translateZ(-40px); }
+.telephone .bouton-cote { position: absolute; width: 4px; border-radius: 2px; background: linear-gradient(90deg, #2a2d32, #5a5e65); }
+.telephone .bc1 { left: -3px; top: 19%; height: 5%; }
+.telephone .bc2 { left: -3px; top: 27%; height: 9%; }
+.telephone .bc3 { left: -3px; top: 37.5%; height: 9%; }
+.telephone .bc4 { right: -3px; top: 29.5%; height: 14%; background: linear-gradient(270deg, #2a2d32, #5a5e65); }
+.ecran-demo { position: relative; height: 100%; border-radius: 44px; background: #0b0f18; color: #f3f2ed; padding: 0 15px; overflow: hidden; }
+.ecran-demo::after { content: ""; position: absolute; inset: 0; pointer-events: none; border-radius: inherit; background: linear-gradient(118deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.035) 28%, transparent 28.4%); }
+.ecran-demo .ilot { position: absolute; top: 11px; left: 50%; transform: translateX(-50%); width: 31%; height: 27px; border-radius: 20px; background: #000; z-index: 2; }
+.ecran-demo .barre-etat { display: flex; justify-content: space-between; align-items: center; height: 46px; padding: 14px 12px 0; font-size: 13px; font-weight: 600; color: #f3f2ed; }
+.icones-etat { display: flex; gap: 5px; align-items: center; }
+.reseau { display: flex; gap: 1.5px; align-items: flex-end; height: 10px; }
+.reseau i { width: 3px; background: #f3f2ed; border-radius: 1px; }
+.reseau i:nth-child(1) { height: 4px; } .reseau i:nth-child(2) { height: 6px; } .reseau i:nth-child(3) { height: 8px; } .reseau i:nth-child(4) { height: 10px; }
+.batterie { width: 22px; height: 11px; border: 1.5px solid rgba(243, 242, 237, 0.55); border-radius: 3.5px; padding: 1px; position: relative; }
+.batterie::after { content: ""; position: absolute; right: -4px; top: 3px; width: 2px; height: 4px; border-radius: 1px; background: rgba(243, 242, 237, 0.55); }
+.batterie i { display: block; height: 100%; width: 78%; background: #f3f2ed; border-radius: 1.5px; }
+.ecran-demo .barre-accueil { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); width: 36%; height: 4.5px; border-radius: 3px; background: rgba(243, 242, 237, 0.85); }
+.ecran-demo .entete-app { display: flex; align-items: center; gap: 6px; margin: 4px 0 10px; }
+.ecran-demo .entete-app svg { width: 20px; height: 20px; }
+.ecran-demo .entete-app span { font-family: var(--titre); font-size: 19px; letter-spacing: 0.04em; }
+.ecran-demo .titre-tournoi { font-family: var(--titre); font-size: 25px; line-height: 1; }
+.ecran-demo .meta { font-size: 11px; color: #808693; margin: 4px 0 10px; display: flex; justify-content: space-between; align-items: center; }
+.statut-direct { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 700; letter-spacing: 0.06em; color: #4ade80; white-space: nowrap; }
+.statut-direct::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; animation: pulse 1.6s ease-in-out infinite; }
 .direct { white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; color: #e2585a; letter-spacing: 0.06em; }
 .direct::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; animation: pulse 1.6s ease-in-out infinite; }
-.seg { display: flex; background: #181d26; border: 1px solid #2d333d; border-radius: 12px; padding: 3px; margin-bottom: 14px; position: relative; }
-.seg span { flex: 1; text-align: center; font-size: 12px; padding: 7px 0; border-radius: 9px; color: #808693; font-weight: 600; position: relative; z-index: 1; transition: color 0.3s; }
-.seg span.actif { color: #0d121b; }
-.seg i { position: absolute; top: 3px; bottom: 3px; left: 3px; width: calc(50% - 3px); border-radius: 9px; background: #ebb517; transition: transform 0.45s var(--ease); }
-.seg.droite i { transform: translateX(100%); }
-.demo-panneau { transition: opacity 0.35s var(--ease), transform 0.35s var(--ease); }
-.demo-panneau.cache { opacity: 0; transform: translateY(8px); }
-.demo-match {
-  display: flex; align-items: center; justify-content: space-between; gap: 8px;
-  background: #181d26; border: 1px solid #2d333d; border-radius: 12px; padding: 10px 12px; margin-bottom: 8px;
-  transition: border-color 0.4s, box-shadow 0.4s;
-}
-.demo-match b { display: block; font-size: 13px; font-weight: 600; }
-.demo-match small { font-size: 11px; color: #808693; }
-.demo-match .sc { font-family: var(--titre); font-size: 24px; letter-spacing: 0.06em; white-space: nowrap; }
-.demo-match.live { border-color: #ebb517; box-shadow: 0 0 0 3px rgba(235, 181, 23, 0.12); }
-.demo-match.live small { color: #ebb517; }
-.sc .flash { display: inline-block; animation: flash 0.8s var(--ease); color: #ebb517; }
+.tel-pastilles { display: flex; gap: 5px; margin-bottom: 9px; overflow: hidden; }
+.tel-pastilles span { border: 1px solid #2d333d; border-radius: 99px; padding: 4px 9px; font-weight: 600; font-size: 10.5px; color: #808693; white-space: nowrap; }
+.tel-pastilles span.on { background: #ebb517; border-color: #ebb517; color: #0d121b; }
+.tel-jauge { display: flex; gap: 8px; align-items: center; color: #808693; font-size: 10.5px; margin-bottom: 6px; }
+.tel-jauge b { width: 56px; height: 5px; border-radius: 3px; background: #181d26; overflow: hidden; flex-shrink: 0; }
+.tel-jauge b i { display: block; height: 100%; background: #ebb517; transition: width 0.6s var(--ease); }
+.tel-creneau { border-top: 1px solid #2d333d; padding: 7px 0; display: grid; gap: 5px; }
+.tel-creneau.courant { border-top: 2px solid #ebb517; }
+.tel-heure { font-family: var(--titre); font-size: 17px; display: flex; gap: 6px; align-items: baseline; }
+.tel-heure small { font-family: var(--corps); font-size: 9px; font-weight: 700; letter-spacing: 0.06em; color: #808693; }
+.tel-creneau.passe .tel-heure { color: #808693; }
+.tel-creneau.courant .tel-heure, .tel-creneau.courant .tel-heure small { color: #ebb517; }
+.tel-match { display: grid; grid-template-columns: 18px minmax(0, 1fr) 42px minmax(0, 1fr); gap: 6px; align-items: center; background: #181d26; border: 1px solid #2d333d; border-radius: 9px; padding: 6px 8px; transition: border-color 0.4s, box-shadow 0.4s; }
+.tel-creneau.passe .tel-match { background: transparent; padding: 3px 8px; }
+.tel-match.enjeu { border-color: #ebb517; box-shadow: 0 0 0 2px rgba(235, 181, 23, 0.15); }
+.tel-p { font-family: var(--titre); font-size: 11px; width: 18px; height: 18px; border-radius: 5px; display: grid; place-items: center; background: rgba(235, 181, 23, 0.16); color: #ebb517; padding-top: 1px; }
+.tel-e { font-weight: 600; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: right; }
+.tel-e.b { text-align: left; }
+.tel-e.g { color: #ebb517; }
+.tel-s { font-family: var(--titre); font-size: 17px; text-align: center; white-space: nowrap; }
+.tel-s small { font-family: var(--corps); font-size: 9.5px; color: #808693; font-weight: 600; }
+.tel-s .flash { display: inline-block; animation: flash 0.8s var(--ease); color: #ebb517; }
 @keyframes flash { 0% { transform: scale(1.8); } 100% { transform: scale(1); } }
-.demo-table { background: #181d26; border: 1px solid #2d333d; border-radius: 14px; padding: 12px 12px 6px; }
-.demo-table h4 { margin: 0 0 6px; font-family: var(--titre); font-weight: 400; color: #ebb517; font-size: 17px; letter-spacing: 0.03em; }
-.demo-ligne { display: grid; grid-template-columns: 18px 1fr 26px 26px 30px; font-size: 12px; padding: 6px 0; border-top: 1px solid #212730; align-items: center; transition: transform 0.5s var(--ease); }
-.demo-ligne.tete { color: #808693; font-weight: 600; border-top: 0; }
-.demo-ligne span:nth-child(n+3) { text-align: right; }
-.demo-ligne b { color: #ebb517; text-align: right; }
 .bulle {
   position: absolute; z-index: 3; display: flex; align-items: center; gap: 10px;
   padding: 10px 14px; border-radius: 14px; font-size: 13px; font-weight: 600;
@@ -282,7 +299,7 @@ h1 em { font-style: normal; color: var(--accent); }
 .bulle .ico { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; background: color-mix(in srgb, var(--accent) 18%, transparent); color: var(--accent); }
 .bulle .ico svg { width: 17px; height: 17px; }
 .bulle small { display: block; font-weight: 500; color: var(--texte-attenue); font-size: 11px; }
-.bulle.b1 { top: 18%; left: -6%; }
+.bulle.b1 { top: 4%; left: -8%; }
 .bulle.b2 { bottom: 14%; right: -4%; animation-delay: -3s; }
 @keyframes flotter { 50% { transform: translateY(-12px); } }
 
