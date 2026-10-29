@@ -187,7 +187,7 @@
           <h3 data-i18n="comment.e2t">Partage le QR code</h3>
           <p data-i18n="comment.e2p">Affiche-le à l'accueil ou envoie le lien : équipes et spectateurs suivent le tournoi en un scan, sans créer de compte.</p>
           <div class="scene-etape" aria-hidden="true">
-            <div class="se-qr"></div><div class="se-faisceau"></div>
+            <div class="se-qr" id="se-qr"></div><div class="se-faisceau"></div>
             <div class="se-mini"><i class="a"></i><i></i><i></i><i></i><i></i></div>
           </div>
         </div>
@@ -201,11 +201,44 @@
           </div>
         </div>
       </div>
+
+      <!-- Avant / après : curseur à faire glisser (site.js) -->
+      <div class="avant-apres reveler">
+        <div class="aa-texte">
+          <h3 data-i18n="aa.titre">Avant / après</h3>
+          <p data-i18n="aa.p">Fais glisser le curseur : la feuille raturée devient OLYMPIAD.</p>
+        </div>
+        <div class="aa-cadre" id="avant-apres">
+          <span class="aa-etiquette g" data-i18n="aa.avant">Avant</span><span class="aa-etiquette d" data-i18n="aa.apres">Avec OLYMPIAD</span>
+          <div class="aa-avant" aria-hidden="true"><div class="aa-feuille">
+            <p><b data-i18n="aa.f0">Tournoi U13 — samedi</b></p>
+            <p>9h00 Aigles / Rivière <s>2-1</s> 2-2 ?</p>
+            <p data-i18n="aa.f2">9h15 Étoile / Collines … terrain ?</p>
+            <p><s>9h30</s> 10h00 Aigles / Étoile</p>
+            <p data-i18n-html="aa.f4">Classement : <s>Aigles 4</s> Collines 3 ?</p>
+            <p data-i18n="aa.f5">Finale : 1er A contre ???</p>
+          </div><div class="aa-tache"></div></div>
+          <div class="aa-apres" aria-hidden="true"><div class="ordi-contenu" id="aa-ecran"></div></div>
+          <div class="aa-poignee"></div>
+          <input type="range" min="0" max="100" value="50" aria-label="Comparer avant et après">
+        </div>
+      </div>
+      </div>
     </div>
   </section>
 
   <!-- Simulateur -->
-  <section class="section-alt" id="essayer">
+  <section class="section-alt replie" id="essayer">
+    <div class="conteneur">
+      <div class="appel-sim reveler">
+        <div>
+          <p class="surtitre" data-i18n="sim.sur2">Essaie sans rien installer</p>
+          <h2 data-i18n="sim.appel">L'app, en vrai, ici.</h2>
+          <p data-i18n="sim.appelp">Crée un tournoi, saisis des scores, regarde le classement bouger : le vrai moteur d'OLYMPIAD tourne dans ton navigateur.</p>
+        </div>
+        <button class="bouton" type="button" id="ouvrir-sim"><span data-i18n="sim.ouvrir">Essayer l'app ici</span><svg aria-hidden="true"><use href="#i-fleche"/></svg></button>
+      </div>
+    </div>
     <div class="conteneur simulateur">
       <div class="guide">
         <p class="surtitre reveler" data-i18n="sim.sur">Essaie sans rien installer</p>
@@ -250,31 +283,31 @@
       <p class="surtitre reveler" data-i18n="f.sur">Tout est dans l'app</p>
       <h2 class="reveler" data-i18n="f.titre">Pensée pour le bord du terrain</h2>
       <p class="intro reveler" data-i18n="f.intro">Pour les clubs, les associations et les bénévoles qui organisent des tournois d'une journée. Et pour tous ceux qui veulent suivre.</p>
+      <div class="onglets-section reveler" role="tablist">
+        <button type="button" role="tab" class="actif" aria-selected="true" data-panneau="fonctions" data-i18n="nav.fonctions">Fonctionnalités</button>
+        <button type="button" role="tab" aria-selected="false" data-panneau="sports" data-i18n="nav.sports">Sports</button>
+      </div>
+      <div class="panneau-section" id="panneau-fonctions">
       <div class="filtres reveler" role="group" aria-label="Filtrer">
         <button type="button" class="actif" data-filtre="tous" data-i18n="f.tous">Tout</button>
         <button type="button" data-filtre="orga" data-i18n="f.orga">Organisateurs</button>
         <button type="button" data-filtre="public" data-i18n="f.public">Équipes et spectateurs</button>
       </div>
       <div class="bento" id="bento"></div>
-    </div>
-  </section>
-
-  <!-- Sports -->
-  <section class="section-alt" id="sports">
-    <div class="conteneur">
-      <p class="surtitre reveler" data-i18n="s.sur">5 sports</p>
-      <h2 class="reveler" data-i18n="s.titre">Chaque sport a ses règles</h2>
-      <p class="intro reveler" data-i18n="s.intro">Barème, vocabulaire et départages s'adaptent automatiquement au sport choisi.</p>
-      <div class="sports-zone reveler">
+      </div>
+      <div class="panneau-section" id="sports" hidden>
+      <p class="intro" data-i18n="s.intro">Barème, vocabulaire et départages s'adaptent automatiquement au sport choisi.</p>
+      <div class="sports-zone">
         <div class="sports-liste" id="sports-liste" role="tablist"></div>
         <div class="sport-detail" id="sport-detail" role="tabpanel"></div>
+      </div>
       </div>
     </div>
   </section>
 
   <!-- Offres -->
   <!-- Espace organisateur : l'app OLYMPIAD dans le navigateur (docs/app/) -->
-  <section id="ordinateur">
+  <section class="section-alt" id="ordinateur">
     <div class="conteneur espace">
       <div class="espace-texte">
         <p class="surtitre reveler" data-i18n="e.sur">Espace organisateur</p>
@@ -301,7 +334,7 @@
   </section>
 
   <!-- Tes données : ce que dit la politique de confidentialité, en clair -->
-  <section class="section-alt" id="donnees">
+  <section id="donnees">
     <div class="conteneur">
       <p class="surtitre reveler" data-i18n="d.sur">Confiance</p>
       <h2 class="reveler" data-i18n="d.titre">Tes données</h2>
@@ -313,6 +346,15 @@
         <div class="reveler" style="--delai:0.24s"><svg aria-hidden="true"><use href="#i-poubelle"/></svg><b data-i18n="d.t4">Supprimable à tout moment</b><span data-i18n="d.p4">Ton compte et tes tournois, en un bouton.</span></div>
       </div>
       <p class="mention reveler"><a href="politique-confidentialite.html" data-i18n="d.lien">Lire la politique de confidentialité</a></p>
+    </div>
+  </section>
+
+  <!-- Ils l'ont testé : vrais retours de testeurs seulement, avec leur accord -->
+  <section class="section-alt" id="temoignages" hidden>
+    <div class="conteneur">
+      <p class="surtitre reveler" data-i18n="t.sur">Premiers retours</p>
+      <h2 class="reveler" data-i18n="t.titre">Ils l'ont testé</h2>
+      <div class="avis" id="avis"></div>
     </div>
   </section>
 
@@ -434,6 +476,12 @@
     </div>
   </section>
 </main>
+
+<!-- Barre flottante sur téléphone (site.js) -->
+<div class="barre-flottante" id="barre-flottante">
+  <a class="bouton" href="#essayer" data-i18n="bf.creer">Créer un tournoi</a>
+  <a class="bouton secondaire" href="espace.html" data-i18n="bf.espace">Espace organisateur</a>
+</div>
 
 <footer>
   <div class="conteneur">

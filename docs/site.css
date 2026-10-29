@@ -352,7 +352,7 @@ h2 { font-size: clamp(40px, 6vw, 68px); line-height: 0.95; margin: 0 0 14px; }
 .chiffres { display: grid; grid-template-columns: repeat(4, 1fr); margin: 34px 0 -40px; border-block: 1px solid var(--bordure); }
 .chiffres div { padding: 22px 16px; text-align: center; border-left: 1px solid var(--bordure); }
 .chiffres div:first-child { border-left: 0; }
-.chiffres b { display: block; font-family: var(--titre); font-weight: 400; font-size: clamp(44px, 6vw, 64px); line-height: 1; color: var(--lien); }
+.chiffres b { display: block; font-family: var(--titre); font-weight: 400; font-size: clamp(44px, 6vw, 64px); line-height: 1; color: var(--accent); }
 .chiffres span { color: var(--texte-attenue); font-size: 14px; }
 
 /* « Le jour J » : scène animée sous chaque étape (site.js) */
@@ -365,7 +365,8 @@ h2 { font-size: clamp(40px, 6vw, 68px); line-height: 0.95; margin: 0 0 14px; }
 .se-calendrier b { font-family: var(--titre); font-weight: 400; font-size: 16px; color: var(--lien); padding-top: 3px; }
 .etape.jouee .se-liste { opacity: 0; transform: scale(0.9); }
 .etape.jouee .se-calendrier { opacity: 1; transform: none; }
-.se-qr { position: absolute; left: 18px; top: 22px; width: 92px; height: 92px; border-radius: 10px; border: 8px solid var(--surface-2); box-shadow: 0 0 0 1px var(--bordure); background: repeating-conic-gradient(var(--texte) 0 25%, var(--surface-2) 0 50%) 0 0 / 19px 19px; }
+.se-qr { position: absolute; left: 18px; top: 22px; width: 92px; height: 92px; border-radius: 10px; padding: 8px; background: #ffffff; box-shadow: 0 0 0 1px var(--bordure), 0 6px 16px rgba(5, 8, 15, 0.12); }
+.se-qr canvas, .se-qr img { display: block; width: 76px !important; height: 76px !important; }
 .se-faisceau { position: absolute; left: 18px; top: 22px; width: 92px; height: 3px; background: var(--accent); box-shadow: 0 0 12px var(--accent); opacity: 0; }
 .etape.jouee .se-faisceau { animation: scanQr 1.2s var(--ease) both; }
 @keyframes scanQr { 0% { opacity: 1; top: 22px; } 90% { opacity: 1; top: 112px; } 100% { opacity: 0; top: 112px; } }
@@ -380,6 +381,58 @@ h2 { font-size: clamp(40px, 6vw, 68px); line-height: 0.95; margin: 0 0 14px; }
 .se-classement div { display: flex; justify-content: space-between; background: var(--surface-2); border: 1px solid var(--bordure); border-radius: 7px; padding: 4px 9px; transition: transform 0.6s var(--ease), background 0.4s; }
 .etape.jouee .se-monte { transform: translateY(-29px); background: color-mix(in srgb, var(--accent) 22%, var(--surface-2)); }
 .etape.jouee .se-descend { transform: translateY(29px); }
+
+/* Avant / après (curseur) */
+.avant-apres { display: grid; grid-template-columns: minmax(0, 0.7fr) minmax(0, 1.3fr); gap: 32px; align-items: center; margin-top: 56px; }
+.avant-apres h3 { font-size: 34px; margin: 0 0 6px; }
+.avant-apres p { color: var(--texte-attenue); margin: 0; }
+.aa-cadre { position: relative; height: 330px; border-radius: 18px; overflow: hidden; border: 1px solid var(--bordure); box-shadow: var(--ombre); user-select: none; --coupe: 50%; }
+.aa-avant, .aa-apres { position: absolute; inset: 0; }
+.aa-avant { background: #efe6cc; padding: 22px; color: #34312b; font-family: "Segoe Print", "Bradley Hand", "Comic Sans MS", cursive; }
+.aa-feuille { height: 100%; padding: 8px 18px; background: repeating-linear-gradient(#fbf6e6 0 27px, #b9cfe8 27px 28px); transform: rotate(-1.2deg); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.14); }
+.aa-feuille p { margin: 0 0 6px; font-size: 16px; line-height: 22px; color: #34312b; }
+.aa-feuille s { color: #c0392b; }
+.aa-tache { position: absolute; right: 54px; bottom: 44px; width: 90px; height: 70px; border-radius: 50%; background: rgba(120, 80, 30, 0.18); filter: blur(2px); }
+.aa-apres { background: #0b0f18; color: #f3f2ed; clip-path: inset(0 0 0 var(--coupe)); }
+.aa-apres .ordi-contenu { padding: 20px 22px; }
+.aa-classement { margin-top: 10px; display: grid; gap: 4px; font-size: 12px; }
+.aa-classement b { font-family: var(--titre); font-weight: 400; font-size: 16px; color: #ebb517; }
+.aa-classement span { display: flex; justify-content: space-between; background: #181d26; border: 1px solid #2d333d; border-radius: 8px; padding: 5px 10px; }
+.aa-classement i { font-style: normal; font-family: var(--titre); font-size: 16px; }
+.aa-poignee { position: absolute; top: 0; bottom: 0; left: var(--coupe); width: 3px; margin-left: -1.5px; background: var(--accent); pointer-events: none; }
+.aa-poignee::after { content: "↔"; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: var(--accent-encre); font-weight: 800; box-shadow: 0 6px 18px rgba(5, 8, 15, 0.3); }
+.aa-cadre input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: ew-resize; }
+.aa-etiquette { position: absolute; top: 12px; z-index: 2; padding: 4px 10px; border-radius: 99px; font-size: 12px; font-weight: 700; pointer-events: none; }
+.aa-etiquette.g { left: 12px; background: rgba(0, 0, 0, 0.55); color: #fff; }
+.aa-etiquette.d { right: 12px; background: var(--accent); color: var(--accent-encre); }
+
+/* Simulateur replié derrière « Essayer l'app ici » */
+.appel-sim { display: none; align-items: center; justify-content: space-between; gap: 24px; padding: 30px 34px; border-radius: 24px; background: var(--fond); border: 1px solid var(--bordure); }
+.appel-sim h2 { margin: 0; font-size: clamp(36px, 4.4vw, 52px); }
+.appel-sim p:not(.surtitre) { margin: 6px 0 0; color: var(--texte-attenue); max-width: 52ch; }
+.appel-sim .bouton { flex-shrink: 0; }
+#essayer.replie { padding: 56px 0; }
+#essayer.replie .appel-sim { display: flex; }
+#essayer.replie .simulateur { display: none; }
+
+/* Fonctionnalités / Sports : une seule section à onglets */
+.onglets-section { display: inline-flex; gap: 4px; padding: 4px; border-radius: 999px; background: var(--surface); border: 1px solid var(--bordure); margin-bottom: 22px; }
+.onglets-section button { border: 0; background: none; cursor: pointer; padding: 9px 20px; border-radius: 999px; font: inherit; font-family: var(--titre); font-size: 19px; letter-spacing: 0.04em; color: var(--texte-attenue); padding-top: 11px; }
+.onglets-section button.actif { background: var(--accent); color: var(--accent-encre); }
+.panneau-section[hidden] { display: none; }
+#sports > .intro { margin-top: 0; }
+
+/* Ils l'ont testé (vrais retours seulement, voir TEMOIGNAGES dans site.js) */
+.avis { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; }
+.avis figure { margin: 0; padding: 22px; border-radius: var(--rayon); background: var(--fond); border: 1px solid var(--bordure); }
+.avis blockquote { margin: 0 0 16px; font-size: 16px; line-height: 1.5; }
+.avis blockquote::before { content: "“"; display: block; font-family: var(--titre); font-size: 54px; line-height: 0.6; color: var(--accent); }
+.avis figcaption { display: flex; gap: 10px; align-items: center; font-size: 13px; }
+.avis figcaption b { display: block; } .avis figcaption small { color: var(--texte-attenue); }
+.avatar-avis { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; font-family: var(--titre); font-size: 17px; padding-top: 2px; background: color-mix(in srgb, var(--accent) 22%, transparent); color: var(--lien); }
+
+/* Barre de boutons flottante, sur téléphone seulement */
+.barre-flottante { display: none; }
 
 /* Tes données */
 .donnees { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 8px; }
@@ -871,6 +924,8 @@ footer nav a:hover { color: var(--texte); }
   .bulle.b2 { right: 0; }
   .etapes, .offres { grid-template-columns: 1fr; }
   .chiffres, .donnees { grid-template-columns: 1fr 1fr; }
+  .avant-apres { grid-template-columns: 1fr; gap: 16px; }
+  .appel-sim { flex-direction: column; align-items: flex-start; padding: 24px; }
   .chiffres div:nth-child(3) { border-left: 0; }
   .chiffres div:nth-child(n+3) { border-top: 1px solid var(--bordure); }
   .ordi-m { grid-template-columns: 22px minmax(0, 1fr) 50px minmax(0, 1fr); }
@@ -882,6 +937,13 @@ footer nav a:hover { color: var(--texte); }
   .sport-onglet svg { width: 26px; height: 26px; }
 }
 @media (max-width: 640px) {
+  .barre-flottante { position: fixed; left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 70; display: flex; gap: 8px; padding: 8px; border-radius: 16px;
+    background: color-mix(in srgb, var(--surface-2) 90%, transparent); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid var(--bordure); box-shadow: 0 10px 30px rgba(5, 8, 15, 0.25);
+    transform: translateY(140%); transition: transform 0.45s var(--ease); }
+  .barre-flottante.visible { transform: none; }
+  .barre-flottante .bouton { flex: 1; justify-content: center; padding-left: 8px; padding-right: 8px; font-size: 17px; }
+  .aa-cadre { height: 300px; }
+  .aa-feuille p { font-size: 13.5px; line-height: 22px; }
   section { padding: 72px 0; }
   .conteneur { padding: 0 16px; }
   .cta-entete { display: none; }

@@ -57,6 +57,10 @@
     'd.sur': 'Trust', 'd.titre': 'Your data', 'd.intro': 'What our privacy policy says, in plain words.', 'd.lien': 'Read the privacy policy',
     'd.t1': 'Your GDPR rights', 'd.p1': 'Access, correction, deletion, portability: just ask.', 'd.t2': 'No ads, no tracking', 'd.p2': 'No audience measurement, no advertising cookies.',
     'd.t3': 'Spectators without an account', 'd.p3': 'A QR code is enough, no data requested.', 'd.t4': 'Delete anytime', 'd.p4': 'Your account and your tournaments, in one tap.',
+    'aa.titre': 'Before / after', 'aa.p': 'Drag the slider: the scribbled sheet turns into OLYMPIAD.', 'aa.avant': 'Before', 'aa.apres': 'With OLYMPIAD',
+    'aa.f0': 'U13 tournament — Saturday', 'aa.f2': '9:15 Étoile / Collines … which field?', 'aa.f4': 'Standings: <s>Aigles 4</s> Collines 3?', 'aa.f5': 'Final: 1st A vs ???',
+    'sim.sur2': 'Try it, nothing to install', 'sim.appel': 'The real app, right here.', 'sim.appelp': 'Create a tournament, enter scores, watch the standings move: the real OLYMPIAD engine runs in your browser.', 'sim.ouvrir': 'Try the app here',
+    't.sur': 'First feedback', 't.titre': 'They tried it', 'bf.creer': 'Create a tournament', 'bf.espace': 'Organizer area',
     'comment.sur': 'On the day', 'comment.titre': 'Three steps. Zero spreadsheets.', 'comment.intro': 'From the team list to the podium, everything is handled from your phone.',
     'comment.e1t': 'Create your tournament', 'comment.e1p': 'Pick the sport, the format (groups, knockout or both) and add the teams. The schedule is generated automatically, by field and time slot.',
     'comment.e2t': 'Share the QR code', 'comment.e2p': 'Display it at the entrance or send the link: teams and spectators follow the tournament with one scan, without creating an account.',
@@ -1785,6 +1789,18 @@
     $('#essayer').scrollIntoView({ behavior: mouvementReduit ? 'auto' : 'smooth' });
   });
 
+  // Simulateur replié derrière « Essayer l'app ici » : il se déplie au clic,
+  // ou dès qu'un lien ou un bouton du site y mène (créer un tournoi, démo…)
+  function ouvrirSimulateur() {
+    const sec = $('#essayer');
+    if (!sec.classList.contains('replie')) return;
+    sec.classList.remove('replie');
+    $$('.reveler', sec).forEach((el) => el.classList.add('visible'));
+  }
+  $('#ouvrir-sim').addEventListener('click', () => { ouvrirSimulateur(); $('#essayer .simulateur').scrollIntoView({ behavior: mouvementReduit ? 'auto' : 'smooth', block: 'start' }); });
+  document.addEventListener('click', (e) => { if (e.target.closest('a[href="#essayer"], [data-demo], [data-essayer-sport], [data-offre-action]')) ouvrirSimulateur(); }, true);
+  if (location.hash === '#essayer') ouvrirSimulateur();
+
   // Téléphone animé du héros : écran « fil de la journée » de l'app (créneaux
   // horaires, créneau en cours mis en avant, scores en direct qui changent)
   const DEMO = {
@@ -1850,6 +1866,54 @@
   rendreOrdi(false);
   document.addEventListener('olympiad-langue', () => rendreOrdi(false));
   if (!mouvementReduit) setInterval(() => { butsOrdi = butsOrdi >= 4 ? 2 : butsOrdi + 1; rendreOrdi(true); }, 3000);
+
+  // QR code de l'étape 2 : un vrai QR code (lien vers le site)
+  if (window.QRCode && $('#se-qr')) {
+    try { new window.QRCode($('#se-qr'), { text: 'https://clementberthout-maker.github.io/olympiad/', width: 76, height: 76, colorDark: '#0b0f18', colorLight: '#ffffff', correctLevel: window.QRCode.CorrectLevel.L }); } catch (e) { /* QR décoratif */ }
+  }
+
+  // Avant / après : la feuille raturée et l'écran OLYMPIAD, séparés par un curseur
+  function rendreAvantApres() {
+    const ligne = (p, a, sc, b, t, live) => `<div class="ordi-m ${live ? 'live' : ''}"><span class="ordi-p">${p}</span><span class="ordi-e">${a}</span><span class="ordi-s">${sc}</span><span class="ordi-e b">${b}</span><span class="ordi-t">${t}</span></div>`;
+    $('#aa-ecran').innerHTML = `<div class="ordi-titre">${tr('Tournoi U13', 'U13 tournament')}</div>
+      <div class="ordi-infos"><span>${tr('Football · samedi', 'Football · Saturday')}</span><b>${tr('EN DIRECT', 'LIVE')}</b></div>
+      <div class="ordi-cr now"><div class="ordi-h">09:00<small>${tr('EN COURS', 'LIVE NOW')}</small></div><div>${ligne('A', 'Les Aigles', '2 - 2', 'FC Rivière', `● ${tr('EN DIRECT', 'LIVE')}`, true)}${ligne('A', 'Étoile Sud', `<small>${tr('À venir', 'Upcoming')}</small>`, 'US Collines', tr('Terrain 2', 'Field 2'))}</div></div>
+      <div class="ordi-cr"><div class="ordi-h">10:00</div><div>${ligne('A', 'Les Aigles', `<small>${tr('À venir', 'Upcoming')}</small>`, 'Étoile Sud', tr('Terrain 1', 'Field 1'))}</div></div>
+      <div class="aa-classement"><b>${tr('Classement · Poule A', 'Standings · Group A')}</b><span>1 · US Collines <i>4</i></span><span>2 · Les Aigles <i>4</i></span></div>`;
+    $('#avant-apres input').setAttribute('aria-label', tr('Comparer avant et après', 'Compare before and after'));
+  }
+  rendreAvantApres();
+  document.addEventListener('olympiad-langue', rendreAvantApres);
+  $('#avant-apres input').addEventListener('input', (e) => $('#avant-apres').style.setProperty('--coupe', `${e.target.value}%`));
+
+  // Ils l'ont testé : uniquement de vrais retours de testeurs, avec leur accord.
+  // Tant que la liste est vide, la section reste masquée.
+  // Format : { texte: ['FR', 'EN'], nom: 'Prénom N.', role: ['Éducateur U13 · football', 'U13 coach · football'] }
+  const TEMOIGNAGES = [];
+  function rendreTemoignages() {
+    if (!TEMOIGNAGES.length) return;
+    $('#temoignages').hidden = false;
+    $('#avis').innerHTML = TEMOIGNAGES.map((t) => `<figure class="reveler visible"><blockquote>${tr(t.texte[0], t.texte[1])}</blockquote><figcaption><span class="avatar-avis">${t.nom.split(' ').map((m) => m[0]).join('').slice(0, 2)}</span><span><b>${t.nom}</b><small>${tr(t.role[0], t.role[1])}</small></span></figcaption></figure>`).join('');
+  }
+  rendreTemoignages();
+  document.addEventListener('olympiad-langue', rendreTemoignages);
+
+  // Fonctionnalités / Sports : une seule section, deux onglets. Les liens
+  // #fonctionnalites et #sports du menu ouvrent le bon onglet.
+  function ouvrirOnglet(nom) {
+    $$('.onglets-section [data-panneau]').forEach((b) => { const on = b.dataset.panneau === nom; b.classList.toggle('actif', on); b.setAttribute('aria-selected', String(on)); });
+    $('#panneau-fonctions').hidden = nom !== 'fonctions';
+    $('#sports').hidden = nom !== 'sports';
+  }
+  $('.onglets-section').addEventListener('click', (e) => { const b = e.target.closest('[data-panneau]'); if (b) ouvrirOnglet(b.dataset.panneau); });
+  document.addEventListener('click', (e) => {
+    const a = e.target.closest('a[href="#sports"], a[href="#fonctionnalites"]');
+    if (!a) return;
+    e.preventDefault();
+    ouvrirOnglet(a.getAttribute('href') === '#sports' ? 'sports' : 'fonctions');
+    $('#fonctionnalites').scrollIntoView({ behavior: mouvementReduit ? 'auto' : 'smooth' });
+  });
+  if (location.hash === '#sports') ouvrirOnglet('sports');
 
   // « Le jour J » : les trois étapes s'animent l'une après l'autre, en boucle,
   // tant que la section est à l'écran (liste → calendrier, QR scanné,
@@ -1917,6 +1981,7 @@
   const barreLecture = $('.progression-lecture');
   const ligneEtapes = $('.etapes-ligne');
   const liens = $$('.nav-principale a');
+  const barreFlottante = $('#barre-flottante');
   let tickDefil = false;
   function auDefilement() {
     tickDefil = false;
@@ -1930,8 +1995,11 @@
     const av = Math.max(0, Math.min(1, (window.innerHeight * 0.85 - r.top) / (r.height + window.innerHeight * 0.3)));
     ligneEtapes.style.setProperty('--avance', av.toFixed(3));
     let actif = null;
-    liens.forEach((a) => { const s = $(a.getAttribute('href')); if (s && s.getBoundingClientRect().top < 120) actif = a; });
+    liens.forEach((a) => { const s = $(a.getAttribute('href')); if (s && s.offsetParent !== null && s.getBoundingClientRect().top < 120) actif = a; });
     liens.forEach((a) => a.classList.toggle('actif', a === actif));
+    // Barre flottante : après le haut de page, et pas sur la section finale
+    const fin = $('.final').getBoundingClientRect().top;
+    barreFlottante.classList.toggle('visible', window.scrollY > window.innerHeight * 0.8 && fin > window.innerHeight * 0.9);
   }
   window.addEventListener('scroll', () => { if (!tickDefil) { tickDefil = true; requestAnimationFrame(auDefilement); } }, { passive: true });
   window.addEventListener('resize', () => { $$('.s-onglets').forEach(placerCurseur); });
@@ -2013,6 +2081,7 @@
     }
     appliquerLangue();
     rendre('avant');
+    ouvrirSimulateur();
     setTimeout(() => $('#essayer').scrollIntoView({ behavior: 'auto' }), 60);
   } else {
     ecranCourant = { ecran: 'accueil', params: {} };
