@@ -450,6 +450,14 @@ OLYMPIAD sert à organiser des tournois sportifs amateurs. L'organisateur crée 
 - **Espace web :** bandeau « Tournoi archivé » (date de fin du Pass, boutons « Dupliquer en nouveau tournoi » et « Supprimer »), onglets Équipes et Réglages masqués, saisie et génération des phases bloquées. « Dupliquer » ouvre l'assistant prérempli (sport, format, départages, équipes, poules, horaires), avec une nouvelle date. Vérifié en mode démo.
 - **App** (prochain build) : même bandeau sur le calendrier (Dupliquer, Supprimer ce tournoi), matchs non cliquables, « Modifier mon tournoi » masqué, écran Équipes refermé avec un message. Duplication par `creer-tournoi` puis `equipes` (`copieDe`) ; plus de 12 équipes en gratuit → écran d'achat. `tournoiEnLectureSeule` dans `lib/achats.js`, message `erreurs.tournoiArchive` (FR/EN).
 
+### Nouvelles vues des matchs et du classement (29 octobre)
+- Trois propositions présentées (maquette locale, supprimée ensuite), retenues par Clément : A, C et D.
+- **Espace web, onglet Matchs (A, « fil de la journée ») :** tous les matchs dans une seule liste par créneau horaire (« Terminé », créneau en cours souligné « Maintenant » / « En cours », matchs en direct encadrés), pastille de poule ou de tour (A, B, ½, F, 3), terrain, jauge « x / y matchs joués · fin estimée ». Filtres Tous, chaque poule, Phase finale, chaque terrain (remplacent « par poule / par terrain »). Séparation « Phase finale », jour affiché sur un tournoi de plusieurs jours, exempts en bas.
+- **Onglet Classement (C) :** une carte par poule avec rang, équipe, J, Diff, Pts et forme (V/N/D des derniers matchs), ligne pointillée sous les qualifiés, matchs joués et en direct par poule.
+- **Tableau final (D) :** une colonne par tour avec l'heure, vainqueur en couleur, perdant estompé, match en direct encadré ; tours suivants (finale, 3e place) en pointillés « Vainqueur ½ 1 »… tant qu'ils ne sont pas générés.
+- Vue spectateur web : mêmes vues (lecture seule) et statut À venir / En direct / Terminé.
+- Vérifié en mode démo (ordinateur et téléphone, filtres, saisie depuis le fil, phase finale, vue spectateur), aucune erreur. **App : à faire au prochain build (H43).**
+
 ## 3. Ce qu'il reste à faire
 
 Légende : `[ ]` à faire · `[x]` fait
@@ -564,6 +572,7 @@ Légende : `[ ]` à faire · `[x]` fait
 
 ### H. Retours du premier testeur Android (26/10)
 - [ ] **H42. Tournoi archivé en lecture seule (29/10) :** *Code fait le 29/10 (espace, app, base). Espace en ligne ; migration « Tournoi archivé en lecture seule » exécutée par Clément le 29/10. Reste : app au prochain build.* Après un Pass expiré (dernier jour + 5 jours, organisateur sans Pro), le tournoi reste consultable, partageable et supprimable, mais scores, équipes, réglages et régénération sont bloqués (code `OLY03` dans la base). « Dupliquer en nouveau tournoi » repart des mêmes équipes et réglages. À tester sur téléphone : bandeau « Tournoi archivé », duplication (plus de 12 équipes en gratuit → écran d'achat), suppression depuis le bandeau.
+- [ ] **H43. Nouvelles vues dans l'app (29/10) :** fil de la journée dans le calendrier, classement compact (forme, ligne des qualifiés) et tableau final, comme l'espace web (fait le 29/10). Écrans `tournoi/[id]/calendrier.js`, `suivi/[code]`, composant `ClassementPoule`.
 - [ ] **H35. Lot 1 à tester sur le prochain build :** finale 0-0 (tirs au but exigés, aucun vainqueur avant), majuscule du mot de passe, bandeau « Se connecter » de l'inscription, adresse déjà inscrite, nom d'équipe en double, chevrons et bandeau du calendrier, alerte d'égalité parfaite, QR code à côté de la carte. Recoller la fiche Google Play. *Fait le 26/10.*
 - [ ] **H40. Mettre en ligne les lots 2 et 3 (26/10) :** *Migration SQL exécutée par Clément le 26/10 (tâche `corbeille-quotidienne` créée), commit poussé : espace web en ligne. Edge Function `valider-pass-tournoi` redéployée et fiche Google Play recollée par Clément le 26/10. Reste : prochain build et tests sur téléphone (étape 4).* 1) exécuter la migration « Plusieurs jours, corbeille et olympiades » (fin de `supabase/schema.sql`) dans l'éditeur SQL ; 2) redéployer l'Edge Function `valider-pass-tournoi` depuis le tableau de bord ; 3) recoller la fiche Google Play ; 4) prochain build, puis tester sur téléphone : ajout d'équipe en cours, plusieurs jours, corbeille, olympiade (avec un compte Pro). L'espace web est déjà en ligne au push : ne pas pousser avant l'étape 1, sinon ses requêtes sur les nouvelles colonnes échouent.
 - [ ] **H41. Textes du Pass dans l'app (build 9) :** *Corrigé le 26/10 dans `lib/traductions.js` (FR/EN, « les dates du tournoi » figées) ; reste à livrer au build 9 et à vérifier sur l'écran d'achat.* `lib/traductions.js` disait encore « jusqu'à 5 jours après sa date » (`passTournoiDescription`, `mentionsAbonnement`, FR et EN). Écrire « après son dernier jour », comme le site et les CGU (corrigés le 26/10). La règle elle-même est déjà juste (`lib/achats.js`).
@@ -582,6 +591,7 @@ Une ligne par modification, la plus récente en haut.
 
 | Date | Modification |
 |------|--------------|
+| 2026-10-29 | Espace : matchs en « fil de la journée » (créneaux, filtres), classement compact avec forme et ligne des qualifiés, tableau final avec les tours à venir ; app à suivre (H43) |
 | 2026-10-29 | Migration « Tournoi archivé en lecture seule » exécutée dans Supabase (H42) |
 | 2026-10-29 | Tournoi archivé en lecture seule après la fin du Pass, avec « Dupliquer en nouveau tournoi » (espace, app, base) ; migration SQL à exécuter (H42) |
 | 2026-10-29 | Site : « Espace organisateur » en bouton ambre à droite de « Essayer en direct » ; espace : « Nouvelle olympiade » masqué, statut À venir / En direct / Terminé dans le bandeau du tournoi ; réemploi d'un tournoi débloqué à décider (H42) |

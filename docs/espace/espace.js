@@ -157,7 +157,7 @@ function confirmer({ titre, texte, bouton, danger = false, saisie = null }) {
 // ---------------------------------------------------------------------
 // État et session
 // ---------------------------------------------------------------------
-const etat = { session: null, profil: null, pro: false, tournois: null, courant: null, desabonner: null, brouillon: null, vueMatchs: 'phase', majIds: new Set() };
+const etat = { session: null, profil: null, pro: false, tournois: null, courant: null, desabonner: null, brouillon: null, filtreMatchs: 'tous', majIds: new Set() };
 const uid = () => etat.session?.user?.id;
 
 async function chargerUtilisateur() {
@@ -741,26 +741,46 @@ function rendreOnglet() {
 }
 
 // Matchs
-function carteMatch(c, m, lecture) {
-  const r = m.resultat;
-  if (!m.equipe_b_id) return `<div class="match exempt"><span class="eq">${esc(nomEquipe(c, m.equipe_a_id))}</span><span class="sous"><span>${tr('Exempt · qualifié·e directement', 'Bye · directly qualified')}</span></span></div>`;
-  const fini = r?.statut === 'termine';
-  const direct = r?.statut === 'en_cours';
-  const g = fini ? idEquipeGagnante(m) : null;
-  const tab = fini && r.score_a === r.score_b && r.score_tab_a != null ? `<span class="tab">${tr('t.a.b.', 'pens')} ${r.score_tab_a}-${r.score_tab_b}</span>` : '';
-  const peut = !lecture && c.droits?.saisir;
-  return `<${peut ? 'button' : 'div'} class="match ${direct ? 'direct' : ''} ${etat.majIds.has(m.id) ? 'maj' : ''}" ${peut ? `data-action="saisir" data-match="${m.id}"` : ''}>
-    <span class="eq ${g === m.equipe_a_id ? 'gagnant' : ''}">${esc(nomEquipe(c, m.equipe_a_id))}</span>
-    <span class="centre">${fini || direct ? `<span class="score">${r.score_a} - ${r.score_b}</span>${tab}` : `<span class="heure">${formaterHeure(m.horaire)}</span>`}</span>
-    <span class="eq b ${g === m.equipe_b_id ? 'gagnant' : ''}">${esc(nomEquipe(c, m.equipe_b_id))}</span>
-    <span class="sous"><span>${m.terrain ? `${tr('Terrain', 'Field')} ${esc(m.terrain)}` : ''}</span><span>${fini ? `${formaterHeure(m.horaire)} · ${tr('Terminé', 'Finished')}` : direct ? `<span class="badge-direct">${tr('EN DIRECT', 'LIVE')}</span>` : tr('À venir', 'Upcoming')}</span></span>
-  </${peut ? 'button' : 'div'}>`;
-}
 function htmlPodium(c, a) {
   if (!a.vainqueur) return '';
   const nom = (id) => (id ? esc(nomEquipe(c, id)) : '—');
   return `<p class="coupe">🏆 ${tr('Vainqueur', 'Winner')} : <em>${nom(a.vainqueur)}</em></p>
     <div class="podium" ${a.troisiemeId ? '' : 'style="grid-template-columns:1fr 1.15fr;max-width:420px"'}><div class="p2"><div class="nom-p">${nom(a.deuxieme)}</div><div class="marche">2</div></div><div class="p1"><div class="nom-p">${nom(a.vainqueur)}</div><div class="marche">1</div></div>${a.troisiemeId ? `<div class="p3"><div class="nom-p">${nom(a.troisiemeId)}</div><div class="marche">3</div></div>` : ''}</div>`;
+}
+// Matchs : « fil de la journée ». Tous les matchs dans une seule liste, par
+// créneau horaire ; le premier créneau pas encore joué est mis en avant.
+// Filtres par poule, phase finale ou terrain (remplacent « par poule / par terrain »).
+const aujourdhuiIso = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
+const jourLocal = (iso) => { const d = new Date(iso); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
+// Pastille courte de la phase : lettre de la poule, ou tour de la phase finale
+function etiquettePhase(nom) {
+  const p = String(nom || '').match(/^Poule ([A-Z]+)$/);
+  if (p) return p[1];
+  return { Finale: 'F', 'Demi-finale': '½', 'Quart de finale': '¼', 'Huitième de finale': '⅛', [NOM_MATCH_TROISIEME_PLACE]: '3' }[nom] || 'T';
+}
+function filtresMatchs(c, a) {
+  const f = [['tous', tr('Tous', 'All')]];
+  if (a.phasesPoule.length > 1) a.phasesPoule.forEach((p) => f.push([`phase:${p.nom}`, libellePhase(p.nom)]));
+  if (a.phasesElim.length && a.phasesPoule.length) f.push(['finale', tr('Phase finale', 'Knockouts')]);
+  const terrains = [...new Set(a.matchs.filter((m) => m.equipe_b_id && m.terrain).map((m) => String(m.terrain)))].sort((x, y) => x.localeCompare(y, undefined, { numeric: true }));
+  if (terrains.length > 1) terrains.forEach((n) => f.push([`terrain:${n}`, `${tr('Terrain', 'Field')} ${n}`]));
+  return f;
+}
+function ligneMatch(c, m, lecture) {
+  const r = m.resultat;
+  const fini = r?.statut === 'termine';
+  const enJeu = r?.statut === 'en_cours';
+  const g = fini ? idEquipeGagnante(m) : null;
+  const tab = fini && r.score_a === r.score_b && r.score_tab_a != null ? `<small>${tr('t.a.b.', 'pens')} ${r.score_tab_a}-${r.score_tab_b}</small>` : '';
+  const peut = !lecture && c.droits?.saisir;
+  const balise = peut ? 'button' : 'div';
+  return `<${balise} class="fil-match ${enJeu ? 'enjeu' : ''} ${etat.majIds.has(m.id) ? 'maj' : ''}" ${peut ? `data-action="saisir" data-match="${m.id}"` : ''}>
+    <span class="fil-phase" title="${esc(libellePhase(m.phase))}">${esc(etiquettePhase(m.phase))}</span>
+    <span class="fil-eq ${g === m.equipe_a_id ? 'gagnant' : ''}">${esc(nomEquipe(c, m.equipe_a_id))}</span>
+    <span class="fil-score ${fini || enJeu ? '' : 'vide'}">${fini || enJeu ? `${r.score_a} - ${r.score_b}${tab}` : tr('À venir', 'Upcoming')}</span>
+    <span class="fil-eq b ${g === m.equipe_b_id ? 'gagnant' : ''}">${esc(nomEquipe(c, m.equipe_b_id))}</span>
+    <span class="fil-terrain">${enJeu ? `<span class="badge-direct">${tr('EN DIRECT', 'LIVE')}</span>` : m.terrain ? `${tr('Terrain', 'Field')} ${esc(m.terrain)}` : ''}</span>
+  </${balise}>`;
 }
 function htmlMatchs(lecture = false) {
   const c = etat.courant; const t = c.tournoi;
@@ -773,43 +793,109 @@ function htmlMatchs(lecture = false) {
     if (a.peutPhaseFinale) bandeau = `<div class="bandeau-progression"><div><b>${tr('Toutes les poules sont terminées', 'All groups are finished')}</b><p>${tr(`${a.qualifies} qualifiés pour la phase finale.`, `${a.qualifies} teams qualify for the knockouts.`)}</p></div><button class="bouton petit" data-action="phase-finale">${tr('Générer la phase finale', 'Generate the knockouts')}</button></div>`;
     else if (a.peutTourSuivant) bandeau = `<div class="bandeau-progression"><div><b>${esc(libellePhase(a.derniere.nom))} · ${tr('terminé', 'finished')}</b><p>${a.peutTroisieme ? tr('La finale et le match pour la 3e place seront générés.', 'The final and third-place match will be generated.') : tr('Les vainqueurs passent au tour suivant.', 'Winners go through to the next round.')}</p></div><button class="bouton petit" data-action="tour-suivant">${tr('Générer le tour suivant', 'Generate the next round')}</button></div>`;
   }
-  const parTerrain = etat.vueMatchs === 'terrain';
-  const groupes = parTerrain ? grouperParTerrain(a.matchs).map((g) => ({ ...g, titre: g.nom.startsWith('Terrain') ? g.nom.replace('Terrain', tr('Terrain', 'Field')) : tr('Exempts', 'Byes') })) : [...a.phasesPoule, ...a.phasesElim].map((g) => ({ ...g, titre: libellePhase(g.nom) }));
+  // Progression et fin estimée (dernier match + sa durée)
+  const jouables = a.matchs.filter((m) => m.equipe_b_id && m.horaire);
+  const joues = jouables.filter((m) => m.resultat?.statut === 'termine').length;
+  const dernier = jouables.reduce((x, m) => (!x || new Date(m.horaire) > new Date(x.horaire) ? m : x), null);
+  const finEstimee = dernier ? new Date(new Date(dernier.horaire).getTime() + ((t.duree_match || 0) + (t.mi_temps ? t.duree_mi_temps || 0 : 0)) * 60000) : null;
+  const filtres = filtresMatchs(c, a);
+  if (!filtres.some(([v]) => v === etat.filtreMatchs)) etat.filtreMatchs = 'tous';
+  const filtre = etat.filtreMatchs;
+  const garde = (m) => filtre === 'tous'
+    || (filtre === 'finale' && !estPhaseDePoule(m.phase))
+    || (filtre.startsWith('phase:') && m.phase === filtre.slice(6))
+    || (filtre.startsWith('terrain:') && String(m.terrain) === filtre.slice(8));
+  // Créneaux : matchs regroupés par horaire, dans l'ordre
+  const creneaux = [];
+  jouables.filter(garde).sort((x, y) => new Date(x.horaire) - new Date(y.horaire) || String(x.terrain).localeCompare(String(y.terrain), undefined, { numeric: true }))
+    .forEach((m) => { const cle = new Date(m.horaire).getTime(); const der = creneaux[creneaux.length - 1]; if (der && der.cle === cle) der.matchs.push(m); else creneaux.push({ cle, horaire: m.horaire, matchs: [m] }); });
+  const indexCourant = creneaux.findIndex((cr) => cr.matchs.some((m) => m.resultat?.statut !== 'termine'));
+  const aujourdhui = statutTournoi(t)[0] === 'aujourdhui';
+  const plusieursJours = new Set(creneaux.map((cr) => jourLocal(cr.horaire))).size > 1;
+  let jourPrec = ''; let finalePrec = false;
+  const html = creneaux.map((cr, i) => {
+    const passe = cr.matchs.every((m) => m.resultat?.statut === 'termine');
+    const courant = i === indexCourant;
+    const finale = cr.matchs.every((m) => !estPhaseDePoule(m.phase));
+    let avant = '';
+    const jour = jourLocal(cr.horaire);
+    if (plusieursJours && jour !== jourPrec) avant += `<div class="fil-jour">${esc(formaterDate(jour))}${jour === aujourdhuiIso() ? ` · ${tr('aujourd\'hui', 'today')}` : ''}</div>`;
+    if (finale && !finalePrec && a.phasesPoule.length && filtre === 'tous') avant += `<div class="fil-separation">${tr('Phase finale', 'Knockouts')}</div>`;
+    jourPrec = jour; finalePrec = finale;
+    const etiquette = passe ? tr('TERMINÉ', 'DONE') : courant ? (cr.matchs.some((m) => m.resultat?.statut === 'en_cours') ? tr('EN COURS', 'LIVE NOW') : aujourdhui ? tr('MAINTENANT', 'NOW') : tr('À SUIVRE', 'NEXT')) : '';
+    return `${avant}<section class="fil-creneau ${passe ? 'passe' : ''} ${courant ? 'courant' : ''}" ${courant ? 'id="creneau-courant"' : ''}>
+      <div class="fil-heure">${formaterHeure(cr.horaire)}${etiquette ? `<small>${etiquette}</small>` : ''}</div>
+      <div class="fil-lignes">${cr.matchs.map((m) => ligneMatch(c, m, lecture)).join('')}</div></section>`;
+  }).join('');
+  const exempts = a.matchs.filter((m) => !m.equipe_b_id && garde(m));
   return `${htmlPodium(c, a)}${bandeau}
-    <div class="barre-outils"><div class="segments"><button class="${parTerrain ? '' : 'actif'}" data-action="vue-matchs" data-valeur="phase">${t.format === 'elimination_directe' ? tr('Par tour', 'By round') : tr('Par poule', 'By group')}</button><button class="${parTerrain ? 'actif' : ''}" data-action="vue-matchs" data-valeur="terrain">${tr('Par terrain', 'By field')}</button></div>
-      ${!lecture && c.droits.saisir ? `<span class="raccourcis">${tr('Clique sur un match pour saisir son score', 'Click a match to enter its score')}</span>` : ''}</div>
-    <div class="colonnes-phases cascade">${groupes.map((g, i) => {
-      const jouables = g.matchs.filter((m) => m.equipe_b_id);
-      const finis = jouables.filter((m) => m.resultat?.statut === 'termine').length;
-      return `<section class="groupe-matchs" style="--i:${i}"><h3>${esc(g.titre)}<small>${finis}/${jouables.length}</small></h3>${g.matchs.map((m) => carteMatch(c, m, lecture)).join('')}</section>`;
-    }).join('')}</div>`;
+    <div class="fil-barre">
+      <div class="fil-progression"><span class="fil-jauge"><i style="width:${jouables.length ? Math.round((joues / jouables.length) * 100) : 0}%"></i></span><span><b>${joues} / ${jouables.length}</b> ${tr('matchs joués', 'matches played')}${finEstimee && joues < jouables.length ? ` · ${tr('fin estimée', 'estimated end')} <b>${pad(finEstimee.getHours())}:${pad(finEstimee.getMinutes())}</b>` : ''}</span></div>
+      ${filtres.length > 1 ? `<div class="fil-filtres">${filtres.map(([v, l]) => `<button type="button" class="${v === filtre ? 'actif' : ''}" data-action="filtre-matchs" data-valeur="${esc(v)}">${esc(l)}</button>`).join('')}</div>` : ''}
+    </div>
+    ${!lecture && c.droits.saisir ? `<p class="raccourcis fil-aide">${tr('Clique sur un match pour saisir son score', 'Click a match to enter its score')}</p>` : ''}
+    <div class="fil-journee">${html || `<div class="vide-etat">${tr('Aucun match pour ce filtre.', 'No match for this filter.')}</div>`}</div>
+    ${exempts.length ? `<p class="mention">${tr('Exempts, qualifiés directement', 'Byes, directly qualified')} : ${exempts.map((m) => `${esc(nomEquipe(c, m.equipe_a_id))} (${esc(libellePhase(m.phase))})`).join(', ')}</p>` : ''}`;
 }
 
-// Classements et tableau final
+// Classements (compacts, avec la forme et la ligne des qualifiés) et tableau final
 function classementsPoules(c) {
   return c.poules.map((p) => ({ poule: p, classement: calculerClassement(c.equipes.filter((e) => e.poule_id === p.id), c.matchs.filter((m) => m.phase === p.nom), c.resultats, c.tournoi.critere_departage_poule, c.tournoi.sport) }));
 }
+// Derniers résultats d'une équipe dans sa poule (V, N, D), du plus ancien au plus récent
+function formeEquipe(c, equipeId, nomPoule) {
+  return c.matchs.filter((m) => m.phase === nomPoule && (m.equipe_a_id === equipeId || m.equipe_b_id === equipeId))
+    .map((m) => ({ m, r: c.resultats.find((x) => x.match_id === m.id) })).filter(({ r }) => r?.statut === 'termine')
+    .sort((x, y) => new Date(x.m.horaire) - new Date(y.m.horaire)).slice(-5)
+    .map(({ m, r }) => { const pour = m.equipe_a_id === equipeId ? r.score_a : r.score_b; const contre = m.equipe_a_id === equipeId ? r.score_b : r.score_a; return pour > contre ? 'v' : pour < contre ? 'd' : 'n'; });
+}
 function tableClassement(c, { poule, classement }, nbQualifies) {
-  const [bp, bc] = (ABREV[c.tournoi.sport] || ABREV.football)[langue === 'en' ? 1 : 0];
-  return `<div class="tableau-classement"><h3>${tr('Classement', 'Standings')} · ${esc(libellePhase(poule.nom))}</h3><table><thead><tr><th></th><th>${tr('Équipe', 'Team')}</th><th>${tr('J', 'P')}</th><th>${tr('V', 'W')}</th><th>${tr('N', 'D')}</th><th>${tr('D', 'L')}</th><th>${bp}</th><th>${bc}</th><th>Diff</th><th>Pts</th></tr></thead><tbody>
-    ${classement.map((s, i) => `<tr class="${nbQualifies && i < nbQualifies ? 'qualifie' : ''}" style="--i:${i}"><td>${i + 1}</td><td>${esc(s.equipe.nom)}</td><td>${s.joues}</td><td>${s.victoires}</td><td>${s.nuls}</td><td>${s.defaites}</td><td>${s.buts_pour}</td><td>${s.buts_contre}</td><td>${s.diff_buts > 0 ? '+' : ''}${s.diff_buts}</td><td>${s.points}</td></tr>`).join('')}
-  </tbody></table></div>`;
+  const matchsPoule = c.matchs.filter((m) => m.phase === poule.nom && m.equipe_b_id);
+  const res = (m) => c.resultats.find((x) => x.match_id === m.id);
+  const finis = matchsPoule.filter((m) => res(m)?.statut === 'termine').length;
+  const enJeu = matchsPoule.filter((m) => res(m)?.statut === 'en_cours').length;
+  const lettres = { v: tr('V', 'W'), n: tr('N', 'D'), d: tr('D', 'L') };
+  return `<div class="carte-classement"><h3>${esc(libellePhase(poule.nom))}<small>${finis}/${matchsPoule.length} ${tr('matchs', 'matches')}${enJeu ? ` · ${enJeu} ${tr('en direct', 'live')}` : ''}</small></h3>
+    <table><thead><tr><th></th><th>${tr('Équipe', 'Team')}</th><th>${tr('J', 'P')}</th><th>Diff</th><th>Pts</th><th>${tr('Forme', 'Form')}</th></tr></thead><tbody>
+    ${classement.map((s, i) => `<tr class="${nbQualifies && i < nbQualifies ? 'qualifie' : ''} ${nbQualifies && i === nbQualifies ? 'limite' : ''}"><td>${i + 1}</td><td>${esc(s.equipe.nom)}</td><td>${s.joues}</td><td>${s.diff_buts > 0 ? '+' : ''}${s.diff_buts}</td><td class="pts">${s.points}</td><td><span class="forme">${formeEquipe(c, s.equipe.id, poule.nom).map((f) => `<i class="${f}">${lettres[f]}</i>`).join('')}</span></td></tr>`).join('')}
+    </tbody></table></div>`;
 }
 function htmlClassement() {
   const c = etat.courant;
   const a = analyser(c);
   const cp = classementsPoules(c);
+  const nbQualifies = c.tournoi.format === 'mixte' ? c.tournoi.nombre_qualifies_par_poule : 0;
   const duel = (m) => {
-    const r = m.resultat; const fini = r?.statut === 'termine'; const g = fini ? idEquipeGagnante(m) : null;
+    const r = m.resultat; const fini = r?.statut === 'termine'; const enJeu = r?.statut === 'en_cours'; const g = fini ? idEquipeGagnante(m) : null;
+    const cls = (id) => (g ? (g === id ? 'gagnant' : 'perdant') : '');
     if (!m.equipe_b_id) return `<div class="duel"><div class="gagnant"><span>${esc(nomEquipe(c, m.equipe_a_id))}</span><span>${tr('Exempt', 'Bye')}</span></div></div>`;
-    return `<div class="duel"><div class="${g === m.equipe_a_id ? 'gagnant' : ''}"><span>${esc(nomEquipe(c, m.equipe_a_id))}</span><span>${fini ? r.score_a : ''}</span></div><div class="${g === m.equipe_b_id ? 'gagnant' : ''}"><span>${esc(nomEquipe(c, m.equipe_b_id))}</span><span>${fini ? r.score_b : ''}</span></div></div>`;
+    return `<div class="duel ${enJeu ? 'enjeu' : ''}"><div class="${cls(m.equipe_a_id)}"><span>${esc(nomEquipe(c, m.equipe_a_id))}</span><span>${fini || enJeu ? r.score_a : ''}</span></div><div class="${cls(m.equipe_b_id)}"><span>${esc(nomEquipe(c, m.equipe_b_id))}</span><span>${fini || enJeu ? r.score_b : ''}</span></div></div>`;
   };
+  const tourHtml = (p) => { const h = p.matchs.filter((m) => m.horaire).map((m) => new Date(m.horaire)).sort((x, y) => x - y)[0]; return `<div class="tour-final"><h4>${esc(libellePhase(p.nom))}${h ? `<small>${pad(h.getHours())}:${pad(h.getMinutes())}</small>` : ''}</h4>${p.matchs.map(duel).join('')}</div>`; };
   const principales = [...a.principales].sort((x, y) => Math.max(...x.matchs.map((m) => new Date(m.created_at))) - Math.max(...y.matchs.map((m) => new Date(m.created_at))));
   const troisieme = a.phasesElim.find((p) => p.nom === NOM_MATCH_TROISIEME_PLACE);
+  // Tours pas encore générés : cases en attente jusqu'à la finale (et 3e place)
+  const NOMS_TOURS = { 1: 'Finale', 2: 'Demi-finale', 4: 'Quart de finale', 8: 'Huitième de finale' };
+  const COURT = { Finale: tr('finale', 'final'), 'Demi-finale': '½', 'Quart de finale': '¼', 'Huitième de finale': '⅛' };
+  const attente = (l1, l2) => `<div class="duel attente"><div><span>${esc(l1)}</span><span></span></div><div><span>${esc(l2)}</span><span></span></div></div>`;
+  let aVenir = '';
+  const dernierTour = principales[principales.length - 1];
+  if (dernierTour && dernierTour.nom !== 'Finale') {
+    let n = dernierTour.matchs.length; let precedent = dernierTour.nom;
+    while (n > 1) {
+      n = Math.ceil(n / 2);
+      const nom = NOMS_TOURS[n] || tr(`Tour à ${n * 2} équipes`, `Round of ${n * 2}`);
+      const court = COURT[precedent] || precedent;
+      aVenir += `<div class="tour-final"><h4>${esc(libellePhase(nom))}</h4>${Array.from({ length: n }, (_, k) => attente(`${tr('Vainqueur', 'Winner')} ${court} ${2 * k + 1}`, `${tr('Vainqueur', 'Winner')} ${court} ${2 * k + 2}`)).join('')}</div>`;
+      if (n === 1 && precedent === 'Demi-finale' && c.tournoi.match_troisieme_place && !troisieme) aVenir += `<div class="tour-final"><h4>${esc(libellePhase(NOM_MATCH_TROISIEME_PLACE))}</h4>${attente(`${tr('Perdant', 'Loser')} ½ 1`, `${tr('Perdant', 'Loser')} ½ 2`)}</div>`;
+      precedent = nom;
+    }
+  }
   return `${htmlPodium(c, a)}
-    ${cp.length ? `<div class="grille-classements">${cp.map((p) => tableClassement(c, p, c.tournoi.format === 'mixte' ? c.tournoi.nombre_qualifies_par_poule : 0)).join('')}</div>` : ''}
-    ${cp.length && c.tournoi.format === 'mixte' ? `<p class="mention">${tr(`En jaune : les ${c.tournoi.nombre_qualifies_par_poule} premiers de chaque poule, qualifiés pour la phase finale.`, `In yellow: the top ${c.tournoi.nombre_qualifies_par_poule} of each group, qualified for the knockouts.`)}</p>` : ''}
-    ${principales.length ? `<h2 style="font-size:40px;margin:34px 0 12px">${tr('Tableau final', 'Knockout bracket')}</h2><div class="tableau-final">${principales.map((p) => `<div class="tour-final"><h4>${esc(libellePhase(p.nom))}</h4>${p.matchs.map(duel).join('')}</div>`).join('')}${troisieme ? `<div class="tour-final"><h4>${esc(libellePhase(troisieme.nom))}</h4>${troisieme.matchs.map(duel).join('')}</div>` : ''}</div>` : ''}
+    ${cp.length ? `<div class="grille-classements">${cp.map((p) => tableClassement(c, p, nbQualifies)).join('')}</div>` : ''}
+    ${cp.length && nbQualifies ? `<p class="legende-qualifies">${tr(`Qualifiés pour la phase finale : les ${nbQualifies} premiers de chaque poule.`, `Qualified for the knockouts: the top ${nbQualifies} of each group.`)}</p>` : ''}
+    ${principales.length ? `<h2 class="titre-tableau">${tr('Tableau final', 'Knockout bracket')}</h2><div class="tableau-final">${principales.map(tourHtml).join('')}${aVenir}${troisieme ? tourHtml(troisieme) : ''}</div>`
+      : cp.length && nbQualifies ? `<h2 class="titre-tableau">${tr('Tableau final', 'Knockout bracket')}</h2><div class="vide-etat" style="padding:26px">${tr(`Il apparaîtra quand toutes les poules seront terminées : ${a.qualifies} qualifiés, les premiers de poule croisés avec les deuxièmes.`, `It will appear once every group is finished: ${a.qualifies} qualifiers, group winners crossed with runners-up.`)}</div>` : ''}
     ${!cp.length && !principales.length ? `<div class="vide-etat">${tr('Le classement apparaîtra ici dès les premiers matchs.', 'Standings will appear here after the first matches.')}</div>` : ''}`;
 }
 
@@ -943,7 +1029,7 @@ function ouvrirSaisie(matchId) {
   tiroir.innerHTML = htmlSaisie();
   tiroir.classList.add('ouvert');
   $('#voile').classList.add('ouvert');
-  $$('.match').forEach((x) => x.classList.toggle('selection', x.dataset.match === matchId));
+  $$('.fil-match').forEach((x) => x.classList.toggle('selection', x.dataset.match === matchId));
   setTimeout(() => { const i = $('#score-a'); if (i) { i.focus(); i.select(); } }, 350);
 }
 function htmlSaisie() {
@@ -982,7 +1068,7 @@ function majZoneTab() {
 function fermerTiroir() {
   $('#tiroir').classList.remove('ouvert');
   if (!$('#fenetre').classList.contains('ouvert')) $('#voile').classList.remove('ouvert');
-  $$('.match.selection').forEach((x) => x.classList.remove('selection'));
+  $$('.fil-match.selection').forEach((x) => x.classList.remove('selection'));
   saisie = null;
 }
 async function enregistrerScore(bouton) {
@@ -1237,13 +1323,12 @@ function rendreSuivi() {
   const t = c.tournoi;
   zone.innerHTML = `<section class="entete-tournoi"><div class="page">
       <div class="titre-tournoi"><span class="ico-sport">${ico(t.sport)}</span><h1>${esc(t.nom)}</h1></div>
-      <div class="infos-tournoi"><span>${nomSport(t.sport)} · ${formaterPeriode(t)}</span><span class="indicateur-direct" id="indicateur-direct">${tr('EN DIRECT', 'LIVE')}</span>${etat.olympiadeSuivi ? `<a class="puce-code" href="#/suivi/${esc(etat.olympiadeSuivi.code_acces)}">${tr('Classement général de l\'olympiade', 'Olympiad overall ranking')}</a>` : ''}</div>
+      <div class="infos-tournoi"><span>${nomSport(t.sport)} · ${formaterPeriode(t)}</span>${htmlIndicateurStatut(c)}${etat.olympiadeSuivi ? `<a class="puce-code" href="#/suivi/${esc(etat.olympiadeSuivi.code_acces)}">${tr('Classement général de l\'olympiade', 'Olympiad overall ranking')}</a>` : ''}</div>
       <nav class="onglets-tournoi"><a href="#" data-action="onglet-suivi" data-onglet="classement" class="${etat.ongletSuivi === 'classement' ? 'actif' : ''}">${tr('Classement', 'Standings')}</a><a href="#" data-action="onglet-suivi" data-onglet="calendrier" class="${etat.ongletSuivi === 'calendrier' ? 'actif' : ''}">${tr('Calendrier', 'Schedule')}</a></nav>
     </div></section>
     <div class="page"><div class="contenu-onglet">${etat.ongletSuivi === 'classement' ? htmlClassement() : htmlMatchs(true)}</div>
       <p class="mention" style="text-align:center;margin-top:28px"><a href="${lienSignalement(t)}">${tr('Signaler ce tournoi', 'Report this tournament')}</a></p>
       <p class="mention" style="text-align:center;margin-top:34px">${etat.session && etat.suiviDepuis ? `<a class="bouton secondaire petit" href="#/tournoi/${t.id}">${tr('Retour à la gestion du tournoi', 'Back to tournament management')}</a>` : `${tr('Tu organises ce tournoi ?', 'Running this tournament?')} <a href="#/connexion">${tr('Connecte-toi à l\'espace organisateur', 'Sign in to the organizer area')}</a> · <a href="index.html">OLYMPIAD</a>`}</p></div>`;
-  const ind = $('#indicateur-direct'); if (ind) ind.classList.add('connecte');
   etat.majIds.clear();
 }
 
@@ -1560,7 +1645,7 @@ document.addEventListener('click', async (e) => {
     case 'dupliquer-tournoi': if (etat.courant) { etat.brouillon = brouillonDepuisTournoi(etat.courant); location.hash = '#/nouveau'; } break;
     case 'voir-offres': fenetreOffres({ limite: false, offre: cible.dataset.offre || null }); break;
     // Tournoi
-    case 'vue-matchs': etat.vueMatchs = cible.dataset.valeur; rendreOnglet(); break;
+    case 'filtre-matchs': etat.filtreMatchs = cible.dataset.valeur; if ($('#vue-suivi')) rendreSuivi(); else rendreOnglet(); break;
     case 'saisir': ouvrirSaisie(cible.dataset.match); break;
     case 'score': {
       const cle = cible.dataset.cle;
