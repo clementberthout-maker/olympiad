@@ -1789,7 +1789,6 @@
       { id: 'm0', equipe_a_id: 'b', equipe_b_id: 'd', h: '14:00', p: 'A' }, { id: 'm4', equipe_a_id: 'e', equipe_b_id: 'f', h: '14:00', p: 'B' },
       { id: 'm1', equipe_a_id: 'a', equipe_b_id: 'b', h: '14:30', p: 'A' }, { id: 'm2', equipe_a_id: 'c', equipe_b_id: 'd', h: '14:30', p: 'A' },
       { id: 'm3', equipe_a_id: 'a', equipe_b_id: 'c', h: '14:45', p: 'A' }, { id: 'm5', equipe_a_id: 'e', equipe_b_id: 'b', h: '14:45', p: 'B' },
-      { id: 'm6', equipe_a_id: 'f', equipe_b_id: 'd', h: '15:00', p: 'B' },
     ],
     resultats: [{ match_id: 'm0', score_a: 2, score_b: 2, statut: 'termine' }, { match_id: 'm4', score_a: 0, score_b: 3, statut: 'termine' }, { match_id: 'm1', score_a: 1, score_b: 0, statut: 'en_cours' }, { match_id: 'm2', score_a: 0, score_b: 1, statut: 'en_cours' }],
   };
