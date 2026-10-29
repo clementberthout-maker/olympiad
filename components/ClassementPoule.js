@@ -1,62 +1,41 @@
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
-import { useMemo, useState } from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+import { useMemo } from 'react';
 import { useTheme } from '../lib/ThemeContext';
 import { useLangue } from '../lib/LangueContext';
 import { POLICE_TITRE, POLICE_TEXTE, POLICE_TEXTE_SEMIBOLD, POLICE_TEXTE_BOLD } from '../lib/theme';
-
-const LARGEUR_COL_EQUIPE_MIN = 90;
-const LARGEUR_COL_EQUIPE_MAX = 220;
-const LARGEUR_CURSEUR_MIN = 24;
-// Estimation grossière de la largeur d'un caractère (police proportionnelle,
-// taille 13.5) : suffit à dimensionner la colonne "Équipe" pour que les
-// noms tiennent sur une seule ligne sans être coupés, sans avoir à mesurer
-// le texte réellement rendu.
-const LARGEUR_PAR_CARACTERE = 7.3;
-const MARGE_COL_EQUIPE = 34; // rang + espacement + un peu d'air
 
 function formatDiff(diff) {
   return diff > 0 ? `+${diff}` : String(diff);
 }
 
-function clamp(valeur, min, max) {
-  return Math.min(max, Math.max(min, valeur));
+// Derniers résultats d'une équipe (v, n, d), du plus ancien au plus récent
+function formeEquipe(equipeId, matchs, resultats) {
+  return matchs
+    .filter((m) => m.equipe_a_id === equipeId || m.equipe_b_id === equipeId)
+    .map((m) => ({ m, r: resultats.find((x) => x.match_id === m.id) }))
+    .filter(({ r }) => r?.statut === 'termine')
+    .sort((x, y) => new Date(x.m.horaire) - new Date(y.m.horaire))
+    .slice(-5)
+    .map(({ m, r }) => {
+      const pour = m.equipe_a_id === equipeId ? r.score_a : r.score_b;
+      const contre = m.equipe_a_id === equipeId ? r.score_b : r.score_a;
+      return pour > contre ? 'v' : pour < contre ? 'd' : 'n';
+    });
 }
 
-// Petit tableau de classement réutilisé pour une poule donnée, sur l'écran
-// calendrier (organisateur) et l'écran de suivi (public). Le nom de
-// l'équipe reste figé à gauche, seules les colonnes de stats défilent
-// horizontalement (le nombre de colonnes ne tient pas toujours sur un
-// petit écran) — un petit curseur sous le tableau indique qu'on peut
-// défiler et où on en est.
-export default function ClassementPoule({ nom, classement, equipeMiseEnAvantId, sport = 'football' }) {
+// Classement compact d'une poule (comme l'espace web) : rang, équipe, J,
+// Diff, Pts et forme (V/N/D des derniers matchs, si `matchs` et
+// `resultats` sont fournis), ligne pointillée sous les `nbQualifies`
+// premiers. Tient sur un téléphone sans défilement horizontal. Utilisé par
+// le calendrier (organisateur), le suivi public et le grand écran.
+export default function ClassementPoule({
+  nom, classement, equipeMiseEnAvantId, sport = 'football', nbQualifies = 0, matchs = null, resultats = [],
+}) {
   const { couleurs } = useTheme();
   const { t } = useLangue();
   const styles = useMemo(() => creerStyles(couleurs), [couleurs]);
-  const abregeScorePour = t(`sports.${sport}.abregeScorePour`);
-  const abregeScoreContre = t(`sports.${sport}.abregeScoreContre`);
-  const [largeurVisible, setLargeurVisible] = useState(0);
-  const [largeurContenu, setLargeurContenu] = useState(0);
-  const [decalageX, setDecalageX] = useState(0);
-
-  const plusLongNom = useMemo(
-    () => classement.reduce((max, item) => Math.max(max, item.equipe.nom.length), 0),
-    [classement]
-  );
-  const largeurColEquipe = clamp(
-    MARGE_COL_EQUIPE + plusLongNom * LARGEUR_PAR_CARACTERE,
-    LARGEUR_COL_EQUIPE_MIN,
-    LARGEUR_COL_EQUIPE_MAX
-  );
-
-  const peutDefiler = largeurContenu > largeurVisible + 1;
-  const largeurCurseur = peutDefiler
-    ? Math.max(LARGEUR_CURSEUR_MIN, (largeurVisible / largeurContenu) * largeurVisible)
-    : 0;
-  const decalageMaxCurseur = largeurVisible - largeurCurseur;
-  const decalageMaxScroll = largeurContenu - largeurVisible;
-  const positionCurseur = peutDefiler && decalageMaxScroll > 0
-    ? clamp((decalageX / decalageMaxScroll) * decalageMaxCurseur, 0, decalageMaxCurseur)
-    : 0;
+  const avecForme = Array.isArray(matchs);
+  const lettres = { v: t('classementPoule.v'), n: t('classementPoule.n'), d: t('classementPoule.d') };
 
   return (
     <View style={styles.carte}>
@@ -67,79 +46,39 @@ export default function ClassementPoule({ nom, classement, equipeMiseEnAvantId, 
         </Text>
       ) : (
         <>
-          <View style={styles.tableWrapper}>
-            <View style={[styles.colFixe, { width: largeurColEquipe }]}>
-              <Text style={[styles.entete, styles.enteteEquipe, styles.enteteLigne]} numberOfLines={1}>
-                {t(sport === 'tennis' ? 'classementPoule.joueur' : 'classementPoule.equipe')}
-              </Text>
-              {classement.map((item, index) => {
-                const misEnAvant = item.equipe.id === equipeMiseEnAvantId;
-                return (
-                  <View key={item.equipe.id} style={[styles.rangEquipe, misEnAvant && styles.rangMisEnAvantGauche]}>
-                    <Text style={[styles.rang, misEnAvant && styles.texteMisEnAvant]}>{index + 1}</Text>
-                    <Text style={[styles.nom, misEnAvant && styles.texteMisEnAvant]} numberOfLines={1}>
-                      {item.equipe.nom}
-                    </Text>
-                  </View>
-                );
-              })}
-            </View>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              style={styles.zoneDefilante}
-              contentContainerStyle={styles.contenuDefilant}
-              onLayout={(e) => setLargeurVisible(e.nativeEvent.layout.width)}
-              onContentSizeChange={(w) => setLargeurContenu(w)}
-              onScroll={(e) => setDecalageX(e.nativeEvent.contentOffset.x)}
-              scrollEventThrottle={16}
-            >
-              <View style={styles.groupeLignes}>
-                <View style={[styles.tableHeader, styles.enteteLigne]}>
-                  <Text style={styles.th}>{t('classementPoule.j')}</Text>
-                  <Text style={styles.th}>{t('classementPoule.v')}</Text>
-                  <Text style={styles.th}>{t('classementPoule.n')}</Text>
-                  <Text style={styles.th}>{t('classementPoule.d')}</Text>
-                  <Text style={styles.th}>{abregeScorePour}</Text>
-                  <Text style={styles.th}>{abregeScoreContre}</Text>
-                  <Text style={styles.th}>{t('classementPoule.diff')}</Text>
-                  <Text style={[styles.th, styles.colPts]}>{t('classementPoule.pts')}</Text>
-                </View>
-                {classement.map((item) => {
-                  const misEnAvant = item.equipe.id === equipeMiseEnAvantId;
-                  const styleValeur = [styles.valeur, misEnAvant && styles.valeurMisEnAvant];
-                  return (
-                    <View key={item.equipe.id} style={[styles.ligneStats, misEnAvant && styles.rangMisEnAvantDroite]}>
-                      <Text style={styleValeur}>{item.joues}</Text>
-                      <Text style={styleValeur}>{item.victoires}</Text>
-                      <Text style={styleValeur}>{item.nuls}</Text>
-                      <Text style={styleValeur}>{item.defaites}</Text>
-                      <Text style={styleValeur}>{item.buts_pour}</Text>
-                      <Text style={styleValeur}>{item.buts_contre}</Text>
-                      <Text style={styleValeur}>{formatDiff(item.diff_buts)}</Text>
-                      <Text style={[styles.valeur, styles.points, styles.colPts, misEnAvant && styles.valeurMisEnAvant]}>
-                        {item.points}
-                      </Text>
-                    </View>
-                  );
-                })}
-              </View>
-            </ScrollView>
+          <View style={[styles.ligne, styles.entete]}>
+            <Text style={[styles.th, styles.colRang]} />
+            <Text style={[styles.th, styles.colNom]} numberOfLines={1}>
+              {t(sport === 'tennis' ? 'classementPoule.joueur' : 'classementPoule.equipe')}
+            </Text>
+            <Text style={[styles.th, styles.colNb]}>{t('classementPoule.j')}</Text>
+            <Text style={[styles.th, styles.colDiff]}>{t('classementPoule.diff')}</Text>
+            <Text style={[styles.th, styles.colPts]}>{t('classementPoule.pts')}</Text>
+            {avecForme && <Text style={[styles.th, styles.colForme]}>{t('classementPoule.forme')}</Text>}
           </View>
-
-          {peutDefiler && (
-            <View style={styles.ligneIndicateur}>
-              <View style={{ width: largeurColEquipe }} />
-              <View style={styles.pisteCurseur}>
-                <View
-                  style={[
-                    styles.curseur,
-                    { width: largeurCurseur, transform: [{ translateX: positionCurseur }] },
-                  ]}
-                />
+          {classement.map((item, index) => {
+            const misEnAvant = item.equipe.id === equipeMiseEnAvantId;
+            const qualifie = nbQualifies > 0 && index < nbQualifies;
+            const limite = nbQualifies > 0 && index === nbQualifies;
+            return (
+              <View key={item.equipe.id} style={[styles.ligne, styles.ligneEquipe, limite && styles.limite, misEnAvant && styles.misEnAvant]}>
+                <Text style={[styles.rang, styles.colRang, qualifie && styles.rangQualifie, misEnAvant && styles.texteMisEnAvant]}>{index + 1}</Text>
+                <Text style={[styles.nom, styles.colNom, misEnAvant && styles.texteMisEnAvant]} numberOfLines={1}>{item.equipe.nom}</Text>
+                <Text style={[styles.valeur, styles.colNb, misEnAvant && styles.texteMisEnAvant]}>{item.joues}</Text>
+                <Text style={[styles.valeur, styles.colDiff, misEnAvant && styles.texteMisEnAvant]}>{formatDiff(item.diff_buts)}</Text>
+                <Text style={[styles.points, styles.colPts, misEnAvant && styles.texteMisEnAvant]}>{item.points}</Text>
+                {avecForme && (
+                  <View style={[styles.colForme, styles.forme]}>
+                    {formeEquipe(item.equipe.id, matchs, resultats).map((f, i) => (
+                      <View key={i} style={[styles.pastille, styles[`pastille_${f}`]]}>
+                        <Text style={[styles.lettre, styles[`lettre_${f}`]]}>{lettres[f]}</Text>
+                      </View>
+                    ))}
+                  </View>
+                )}
               </View>
-            </View>
-          )}
+            );
+          })}
         </>
       )}
     </View>
@@ -150,42 +89,36 @@ function creerStyles(c) {
   return StyleSheet.create({
     carte: {
       backgroundColor: c.surface, borderWidth: 1, borderColor: c.bordure,
-      borderRadius: 14, padding: 16, marginBottom: 12,
+      borderRadius: 14, padding: 14, paddingBottom: 8, marginBottom: 12,
     },
-    titre: { fontFamily: POLICE_TITRE, fontSize: 14, letterSpacing: 0.4, color: c.accent, marginBottom: 8 },
+    titre: { fontFamily: POLICE_TITRE, fontSize: 18, letterSpacing: 0.3, color: c.lien, marginBottom: 6 },
     vide: { fontFamily: POLICE_TEXTE, fontSize: 13, color: c.texteAttenue },
-    tableWrapper: { flexDirection: 'row' },
-    colFixe: {},
-    zoneDefilante: { flex: 1 },
-    // Force la zone de stats à occuper toute la largeur disponible même
-    // quand le contenu (toujours 8 colonnes fixes) est plus étroit que la
-    // carte : sinon, sur un écran large, le surlignage de l'équipe suivie
-    // s'arrêtait juste après "Pts" au lieu d'aller jusqu'au bord de la carte.
-    contenuDefilant: { minWidth: '100%' },
-    groupeLignes: { flexGrow: 1 },
-    enteteLigne: { borderBottomWidth: 1, borderColor: c.bordure, paddingBottom: 6, marginBottom: 4 },
-    tableHeader: { flexDirection: 'row' },
-    entete: { fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 11, color: c.texteAttenue },
-    enteteEquipe: { textAlign: 'left' },
-    th: { fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 11, color: c.texteAttenue, width: 34, textAlign: 'right' },
-    ligneStats: { flexDirection: 'row', alignItems: 'center', paddingVertical: 6 },
-    colPts: { width: 40 },
-    rangEquipe: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 6 },
-    rangMisEnAvantGauche: {
-      backgroundColor: c.accent, borderTopLeftRadius: 6, borderBottomLeftRadius: 6,
-      marginLeft: -8, paddingLeft: 8,
-    },
-    rangMisEnAvantDroite: { backgroundColor: c.accent, borderTopRightRadius: 6, borderBottomRightRadius: 6 },
+    ligne: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+    entete: { paddingBottom: 6 },
+    ligneEquipe: { paddingVertical: 8, borderTopWidth: 1, borderColor: c.bordure },
+    limite: { borderTopWidth: 2, borderStyle: 'dashed', borderColor: c.accent },
+    misEnAvant: { backgroundColor: c.accent, borderRadius: 6, marginHorizontal: -6, paddingHorizontal: 6 },
     texteMisEnAvant: { fontFamily: POLICE_TEXTE_BOLD, color: c.accentEncre },
-    valeurMisEnAvant: { fontFamily: POLICE_TEXTE_BOLD, color: c.accentEncre },
-    rang: { fontFamily: POLICE_TEXTE, fontSize: 11, color: c.texteAttenue, width: 14 },
-    nom: { fontFamily: POLICE_TEXTE, fontSize: 13.5, color: c.texte, flexShrink: 1 },
-    valeur: { fontFamily: POLICE_TEXTE, fontSize: 13.5, width: 34, textAlign: 'right', color: c.texte },
-    points: { fontFamily: POLICE_TEXTE_BOLD, color: c.accent },
-    ligneIndicateur: { flexDirection: 'row', marginTop: 8 },
-    pisteCurseur: {
-      flex: 1, height: 4, borderRadius: 2, backgroundColor: c.bordure, overflow: 'hidden',
-    },
-    curseur: { height: 4, borderRadius: 2, backgroundColor: c.accent },
+    th: { fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 10.5, letterSpacing: 0.4, color: c.texteAttenue, textAlign: 'right' },
+    colRang: { width: 18, textAlign: 'center' },
+    colNom: { flex: 1, textAlign: 'left' },
+    colNb: { width: 22 },
+    colDiff: { width: 32 },
+    colPts: { width: 30 },
+    colForme: { width: 74, textAlign: 'right' },
+    rang: { fontFamily: POLICE_TITRE, fontSize: 16, color: c.texteAttenue, paddingTop: 2 },
+    rangQualifie: { color: c.lien },
+    nom: { fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 13.5, color: c.texte },
+    valeur: { fontFamily: POLICE_TEXTE, fontSize: 13, color: c.texte, textAlign: 'right' },
+    points: { fontFamily: POLICE_TITRE, fontSize: 18, color: c.texte, textAlign: 'right', paddingTop: 2 },
+    forme: { flexDirection: 'row', justifyContent: 'flex-end', gap: 2 },
+    pastille: { width: 14, height: 14, borderRadius: 4, alignItems: 'center', justifyContent: 'center' },
+    pastille_v: { backgroundColor: c.succes + '38' },
+    pastille_n: { backgroundColor: c.surface2, borderWidth: 1, borderColor: c.bordure },
+    pastille_d: { backgroundColor: c.danger + '2e' },
+    lettre: { fontFamily: POLICE_TEXTE_BOLD, fontSize: 8.5 },
+    lettre_v: { color: c.succes },
+    lettre_n: { color: c.texteAttenue },
+    lettre_d: { color: c.danger },
   });
 }

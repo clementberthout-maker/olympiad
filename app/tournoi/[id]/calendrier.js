@@ -17,16 +17,15 @@ import {
   resultatsAutoPourExempts,
   idEquipeGagnante,
   matchEliminationDecide,
-  grouperParTerrain,
   reglagesDepuisTournoi,
 } from '../../../lib/generation';
-import { formaterPeriode } from '../../../lib/dates';
+import { formaterPeriode, statutPeriode } from '../../../lib/dates';
 import { genererHtmlProgramme } from '../../../lib/exportProgramme';
 import { messageErreur } from '../../../lib/erreurs';
 import ClassementPoule from '../../../components/ClassementPoule';
-import BasculeVue from '../../../components/BasculeVue';
+import FilJournee from '../../../components/FilJournee';
+import TableauFinal from '../../../components/TableauFinal';
 import BoutonRetour from '../../../components/BoutonRetour';
-import BadgeEnDirect from '../../../components/BadgeEnDirect';
 import { useTheme } from '../../../lib/ThemeContext';
 import { useLangue } from '../../../lib/LangueContext';
 import { libellePhase } from '../../../lib/phases';
@@ -69,7 +68,6 @@ export default function Calendrier() {
   const [resultats, setResultats] = useState([]);
   const [phases, setPhases] = useState([]); // [{ nom, matchs: [...] }]
   const [enCours, setEnCours] = useState(false);
-  const [parTerrain, setParTerrain] = useState(false);
   const [partageVisible, setPartageVisible] = useState(false);
   const [exportEnCours, setExportEnCours] = useState(false);
   const idsMatchs = useRef(new Set()); // matchs de ce tournoi, pour filtrer le temps réel
@@ -370,9 +368,10 @@ export default function Calendrier() {
     0
   );
 
-  const groupesAffiches = parTerrain
-    ? grouperParTerrain(phases.flatMap(({ matchs }) => matchs))
-    : [...phasesPoule, ...phasesElim];
+  // Matchs en « fil de la journée » (voir components/FilJournee.js)
+  const matchsAvecResultat = phases.flatMap(({ matchs }) => matchs);
+  const nomEquipe = (equipeId) => equipes.find((e) => e.id === equipeId)?.nom || '—';
+  const statutJour = statutPeriode(tournoi.date_debut, tournoi.date_fin);
 
   return (
     <>
@@ -423,75 +422,17 @@ export default function Calendrier() {
         </View>
       )}
 
-      {tournoi.nombre_terrains > 1 && phases.length > 0 && (
-        <BasculeVue
-          valeur={parTerrain ? 'terrain' : 'poule'}
-          onChange={(v) => setParTerrain(v === 'terrain')}
-          options={[
-            { valeur: 'poule', label: t('calendrier.parPoule') },
-            { valeur: 'terrain', label: t('calendrier.parTerrain') },
-          ]}
+      {phases.length === 0 ? (
+        <Text style={styles.vide}>{t('calendrier.aucunMatch')}</Text>
+      ) : (
+        <FilJournee
+          matchs={matchsAvecResultat}
+          nomEquipe={nomEquipe}
+          dureeMatch={(tournoi.duree_match || 0) + (tournoi.mi_temps ? tournoi.duree_mi_temps || 0 : 0)}
+          aujourdhui={statutJour === 'aujourdhui' || statutJour === 'encours'}
+          onPressMatch={lectureSeule ? undefined : (match) => router.push(`/tournoi/${id}/saisie?matchId=${match.id}`)}
         />
       )}
-
-      {phases.length === 0 && (
-        <Text style={styles.vide}>{t('calendrier.aucunMatch')}</Text>
-      )}
-
-      {groupesAffiches.map(({ nom, matchs }) => (
-        <View key={nom} style={styles.groupe}>
-          <Text style={styles.nomPhase}>{libellePhase(nom, t)}</Text>
-          {matchs.map((match) => {
-            if (!match.equipe_b_id) {
-              return (
-                <View key={match.id} style={styles.ligneExempt}>
-                  <Text style={styles.equipes}>{match.equipe_a?.nom}</Text>
-                  <Text style={styles.exempt}>{t('calendrier.exempt')}</Text>
-                </View>
-              );
-            }
-            const termine = match.resultat?.statut === 'termine';
-            const enDirect = match.resultat?.statut === 'en_cours';
-            return (
-              <Pressable
-                key={match.id}
-                style={styles.ligneMatch}
-                disabled={lectureSeule}
-                onPress={() => router.push(`/tournoi/${id}/saisie?matchId=${match.id}`)}
-              >
-                <View style={styles.infoMatch}>
-                  <Text style={styles.equipes}>
-                    {match.equipe_a?.nom} · {match.equipe_b?.nom}
-                  </Text>
-                  <Text style={styles.horaire}>
-                    {new Date(match.horaire).toLocaleString(langue === 'en' ? 'en-US' : 'fr-FR', {
-                      weekday: 'short', hour: '2-digit', minute: '2-digit',
-                    })}
-                    {parTerrain ? ` · ${libellePhase(match.phase, t)}` : match.terrain ? ` · ${t('saisie.terrain', { n: match.terrain })}` : ''}
-                  </Text>
-                </View>
-                {termine ? (
-                  <Text style={styles.score}>
-                    {match.resultat.score_a} – {match.resultat.score_b}
-                    {!estPhaseDePoule(match.phase) && match.resultat.score_a === match.resultat.score_b
-                      ? ` ${t('calendrier.scoreTab', { a: match.resultat.score_tab_a, b: match.resultat.score_tab_b })}`
-                      : ''}
-                  </Text>
-                ) : enDirect ? (
-                  <View style={styles.scoreDirect}>
-                    <BadgeEnDirect />
-                    <Text style={styles.score}>{match.resultat.score_a} – {match.resultat.score_b}</Text>
-                  </View>
-                ) : (
-                  <Text style={styles.aVenir}>{t('calendrier.aVenir')}</Text>
-                )}
-                {/* Le chevron montre que la ligne s'ouvre (saisie du score). */}
-                <Ionicons name="chevron-forward" size={16} color={couleurs.texteAttenue} style={styles.chevronMatch} />
-              </Pressable>
-            );
-          })}
-        </View>
-      ))}
 
       {afficherPodium ? (
         <View style={styles.podium}>
@@ -544,10 +485,22 @@ export default function Calendrier() {
             const classement = calculerClassement(
               equipesPoule, matchsPoule, resultats, tournoi.critere_departage_poule, tournoi.sport
             );
-            return <ClassementPoule key={poule.id} nom={libellePhase(poule.nom, t)} classement={classement} sport={tournoi.sport} />;
+            return (
+              <ClassementPoule
+                key={poule.id}
+                nom={libellePhase(poule.nom, t)}
+                classement={classement}
+                sport={tournoi.sport}
+                nbQualifies={tournoi.format === 'mixte' ? tournoi.nombre_qualifies_par_poule : 0}
+                matchs={matchsPoule}
+                resultats={resultats}
+              />
+            );
           })}
         </>
       )}
+
+      <TableauFinal matchs={matchsAvecResultat} nomEquipe={nomEquipe} matchTroisiemePlace={tournoi.match_troisieme_place} />
 
       {!lectureSeule && (
         <Pressable
@@ -649,40 +602,6 @@ function creerStyles(c) {
     texteBandeauAide: { flex: 1, fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 13, color: c.texte },
     vide: { fontFamily: POLICE_TEXTE, fontSize: 13, color: c.texteAttenue },
     sectionTitre: { fontFamily: POLICE_TITRE, fontSize: 18, letterSpacing: 0.2, color: c.texte, marginTop: 8, marginBottom: 10 },
-    groupe: { marginBottom: 22 },
-    nomPhase: {
-      fontFamily: POLICE_TITRE, fontSize: 14, letterSpacing: 0.4, color: c.accent, marginBottom: 8,
-    },
-    ligneMatch: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      backgroundColor: c.surface,
-      borderWidth: 1,
-      borderColor: c.bordure,
-      borderRadius: 10,
-      padding: 12,
-      marginBottom: 6,
-    },
-    infoMatch: { flex: 1, flexShrink: 1, marginRight: 8 },
-    chevronMatch: { marginLeft: 8 },
-    equipes: { fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 14, color: c.texte },
-    horaire: { fontFamily: POLICE_TEXTE, fontSize: 12, color: c.texteAttenue, marginTop: 2 },
-    score: { fontFamily: POLICE_TITRE, fontSize: 17, color: c.texte },
-    aVenir: { fontFamily: POLICE_TEXTE, fontSize: 12, color: c.texteAttenue },
-    scoreDirect: { alignItems: 'flex-end', gap: 2 },
-    ligneExempt: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      backgroundColor: c.fond,
-      borderWidth: 1,
-      borderColor: c.bordure,
-      borderRadius: 10,
-      padding: 12,
-      marginBottom: 6,
-    },
-    exempt: { fontFamily: POLICE_TEXTE, fontSize: 12, color: c.texteAttenue, fontStyle: 'italic' },
     bandeauVainqueur: {
       backgroundColor: c.surface,
       borderColor: c.accent,

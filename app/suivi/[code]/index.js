@@ -5,17 +5,18 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../../../lib/supabase';
 import { enregistrerTournoiSuivi, retirerTournoiSuivi } from '../../../lib/tournoisSuivis';
 import { calculerClassement } from '../../../lib/classement';
-import { grouperParPhase, grouperParTerrain } from '../../../lib/generation';
 import { vibrerAttention } from '../../../lib/haptique';
 import ClassementPoule from '../../../components/ClassementPoule';
 import BasculeVue from '../../../components/BasculeVue';
+import FilJournee from '../../../components/FilJournee';
+import TableauFinal from '../../../components/TableauFinal';
 import CarteSelectionnable from '../../../components/CarteSelectionnable';
 import Squelette from '../../../components/Squelette';
 import BadgeEnDirect from '../../../components/BadgeEnDirect';
 import { useTheme } from '../../../lib/ThemeContext';
 import { useLangue } from '../../../lib/LangueContext';
 import { libellePhase } from '../../../lib/phases';
-import { formaterPeriode } from '../../../lib/dates';
+import { formaterPeriode, statutPeriode } from '../../../lib/dates';
 import { signalerTournoi } from '../../../lib/liensLegaux';
 import { POLICE_TITRE, POLICE_TEXTE, POLICE_TEXTE_MEDIUM, POLICE_TEXTE_SEMIBOLD } from '../../../lib/theme';
 
@@ -37,7 +38,6 @@ export default function Suivi() {
   const [equipes, setEquipes] = useState([]);
   const [matchs, setMatchs] = useState([]);
   const [resultats, setResultats] = useState([]);
-  const [parTerrain, setParTerrain] = useState(false);
   const [introuvable, setIntrouvable] = useState(false);
   const [olympiade, setOlympiade] = useState(null);
   const [rafraichissement, setRafraichissement] = useState(false);
@@ -257,9 +257,6 @@ export default function Suivi() {
     .filter((m) => !m.resultat || !['termine', 'en_cours'].includes(m.resultat.statut))
     .sort((a, b) => new Date(a.horaire) - new Date(b.horaire));
 
-  const grouper = parTerrain ? grouperParTerrain : grouperParPhase;
-  const groupesResultats = grouper(resultatsTermines);
-  const groupesAVenir = grouper(matchsAVenirListe);
 
   const dernierResultatEquipe = monEquipeId
     ? resultatsTermines.find((m) => m.equipe_a_id === monEquipeId || m.equipe_b_id === monEquipeId)
@@ -307,6 +304,9 @@ export default function Suivi() {
         classement={classement}
         equipeMiseEnAvantId={monEquipeId}
         sport={tournoi.sport}
+        nbQualifies={tournoi.format === 'mixte' ? tournoi.nombre_qualifies_par_poule : 0}
+        matchs={matchsPoule}
+        resultats={resultats}
       />
     );
   }
@@ -481,6 +481,11 @@ export default function Suivi() {
         <>
           {blocEnDirect}
           {contenuClassement}
+          <TableauFinal
+            matchs={matchs.map((m) => ({ ...m, resultat: resultats.find((r) => r.match_id === m.id) }))}
+            nomEquipe={nomEquipe}
+            matchTroisiemePlace={tournoi.match_troisieme_place}
+          />
         </>
       )}
 
@@ -488,61 +493,12 @@ export default function Suivi() {
         <>
           {blocEnDirect}
 
-          {tournoi.nombre_terrains > 1 && (
-            <BasculeVue
-              valeur={parTerrain ? 'terrain' : 'poule'}
-              onChange={(v) => setParTerrain(v === 'terrain')}
-              options={[
-                { valeur: 'poule', label: t('calendrier.parPoule') },
-                { valeur: 'terrain', label: t('calendrier.parTerrain') },
-              ]}
-            />
-          )}
-
-          <View style={styles.carte}>
-            <Text style={styles.section}>{t('suivi.tousLesResultats')}</Text>
-            {resultatsTermines.length === 0 && (
-              <Text style={styles.vide}>{t('suivi.aucunResultat')}</Text>
-            )}
-            {groupesResultats.map(({ nom, matchs: matchsDuGroupe }) => (
-              <View key={nom} style={styles.sousGroupe}>
-                <Text style={styles.sousGroupeTitre}>{libellePhase(nom, t)}</Text>
-                {matchsDuGroupe.map((match) => (
-                  <View key={match.id} style={styles.ligneResultat}>
-                    <Text style={styles.equipesResultat}>
-                      {nomEquipe(match.equipe_a_id)} · {nomEquipe(match.equipe_b_id)}
-                    </Text>
-                    <Text style={styles.scoreResultat}>
-                      {match.resultat.score_a} – {match.resultat.score_b}
-                    </Text>
-                  </View>
-                ))}
-              </View>
-            ))}
-          </View>
-
-          {matchsAVenirListe.length > 0 && (
-            <View style={styles.carte}>
-              <Text style={styles.section}>{t('suivi.matchsAVenir')}</Text>
-              {groupesAVenir.map(({ nom, matchs: matchsDuGroupe }) => (
-                <View key={nom} style={styles.sousGroupe}>
-                  <Text style={styles.sousGroupeTitre}>{libellePhase(nom, t)}</Text>
-                  {matchsDuGroupe.map((match) => (
-                    <View key={match.id} style={styles.ligneResultat}>
-                      <Text style={styles.equipesResultat}>
-                        {nomEquipe(match.equipe_a_id)} · {nomEquipe(match.equipe_b_id)}
-                      </Text>
-                      <Text style={styles.horaireAVenir} numberOfLines={1}>
-                        {new Date(match.horaire).toLocaleString(locale, {
-                          weekday: 'short', hour: '2-digit', minute: '2-digit',
-                        })}
-                      </Text>
-                    </View>
-                  ))}
-                </View>
-              ))}
-            </View>
-          )}
+          <FilJournee
+            matchs={matchs.map((m) => ({ ...m, resultat: resultats.find((r) => r.match_id === m.id) }))}
+            nomEquipe={nomEquipe}
+            dureeMatch={(tournoi.duree_match || 0) + (tournoi.mi_temps ? tournoi.duree_mi_temps || 0 : 0)}
+            aujourdhui={['aujourdhui', 'encours'].includes(statutPeriode(tournoi.date_debut, tournoi.date_fin))}
+          />
         </>
       )}
 
