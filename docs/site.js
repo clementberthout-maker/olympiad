@@ -46,13 +46,17 @@
     'nav.espace': 'Organizer area', 'fin.cta2': 'Organizer area',
     'e.sur': 'Organizer area', 'e.titre': 'Your tournament, on your computer too', 'e.intro': 'Sign in with your OLYMPIAD account and manage your tournaments from your browser. Everything syncs in real time with the app: enter a score on the computer, it shows up instantly on phones.',
     'e.l1': 'Create a tournament, add teams, generate the schedule', 'e.l2': 'Enter live scores with your keyboard', 'e.l3': 'Standings, knockouts, QR code and big screen view', 'e.l4': 'Same tournaments, same account, same plans as on your phone',
-    'e.cta': 'Open the organizer area', 'e.cta2': 'Sign in', 'e.cta3': 'Try the demo', 'e.note': 'Purchases (Tournament Pass, OLYMPIAD Pro) are made in the mobile app; they are then recognized here with the same account.', 'e.ecran': 'Tap a match to enter or edit its result',
+    'e.cta': 'Open the organizer area', 'e.cta2': 'Sign in', 'e.cta3': 'Try the demo', 'e.note': 'Purchases (Tournament Pass, OLYMPIAD Pro) are made in the mobile app; they are then recognized here with the same account.',
     'nav.essayer': 'Try it', 'nav.fonctions': 'Features', 'nav.sports': 'Sports', 'nav.offres': 'Plans', 'nav.aide': 'Help', 'nav.cta': 'Try it live',
     'heros.etiquette': 'Amateur sports tournaments · live', 'heros.l1': 'Run', 'heros.l2': 'your tournament.', 'heros.l3': 'Everyone follows.',
     'heros.accroche': 'OLYMPIAD builds your schedule, lets you enter scores from the sideline and shows results in real time to teams and spectators with a simple QR code. No account needed for them.',
     'tel.titre': 'U13 Spring Cup', 'tel.meta': 'Football · 8 teams', 'tel.direct': 'LIVE',
     'heros.cta': 'Create a tournament now', 'heros.cta2': 'Watch a live tournament', 'heros.bientot': 'Coming soon on', 'heros.badge': 'Soon',
     'heros.bulle1': 'updated for 48 spectators', 'heros.bulle2': 'QR code scanned', 'heros.bulle2b': 'no account, nothing to set up',
+    'ch.formats': 'formats: groups, knockout or both', 'ch.comptes': 'account needed for spectators', 'ch.sports': 'sports, each with its rules', 'ch.equipes': 'free teams per tournament',
+    'd.sur': 'Trust', 'd.titre': 'Your data', 'd.intro': 'What our privacy policy says, in plain words.', 'd.lien': 'Read the privacy policy',
+    'd.t1': 'Your GDPR rights', 'd.p1': 'Access, correction, deletion, portability: just ask.', 'd.t2': 'No ads, no tracking', 'd.p2': 'No audience measurement, no advertising cookies.',
+    'd.t3': 'Spectators without an account', 'd.p3': 'A QR code is enough, no data requested.', 'd.t4': 'Delete anytime', 'd.p4': 'Your account and your tournaments, in one tap.',
     'comment.sur': 'On the day', 'comment.titre': 'Three steps. Zero spreadsheets.', 'comment.intro': 'From the team list to the podium, everything is handled from your phone.',
     'comment.e1t': 'Create your tournament', 'comment.e1p': 'Pick the sport, the format (groups, knockout or both) and add the teams. The schedule is generated automatically, by field and time slot.',
     'comment.e2t': 'Share the QR code', 'comment.e2p': 'Display it at the entrance or send the link: teams and spectators follow the tournament with one scan, without creating an account.',
@@ -1828,6 +1832,64 @@
   rendreDemo();
   document.addEventListener('olympiad-langue', () => { flashDemo = null; rendreDemo(); });
   if (!mouvementReduit) setInterval(animerDemo, 2600);
+
+  // Écran « ordinateur » de la section Espace organisateur : le nouvel
+  // espace web (fil de la journée), avec un score en direct qui change
+  let butsOrdi = 2;
+  function rendreOrdi(flash) {
+    const ligne = (p, a, sc, b, t, live) => `<div class="ordi-m ${live ? 'live' : ''}"><span class="ordi-p">${p}</span><span class="ordi-e">${a}</span><span class="ordi-s">${sc}</span><span class="ordi-e b">${b}</span><span class="ordi-t">${t}</span></div>`;
+    const terrain = (n) => tr(`Terrain ${n}`, `Field ${n}`);
+    $('#ordi-demo').innerHTML = `<div class="ordi-titre">${tr('Tournoi U13 de printemps', 'U13 Spring Cup')}</div>
+      <div class="ordi-infos"><span>${tr('Football · 8 équipes', 'Football · 8 teams')}</span><b>${tr('EN DIRECT', 'LIVE')}</b></div>
+      <div class="ordi-onglets2"><span class="on">${tr('Matchs', 'Matches')}</span><span>${tr('Classement', 'Standings')}</span><span>${tr('Équipes', 'Teams')}</span><span>${tr('Réglages', 'Settings')}</span></div>
+      <div class="ordi-filtres"><span class="on">${tr('Tous', 'All')}</span><span>${tr('Poule A', 'Group A')}</span><span>${tr('Poule B', 'Group B')}</span><span>${terrain(1)}</span><span>${terrain(2)}</span></div>
+      <div class="ordi-cr passe"><div class="ordi-h">14:00<small>${tr('TERMINÉ', 'DONE')}</small></div><div>${ligne('A', 'Racing Vallée', '1 - 0', 'Étoile Sud', terrain(1))}</div></div>
+      <div class="ordi-cr now"><div class="ordi-h">14:30<small>${tr('EN COURS', 'LIVE NOW')}</small></div><div>${ligne('A', 'FC Rivière', `<span class="${flash ? 'flash' : ''}">${butsOrdi}</span> - 2`, 'AS Montagne', `● ${tr('EN DIRECT', 'LIVE')}`, true)}${ligne('B', 'Les Aigles', '0 - 1', 'US Collines', terrain(2))}</div></div>
+      <div class="ordi-cr"><div class="ordi-h">14:45</div><div>${ligne('A', 'Étoile Sud', `<small>${tr('À venir', 'Upcoming')}</small>`, 'FC Rivière', terrain(1))}</div></div>`;
+  }
+  rendreOrdi(false);
+  document.addEventListener('olympiad-langue', () => rendreOrdi(false));
+  if (!mouvementReduit) setInterval(() => { butsOrdi = butsOrdi >= 4 ? 2 : butsOrdi + 1; rendreOrdi(true); }, 3000);
+
+  // « Le jour J » : les trois étapes s'animent l'une après l'autre, en boucle,
+  // tant que la section est à l'écran (liste → calendrier, QR scanné,
+  // but marqué qui fait monter une équipe au classement)
+  const etapesJour = $$('#etapes .etape');
+  let etapeJouee = 0;
+  let minuteurEtapes = null;
+  function jouerEtape() {
+    etapesJour.forEach((e, i) => e.classList.toggle('active', i === etapeJouee));
+    const e = etapesJour[etapeJouee];
+    if (etapeJouee === 0) etapesJour.forEach((x) => x.classList.remove('jouee'));
+    e.classList.remove('jouee'); void e.offsetWidth; e.classList.add('jouee');
+    const but = $('.se-but', etapesJour[2]);
+    if (etapeJouee === 2) { but.textContent = '2'; but.classList.add('flash'); $('.se-pts', etapesJour[2]).textContent = '6'; }
+    else if (etapeJouee === 0) { but.textContent = '1'; but.classList.remove('flash'); $('.se-pts', etapesJour[2]).textContent = '3'; }
+    etapeJouee = (etapeJouee + 1) % etapesJour.length;
+  }
+  if (mouvementReduit) etapesJour.forEach((e) => e.classList.add('jouee'));
+  else if ('IntersectionObserver' in window) {
+    new IntersectionObserver((entrees) => entrees.forEach((en) => {
+      if (en.isIntersecting && !minuteurEtapes) { jouerEtape(); minuteurEtapes = setInterval(jouerEtape, 2600); }
+      if (!en.isIntersecting && minuteurEtapes) { clearInterval(minuteurEtapes); minuteurEtapes = null; }
+    }), { threshold: 0.3 }).observe($('#etapes'));
+  }
+
+  // Chiffres clés : ils comptent jusqu'à leur valeur quand la ligne apparaît
+  if (!mouvementReduit && 'IntersectionObserver' in window) {
+    const chiffres = $$('#chiffres [data-compte]');
+    chiffres.forEach((el) => { el.textContent = '0'; });
+    const obs = new IntersectionObserver((entrees) => {
+      if (!entrees.some((en) => en.isIntersecting)) return;
+      obs.disconnect();
+      chiffres.forEach((el) => {
+        const fin = Number(el.dataset.compte); const t0 = performance.now();
+        const pas = (t) => { const p = Math.min(1, (t - t0) / 1200); el.textContent = Math.round(fin * (1 - Math.pow(1 - p, 3))); if (p < 1) requestAnimationFrame(pas); };
+        requestAnimationFrame(pas);
+      });
+    }, { threshold: 0.5 });
+    obs.observe($('#chiffres'));
+  }
 
   // Inclinaison du téléphone et lueur qui suivent la souris
   const heros = $('.heros');

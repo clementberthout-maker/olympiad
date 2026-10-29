@@ -464,6 +464,14 @@ OLYMPIAD sert à organiser des tournois sportifs amateurs. L'organisateur crée 
 - **Coque** dessinée en CSS (`docs/site.css`) : métal avec reflets, îlot, boutons latéraux, barre d'état (heure, réseau, batterie), reflet sur la vitre, barre d'accueil, ombre au sol. Il suit toujours la souris.
 - **Écran** : la nouvelle interface de l'app en « fil de la journée » (pastilles de filtres, jauge, créneaux terminé / en cours / à venir, matchs en direct encadrés) ; les scores en direct changent toujours seuls et la bulle « But ! » suit (`docs/site.js`). L'ancien onglet Classement du téléphone est retiré, ainsi que le créneau 15:00 coupé en bas de l'écran. FR/EN, rendu identique en thème clair et sombre (l'écran reste sombre comme l'app), vérifié sur ordinateur et téléphone, aucune erreur.
 
+### Accueil du site : 4 améliorations (29 octobre)
+- Huit idées présentées en maquette locale (supprimée ensuite) ; Clément a retenu les points 1, 2, 3 et 6.
+- **1. Écran « ordinateur » à jour :** la section « Ton tournoi, aussi sur ordinateur » montre le nouvel espace (onglets, filtres, fil de la journée) avec un score en direct qui change, au lieu de l'ancien « Par poule / Par terrain ».
+- **2. « Le jour J » animé :** une scène sous chaque étape, jouée l'une après l'autre tant que la section est à l'écran : liste d'équipes → calendrier, QR code scanné → téléphone du spectateur allumé, but marqué → Les Aigles passent devant au classement.
+- **3. Chiffres clés** sous le bandeau défilant, qui comptent à l'apparition : 3 formats, 0 compte pour les spectateurs, 5 sports, 12 équipes gratuites.
+- **6. « Tes données »** (nouvelle section avant les offres) : droits RGPD, ni pub ni pistage, spectateurs sans compte, compte supprimable, lien vers la politique. Seulement ce qu'elle dit déjà (pas d'hébergement en Europe, non mentionné).
+- FR/EN, animations coupées si le système demande moins de mouvement, vérifié sur ordinateur et téléphone, aucune erreur.
+
 ## 3. Ce qu'il reste à faire
 
 Légende : `[ ]` à faire · `[x]` fait
@@ -597,6 +605,7 @@ Une ligne par modification, la plus récente en haut.
 
 | Date | Modification |
 |------|--------------|
+| 2026-10-29 | Accueil : écran ordinateur à jour, « Le jour J » animé, chiffres clés, section « Tes données » |
 | 2026-10-29 | Site : créneau 15:00 retiré du bas du téléphone de l'accueil |
 | 2026-10-29 | Site : téléphone du haut de l'accueil plus réaliste (coque, îlot, reflet) avec l'écran « fil de la journée » animé |
 | 2026-10-29 | App : fil de la journée, classement compact et tableau final dans le calendrier et le suivi public (composants `FilJournee`, `TableauFinal`, `ClassementPoule`), à livrer au prochain build (H43) |

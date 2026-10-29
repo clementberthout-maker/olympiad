@@ -155,6 +155,16 @@
     <div class="bandeau-piste" id="bandeau"></div>
   </div>
 
+  <!-- Chiffres clés, qui comptent à l'apparition (site.js) -->
+  <div class="conteneur">
+    <div class="chiffres reveler" id="chiffres">
+      <div><b data-compte="3">3</b><span data-i18n="ch.formats">formats : poules, élimination ou les deux</span></div>
+      <div><b data-compte="0">0</b><span data-i18n="ch.comptes">compte pour les spectateurs</span></div>
+      <div><b data-compte="5">5</b><span data-i18n="ch.sports">sports, avec leurs règles</span></div>
+      <div><b data-compte="12">12</b><span data-i18n="ch.equipes">équipes gratuites par tournoi</span></div>
+    </div>
+  </div>
+
   <!-- Comment ça marche -->
   <section id="comment">
     <div class="conteneur">
@@ -167,16 +177,28 @@
           <span class="num">1</span>
           <h3 data-i18n="comment.e1t">Crée ton tournoi</h3>
           <p data-i18n="comment.e1p">Choisis le sport, le format (poules, élimination directe ou les deux) et ajoute les équipes. Le calendrier est généré automatiquement, par terrain et par horaire.</p>
+          <div class="scene-etape" aria-hidden="true">
+            <div class="se-liste"><span>Les Aigles</span><span>FC Rivière</span><span>Étoile Sud</span><span>US Collines</span></div>
+            <div class="se-calendrier"><b>14:00</b><span>Les Aigles · FC Rivière</span><b>14:15</b><span>Étoile Sud · US Collines</span><b>14:30</b><span>Les Aigles · Étoile Sud</span><b>14:45</b><span>FC Rivière · US Collines</span></div>
+          </div>
         </div>
         <div class="etape reveler" style="--delai:0.1s">
           <span class="num">2</span>
           <h3 data-i18n="comment.e2t">Partage le QR code</h3>
           <p data-i18n="comment.e2p">Affiche-le à l'accueil ou envoie le lien : équipes et spectateurs suivent le tournoi en un scan, sans créer de compte.</p>
+          <div class="scene-etape" aria-hidden="true">
+            <div class="se-qr"></div><div class="se-faisceau"></div>
+            <div class="se-mini"><i class="a"></i><i></i><i></i><i></i><i></i></div>
+          </div>
         </div>
         <div class="etape reveler" style="--delai:0.2s">
           <span class="num">3</span>
           <h3 data-i18n="comment.e3t">Saisis les scores</h3>
           <p data-i18n="comment.e3p">Au bord du terrain, en quelques touches. Classements, phases finales et podium se mettent à jour en direct pour tout le monde.</p>
+          <div class="scene-etape" aria-hidden="true">
+            <div class="se-score"><span>Les Aigles</span><b><span class="se-but">1</span> - 1</b><span>US Collines</span></div>
+            <div class="se-classement"><div class="se-descend"><span>1 · US Collines</span><b>4</b></div><div class="se-monte"><span>2 · Les Aigles</span><b class="se-pts">3</b></div></div>
+          </div>
         </div>
       </div>
     </div>
@@ -273,16 +295,24 @@
       </div>
       <div class="ecran-ordi reveler" aria-hidden="true">
         <div class="ordi-barre"><i></i><i></i><i></i><span>clementberthout-maker.github.io/olympiad/espace.html</span></div>
-        <div class="ordi-contenu">
-          <div class="ordi-titre">Tournoi U13 de printemps</div>
-          <div class="ordi-sous" data-i18n="e.ecran">Touche un match pour saisir ou modifier son résultat</div>
-          <div class="ordi-onglets"><b>Par poule</b><span>Par terrain</span></div>
-          <div class="ordi-poule">POULE A</div>
-          <div class="ordi-match"><span>Racing Vallée · Étoile Sud</span><b>1-0</b></div>
-          <div class="ordi-match live"><span>FC Rivière · AS Montagne</span><b>2-2</b></div>
-          <div class="ordi-match"><span>Étoile Sud · FC Rivière</span><em>14:30</em></div>
-        </div>
+        <div class="ordi-contenu" id="ordi-demo"></div>
       </div>
+    </div>
+  </section>
+
+  <!-- Tes données : ce que dit la politique de confidentialité, en clair -->
+  <section class="section-alt" id="donnees">
+    <div class="conteneur">
+      <p class="surtitre reveler" data-i18n="d.sur">Confiance</p>
+      <h2 class="reveler" data-i18n="d.titre">Tes données</h2>
+      <p class="intro reveler" data-i18n="d.intro">Ce que dit notre politique de confidentialité, en clair.</p>
+      <div class="donnees">
+        <div class="reveler"><svg aria-hidden="true"><use href="#i-cle"/></svg><b data-i18n="d.t1">Tes droits RGPD</b><span data-i18n="d.p1">Accès, rectification, effacement, portabilité : sur simple demande.</span></div>
+        <div class="reveler" style="--delai:0.08s"><svg aria-hidden="true"><use href="#i-bouclier"/></svg><b data-i18n="d.t2">Ni pub, ni pistage</b><span data-i18n="d.p2">Aucune mesure d'audience, aucun cookie publicitaire.</span></div>
+        <div class="reveler" style="--delai:0.16s"><svg aria-hidden="true"><use href="#i-oeil"/></svg><b data-i18n="d.t3">Spectateurs sans compte</b><span data-i18n="d.p3">Un QR code suffit, aucune donnée demandée.</span></div>
+        <div class="reveler" style="--delai:0.24s"><svg aria-hidden="true"><use href="#i-poubelle"/></svg><b data-i18n="d.t4">Supprimable à tout moment</b><span data-i18n="d.p4">Ton compte et tes tournois, en un bouton.</span></div>
+      </div>
+      <p class="mention reveler"><a href="politique-confidentialite.html" data-i18n="d.lien">Lire la politique de confidentialité</a></p>
     </div>
   </section>
 
