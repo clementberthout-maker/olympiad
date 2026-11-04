@@ -267,7 +267,7 @@ function vueConnexion(mode) {
   }[mode];
   return afficher(`<div class="auth">
     <section class="auth-marque">
-      <div class="egaliseur" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+      <canvas class="panneau-led" aria-hidden="true"></canvas>
       <h1>${tr('Ton tournoi,', 'Your tournament,')}<br><em>${tr('aussi sur ordinateur.', 'on your computer too.')}</em></h1>
       <p>${tr('Connecte-toi avec ton compte SPORTIMATCH : tes tournois, tes équipes et tes scores sont synchronisés en temps réel avec l\'application.', 'Sign in with your SPORTIMATCH account: your tournaments, teams and scores sync in real time with the app.')}</p>
       <ul class="auth-points">
@@ -282,7 +282,46 @@ function vueConnexion(mode) {
         ${formulaire}
       </div>
     </section>
-  </div>`, (v) => { const champ = $('input', v); if (champ) champ.focus(); });
+  </div>`, (v) => { panneauLed($('.panneau-led', v)); const champ = $('input', v); if (champ) champ.focus(); });
+}
+
+// Panneau LED de la page de connexion : une vague de lumière révèle le logo.
+// S'arrête seule quand le panneau quitte la page ; image fixe si le système demande moins de mouvement.
+function panneauLed(canvas) {
+  if (!canvas) return;
+  const LETTRES = { S: '01111 10000 10000 01110 00001 00001 11110', P: '11110 10001 10001 11110 10000 10000 10000', O: '01110 10001 10001 10001 10001 10001 01110', R: '11110 10001 10001 11110 10100 10010 10001', T: '11111 00100 00100 00100 00100 00100 00100', I: '01110 00100 00100 00100 00100 00100 01110', M: '10001 11011 10101 10101 10001 10001 10001', A: '01110 10001 10001 11111 10001 10001 10001', C: '01110 10001 10000 10000 10000 10001 01110', H: '10001 10001 10001 11111 10001 10001 10001' };
+  const COL = 38, LIG = 18, PAS = 5, BLANC = '#f4f3ee', AMBRE = '#ffc531', ETEINT = '#1c1c1c', VAGUE = '#6b5310';
+  const REVELATION = 3.2, CYCLE = 5;
+  const logo = Array.from({ length: LIG }, () => Array(COL).fill(''));
+  const ecrire = (mot, ligne, couleur) => {
+    const depart = Math.floor((COL - (mot.length * 6 - 1)) / 2);
+    [...mot].forEach((l, i) => LETTRES[l].split(' ').forEach((rang, y) => [...rang].forEach((b, x) => { if (b === '1') logo[ligne + y][depart + i * 6 + x] = couleur; })));
+  };
+  ecrire('SPORTI', 1, BLANC);
+  ecrire('MATCH', 10, AMBRE);
+
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = COL * PAS * dpr;
+  canvas.height = LIG * PAS * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  const dessiner = (front, vague) => {
+    for (let y = 0; y < LIG; y++) for (let x = 0; x < COL; x++) {
+      ctx.fillStyle = x < front && logo[y][x] ? logo[y][x] : (vague && Math.abs(x - front) < 1.5 ? VAGUE : ETEINT);
+      ctx.beginPath();
+      ctx.arc((x + 0.5) * PAS, (y + 0.5) * PAS, PAS * 0.37, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  };
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) { dessiner(COL, false); return; }
+  const debut = performance.now();
+  const image = (t) => {
+    if (!canvas.isConnected) return;
+    const temps = ((t - debut) / 1000) % CYCLE;
+    dessiner((temps / REVELATION) * (COL + 8) - 4, temps < REVELATION);
+    requestAnimationFrame(image);
+  };
+  requestAnimationFrame(image);
 }
 
 async function soumettreAuth(form) {
