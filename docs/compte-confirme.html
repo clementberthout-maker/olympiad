@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex">
-<title>Adresse confirmée — OLYMPIAD</title>
+<title>Adresse confirmée — SPORTIMATCH</title>
 <link rel="icon" href="favicon-32.png">
 <style>
   :root {
@@ -37,7 +37,7 @@
     padding: 56px 20px 80px;
     text-align: center;
   }
-  img { width: 72px; height: 72px; border-radius: 16px; }
+  img { width: auto; height: 72px; }
   h1 { font-size: 1.6rem; margin: 20px 0 8px; }
   p { color: var(--texte-attenue); margin: 0 0 1rem; }
   .bouton {
@@ -64,10 +64,10 @@
 </head>
 <body>
 <main>
-  <img src="icon-512.png" alt="OLYMPIAD">
+  <img src="sportimatch-logo.svg" alt="SPORTIMATCH">
   <h1 id="titre">Adresse confirmée</h1>
-  <p id="message">Ton adresse e-mail est confirmée. Retourne dans l'application OLYMPIAD pour te connecter.</p>
-  <a class="bouton" id="bouton" href="olympiad://connexion">Ouvrir OLYMPIAD</a>
+  <p id="message">Ton adresse e-mail est confirmée. Retourne dans l'application SPORTIMATCH pour te connecter.</p>
+  <a class="bouton" id="bouton" href="olympiad://connexion">Ouvrir SPORTIMATCH</a>
   <div class="note" id="note">Tu as changé l'adresse de ton compte ? Pense à confirmer aussi depuis le lien envoyé à l'autre adresse, si tu l'as reçu.</div>
 </main>
 <script>
@@ -80,25 +80,25 @@
 
   var textes = {
     fr: {
-      ok: ['Adresse confirmée', "Ton adresse e-mail est confirmée. Retourne dans l'application OLYMPIAD pour te connecter."],
+      ok: ['Adresse confirmée', "Ton adresse e-mail est confirmée. Retourne dans l'application SPORTIMATCH pour te connecter."],
       erreur: ['Lien expiré', "Ce lien a expiré ou a déjà été utilisé. Si tu arrives à te connecter dans l'application, ton adresse est déjà confirmée. Sinon, recommence l'inscription ou le changement d'adresse pour recevoir un nouveau lien."],
-      bouton: 'Ouvrir OLYMPIAD',
+      bouton: 'Ouvrir SPORTIMATCH',
       note: "Tu as changé l'adresse de ton compte ? Pense à confirmer aussi depuis le lien envoyé à l'autre adresse, si tu l'as reçu.",
-      titrePage: 'Adresse confirmée — OLYMPIAD'
+      titrePage: 'Adresse confirmée — SPORTIMATCH'
     },
     en: {
-      ok: ['Address confirmed', 'Your email address is confirmed. Go back to the OLYMPIAD app to sign in.'],
+      ok: ['Address confirmed', 'Your email address is confirmed. Go back to the SPORTIMATCH app to sign in.'],
       erreur: ['Link expired', 'This link has expired or has already been used. If you can sign in to the app, your address is already confirmed. Otherwise, sign up or change your address again to get a new link.'],
-      bouton: 'Open OLYMPIAD',
+      bouton: 'Open SPORTIMATCH',
       note: 'Changed your account address? Also confirm using the link sent to your other address, if you received one.',
-      titrePage: 'Address confirmed — OLYMPIAD'
+      titrePage: 'Address confirmed — SPORTIMATCH'
     }
   };
   var t = anglais ? textes.en : textes.fr;
   var etat = erreur ? t.erreur : t.ok;
 
   document.documentElement.lang = anglais ? 'en' : 'fr';
-  document.title = erreur ? etat[0] + ' — OLYMPIAD' : t.titrePage;
+  document.title = erreur ? etat[0] + ' — SPORTIMATCH' : t.titrePage;
   document.getElementById('titre').textContent = etat[0];
   document.getElementById('message').textContent = etat[1];
   document.getElementById('bouton').textContent = t.bouton;

@@ -1,4 +1,4 @@
-/* OLYMPIAD — site vitrine et simulateur de l'app.
+/* SPORTIMATCH — site vitrine et simulateur de l'app.
    Le moteur de tournoi (génération du calendrier, classement) est repris de
    lib/generation.js et lib/classement.js : mêmes règles que dans l'app.
    Le simulateur garde tout dans le navigateur (localStorage) : rien n'est
@@ -44,12 +44,12 @@
   // Textes fixes de la page en anglais ; le français est lu dans le HTML.
   const EN = {
     'nav.espace': 'Organizer area',
-    'e.sur': 'Organizer area', 'e.titre': 'Your tournament, on your computer too', 'e.intro': 'Sign in with your OLYMPIAD account and manage your tournaments from your browser. Everything syncs in real time with the app: enter a score on the computer, it shows up instantly on phones.',
+    'e.sur': 'Organizer area', 'e.titre': 'Your tournament, on your computer too', 'e.intro': 'Sign in with your SPORTIMATCH account and manage your tournaments from your browser. Everything syncs in real time with the app: enter a score on the computer, it shows up instantly on phones.',
     'e.l1': 'Create a tournament, add teams, generate the schedule', 'e.l2': 'Enter live scores with your keyboard', 'e.l3': 'Standings, knockouts, QR code and big screen view', 'e.l4': 'Same tournaments, same account, same plans as on your phone',
-    'e.cta': 'Open the organizer area', 'e.cta2': 'Sign in', 'e.cta3': 'Try the demo', 'e.note': 'Purchases (Tournament Pass, OLYMPIAD Pro) are made in the mobile app; they are then recognized here with the same account.',
+    'e.cta': 'Open the organizer area', 'e.cta2': 'Sign in', 'e.cta3': 'Try the demo', 'e.note': 'Purchases (Tournament Pass, SPORTIMATCH Pro) are made in the mobile app; they are then recognized here with the same account.',
     'nav.essayer': 'Try it', 'nav.fonctions': 'Features', 'nav.sports': 'Sports', 'nav.offres': 'Plans', 'nav.aide': 'Help', 'nav.cta': 'Try it live',
     'heros.etiquette': 'Amateur sports tournaments · live', 'heros.l1': 'Run', 'heros.l2': 'your tournament.', 'heros.l3': 'Everyone follows.',
-    'heros.accroche': 'OLYMPIAD builds your schedule, lets you enter scores from the sideline and shows results in real time to teams and spectators with a simple QR code. No account needed for them.',
+    'heros.accroche': 'SPORTIMATCH builds your schedule, lets you enter scores from the sideline and shows results in real time to teams and spectators with a simple QR code. No account needed for them.',
     'tel.titre': 'U13 Spring Cup', 'tel.meta': 'Football · 8 teams', 'tel.direct': 'LIVE',
     'heros.cta': 'Create a tournament now', 'heros.cta2': 'Watch a live tournament', 'heros.bientot': 'Coming soon on', 'heros.badge': 'Soon',
     'heros.bulle1': 'updated for 48 spectators', 'heros.bulle2': 'QR code scanned', 'heros.bulle2b': 'no account, nothing to set up',
@@ -57,14 +57,14 @@
     'd.sur': 'Trust', 'd.titre': 'Your data', 'd.intro': 'What our privacy policy says, in plain words.', 'd.lien': 'Read the privacy policy',
     'd.t1': 'Your GDPR rights', 'd.p1': 'Access, correction, deletion, portability: just ask.', 'd.t2': 'No ads, no tracking', 'd.p2': 'No audience measurement, no advertising cookies.',
     'd.t3': 'Spectators without an account', 'd.p3': 'A QR code is enough, no data requested.', 'd.t4': 'Delete anytime', 'd.p4': 'Your account and your tournaments, in one tap.',
-    'sim.sur2': 'Try it, nothing to install', 'sim.appel': 'The real app, right here.', 'sim.appelp': 'Create a tournament, enter scores, watch the standings move: the real OLYMPIAD engine runs in your browser.', 'sim.ouvrir': 'Try the app here', 'sim.replier': 'Collapse the app',
+    'sim.sur2': 'Try it, nothing to install', 'sim.appel': 'The real app, right here.', 'sim.appelp': 'Create a tournament, enter scores, watch the standings move: the real SPORTIMATCH engine runs in your browser.', 'sim.ouvrir': 'Try the app here', 'sim.replier': 'Collapse the app',
     't.sur': 'First feedback', 't.titre': 'They tried it', 'bf.creer': 'Create a tournament', 'bf.espace': 'Organizer area',
     'comment.sur': 'On the day', 'comment.titre': 'Three steps. Zero spreadsheets.', 'comment.intro': 'From the team list to the podium, everything is handled from your phone.',
     'comment.e1t': 'Create your tournament', 'comment.e1p': 'Pick the sport, the format (groups, knockout or both) and add the teams. The schedule is generated automatically, by field and time slot.',
     'comment.e2t': 'Share the QR code', 'comment.e2p': 'Display it at the entrance or send the link: teams and spectators follow the tournament with one scan, without creating an account.',
     'comment.e3t': 'Enter the scores', 'comment.e3p': 'From the sideline, in a few taps. Standings, knockout stages and podium update live for everyone.',
     'sim.sur': 'Try it without installing anything', 'sim.titre': 'The real app, right here.',
-    'sim.intro': 'This simulator runs the OLYMPIAD engine in your browser: same schedule generation, same scoring, same standings. Create your tournament, enter scores, and watch everything update.',
+    'sim.intro': 'This simulator runs the SPORTIMATCH engine in your browser: same schedule generation, same scoring, same standings. Create your tournament, enter scores, and watch everything update.',
     'sim.missions': 'Features discovered', 'sim.demo': 'Load a demo tournament', 'sim.spectateur': 'Spectator view',
     'sim.note': 'Tip: switch to the spectator view to see the tournament as the public does: every score you enter shows up there instantly, just like on spectators’ phones. Everything stays in your browser: nothing is sent.',
     'f.sur': 'Everything is in the app', 'f.titre': 'Built for the sideline', 'f.intro': 'For clubs, associations and volunteers who run one-day tournaments. And for everyone who wants to follow.',
@@ -80,7 +80,7 @@
     'a.q1': 'Do I need an account to follow a tournament?', 'a.r1': 'No. Teams and spectators join the tournament by scanning its QR code or typing its access code in the app. Only the organizer needs an account.',
     'a.q2': 'How do I join a tournament?', 'a.r2': 'In the app, tap “Join a tournament”, then scan the QR code shown by the organizer or type the access code they gave you.',
     'a.q3': 'Who can create an organizer account?', 'a.r3': 'Anyone aged 15 or over. The account lets you create, manage and share your tournaments.',
-    'a.q4': 'How many teams can I add for free?', 'a.r4': 'Up to 12 teams (or players) per tournament. Beyond that, unlock the tournament with a Tournament Pass or upgrade to OLYMPIAD Pro.',
+    'a.q4': 'How many teams can I add for free?', 'a.r4': 'Up to 12 teams (or players) per tournament. Beyond that, unlock the tournament with a Tournament Pass or upgrade to SPORTIMATCH Pro.',
     'a.q5': 'Can several people enter scores?', 'a.r5': 'Yes, with a Tournament Pass or the Pro subscription: invite co-organizers from your tournament and choose for each one whether they can enter scores, manage the tournament or delete it.',
     'a.q6': 'I changed phones, how do I get my purchases back?', 'a.r6': 'Sign in with the same account, then tap “Restore purchases” in My profile or on the plans screen. A Tournament Pass bought but not applied yet can be used with “I already have an unused Tournament Pass”.',
     'a.q7': 'How do I cancel the Pro subscription?', 'a.r7': 'The subscription is managed in your App Store (iPhone) or Google Play (Android) account settings. Cancellation takes effect at the end of the period already paid.',
@@ -97,7 +97,7 @@
   const TITRE_FR = document.title;
   function appliquerLangue() {
     document.documentElement.lang = langue;
-    document.title = langue === 'en' ? 'OLYMPIAD — Run your tournaments, followed live' : TITRE_FR;
+    document.title = langue === 'en' ? 'SPORTIMATCH — Run your tournaments, followed live' : TITRE_FR;
     const dico = langue === 'en' ? EN : FR;
     $$('[data-i18n]').forEach((el) => { const v = dico[el.dataset.i18n]; if (v != null) el.innerHTML = v; });
     $$('[data-i18n-html]').forEach((el) => { const v = dico[el.dataset.i18nHtml]; if (v != null) el.innerHTML = v; });
@@ -699,7 +699,7 @@
   // ---------------------------------------------------------------------
   // Composants HTML de l'app
   // ---------------------------------------------------------------------
-  const marque = () => `<span class="s-marque"><svg aria-hidden="true"><use href="#i-marque"/></svg><span>OLYMPIAD</span></span>`;
+  const marque = () => `<span class="s-marque"><img src="sportimatch-logo.svg" alt=""></span>`;
   const barreNav = (droite = '') => `<div class="s-nav"><button class="s-retour" data-a="retour">${ico('retour')}${tr('Retour', 'Back')}</button>${marque()}<div class="droite">${droite}</div></div>`;
   const etapes = (n, label) => `<div class="s-etapes">${[1, 2, 3].map((i) => `<i class="${i <= n ? 'ok' : ''}"></i>`).join('')}</div><div class="s-etapes-txt">${tr('Étape', 'Step')} ${n}/3 · ${label}</div>`;
   const carteChoix = (champ, valeur, label, actuel) => `<button class="s-carte ${String(actuel) === String(valeur) ? 'choisie' : ''}" data-a="choisir" data-champ="${champ}" data-v="${valeur}"><span class="rond"></span>${esc(label)}</button>`;
@@ -784,7 +784,7 @@
       const carteT = (action, sousTitre) => `<button class="s-carte-tournoi" data-a="${action}"><span class="ic">${ico(t.sport)}</span><span><b>${esc(t.nom)}</b><small>${sousTitre}</small></span>${ico('droite', 'fl')}</button>`;
       return `<div class="s-accueil">
         <div class="s-nav"><div class="droite"><button class="s-rond" data-a="profil" aria-label="${tr('Mon profil', 'My profile')}">${ico('profil')}</button><button class="s-rond" data-a="langue">${langue.toUpperCase()}</button></div></div>
-        <div class="logo-grand"><svg aria-hidden="true"><use href="#i-marque"/></svg><span>OLYMPIAD</span></div>
+        <div class="logo-grand"><img src="sportimatch-logo.svg" alt=""></div>
         <p class="slogan">${tr('Organise tes tournois sportifs', 'Organize your sports tournaments')}</p>
         <button class="s-btn" data-a="creer">${tr('Créer mon tournoi', 'Create my tournament')}</button>
         <button class="s-btn sec" data-a="rejoindre">${tr('Rejoindre un tournoi', 'Join a tournament')}</button>
@@ -968,15 +968,15 @@
         pdf: tr('L\'export PDF du programme fait partie des fonctions premium.', 'PDF export of the schedule is a premium feature.'),
         coorgs: tr('Les co-organisateurs font partie des fonctions premium.', 'Co-organizers are a premium feature.'),
         grand: tr('La vue grand écran fait partie des fonctions premium.', 'The big-screen view is a premium feature.'),
-        defaut: tr('Débloque toutes les fonctions d\'OLYMPIAD.', 'Unlock every OLYMPIAD feature.'),
+        defaut: tr('Débloque toutes les fonctions de SPORTIMATCH.', 'Unlock every SPORTIMATCH feature.'),
       };
       const offre = (id, nom, desc, prix, vedette) => `<div class="s-offre ${vedette ? 'vedette' : ''}"><h5>${nom}</h5><p>${desc}</p><p class="prix">${prix}</p><button class="s-btn" style="margin:0" data-a="acheter" data-v="${id}">${tr('Choisir', 'Choose')}</button></div>`;
       return `${barreNav()}
         <h2 class="s-titre">${tr('Passe au niveau supérieur', 'Level up')}</h2>
         <p class="s-sous">${accroches[raison] || accroches.defaut}</p>
         ${offre('pass', tr('Pass Tournoi', 'Tournament Pass'), tr('Débloque équipes illimitées, grand écran, export PDF et co-organisateurs pour ce tournoi, jusqu\'à 5 jours après son dernier jour.', 'Unlocks unlimited teams, big screen, PDF export and co-organizers for this tournament, until 5 days after its last day.'), tr('9,99 € · achat unique', '€9.99 · one-time purchase'))}
-        ${offre('pro-an', tr('OLYMPIAD Pro (annuel) · Saison', 'OLYMPIAD Pro (yearly) · Season'), tr('Toutes les fonctionnalités premium, pour tous tes tournois. Le plus avantageux.', 'Every premium feature, for all your tournaments. Best value.'), tr('59,99 € / an · soit 5 € / mois, 67 % de moins', '€59.99 / year · just €5 / month, 67% less'), true)}
-        ${offre('pro-mois', tr('OLYMPIAD Pro (mensuel)', 'OLYMPIAD Pro (monthly)'), tr('Le même abonnement, payé chaque mois.', 'The same subscription, paid every month.'), tr('14,99 € / mois', '€14.99 / month'))}
+        ${offre('pro-an', tr('SPORTIMATCH Pro (annuel) · Saison', 'SPORTIMATCH Pro (yearly) · Season'), tr('Toutes les fonctionnalités premium, pour tous tes tournois. Le plus avantageux.', 'Every premium feature, for all your tournaments. Best value.'), tr('59,99 € / an · soit 5 € / mois, 67 % de moins', '€59.99 / year · just €5 / month, 67% less'), true)}
+        ${offre('pro-mois', tr('SPORTIMATCH Pro (mensuel)', 'SPORTIMATCH Pro (monthly)'), tr('Le même abonnement, payé chaque mois.', 'The same subscription, paid every month.'), tr('14,99 € / mois', '€14.99 / month'))}
         <button class="s-lien" data-a="restaurer">${tr('Restaurer mes achats', 'Restore purchases')}</button>
         ${S.passEnAttente ? `<button class="s-lien" data-a="utiliser-pass">${tr('J\'ai déjà un Pass Tournoi non utilisé', 'I already have an unused Tournament Pass')}</button>` : ''}
         <p class="s-aide" style="margin-top:10px">${tr('Simulation : aucun paiement n\'est effectué. Dans l\'app, l\'abonnement Pro se renouvelle automatiquement sauf résiliation au moins 24 h avant la fin de la période.', 'Simulation: no payment is made. In the app, Pro renews automatically unless cancelled at least 24 hours before the end of the period.')}</p>`;
@@ -1007,7 +1007,7 @@
       const p = S.profil;
       const initiales = ((p.prenom || '').charAt(0) + (p.nom || '').charAt(0)).toUpperCase() || '?';
       const th = racine.dataset.theme || 'auto';
-      const statut = S.pro ? 'OLYMPIAD Pro' : tr('Gratuit', 'Free');
+      const statut = S.pro ? 'SPORTIMATCH Pro' : tr('Gratuit', 'Free');
       return `${barreNav()}
         <h2 class="s-titre">${tr('Mon profil', 'My profile')}</h2>
         <label class="s-avatar" title="${tr('Changer la photo', 'Change photo')}">${p.photo ? `<img src="${p.photo}" alt="">` : esc(initiales)}<input type="file" accept="image/*" data-champ="photo" hidden></label>
@@ -1058,7 +1058,7 @@
     mdpOublie() {
       return `${barreNav()}
         <h2 class="s-titre">${tr('Mot de passe oublié', 'Forgot password')}</h2>
-        <p class="s-sous">${tr('Dans l\'app, tu reçois un lien par e-mail qui rouvre OLYMPIAD pour choisir un nouveau mot de passe.', 'In the app, you receive an email link that reopens OLYMPIAD to choose a new password.')}</p>
+        <p class="s-sous">${tr('Dans l\'app, tu reçois un lien par e-mail qui rouvre SPORTIMATCH pour choisir un nouveau mot de passe.', 'In the app, you receive an email link that reopens SPORTIMATCH to choose a new password.')}</p>
         <label class="s-label">E-mail</label><input class="s-champ" type="email" data-champ="email" value="${esc(S.profil.email)}" autocomplete="off">
         <button class="s-btn" data-a="envoyer-lien">${tr('Envoyer le lien', 'Send the link')}</button>`;
     },
@@ -1284,7 +1284,7 @@
     $('#impression').innerHTML = `<h1>${esc(t.nom)}</h1><p class="meta">${formaterDate(t.date)} · ${nomSport(t.sport)} · ${t.equipes.length} ${motEquipes(t)} · ${tr('Code d\'accès', 'Access code')} ${t.code.toUpperCase()}</p>
       ${(t.poules || []).map((p) => `<p><b>${esc(libellePhase(p.nom))}</b> : ${p.equipeIds.map((id) => esc(nomEquipe(t, id))).join(', ')}</p>`).join('')}
       ${a.groupes.map((g) => `<h2>${esc(libellePhase(g.nom))}</h2><table><thead><tr><th>${tr('Horaire', 'Time')}</th><th>${tr('Terrain', 'Field')}</th><th>${tr('Équipe A', 'Team A')}</th><th>${tr('Équipe B', 'Team B')}</th><th>Score</th></tr></thead><tbody>${lignes(g.matchs)}</tbody></table>`).join('')}
-      <p class="pied">${tr('Programme généré par OLYMPIAD', 'Schedule generated by OLYMPIAD')} · ${tr('Suis le tournoi en direct avec le code', 'Follow the tournament live with code')} ${t.code.toUpperCase()}</p>`;
+      <p class="pied">${tr('Programme généré par SPORTIMATCH', 'Schedule generated by SPORTIMATCH')} · ${tr('Suis le tournoi en direct avec le code', 'Follow the tournament live with code')} ${t.code.toUpperCase()}</p>`;
     decouvrir('pdf');
     setTimeout(() => window.print(), 50);
   }
@@ -1522,7 +1522,7 @@
       case 'copier': copier(v); break;
       case 'partager-lien': {
         const url = lienSpectateur();
-        if (navigator.share) navigator.share({ title: t.nom, text: tr('Suis le tournoi en direct sur OLYMPIAD', 'Follow the tournament live on OLYMPIAD'), url }).catch(() => {});
+        if (navigator.share) navigator.share({ title: t.nom, text: tr('Suis le tournoi en direct sur SPORTIMATCH', 'Follow the tournament live on SPORTIMATCH'), url }).catch(() => {});
         else copier(url);
         break;
       }
@@ -1540,7 +1540,7 @@
       case 'retirer-coorg': t.coorgs = t.coorgs.filter((c) => c.id !== v); maj({ diffuser: true }); break;
       case 'droit': { const c = t.coorgs.find((x) => x.id === v); if (c) { c[champ] = !c[champ]; maj({ diffuser: true }); } break; }
       case 'acheter': {
-        const nom = v === 'pass' ? tr('Pass Tournoi', 'Tournament Pass') : 'OLYMPIAD Pro';
+        const nom = v === 'pass' ? tr('Pass Tournoi', 'Tournament Pass') : 'SPORTIMATCH Pro';
         confirmer(tr('Confirmer l\'achat', 'Confirm purchase'), tr(`Simulation de l'achat « ${nom} » : aucun paiement n'est effectué.`, `Simulated purchase of “${nom}”: no payment is made.`), tr('Simuler l\'achat', 'Simulate purchase'), () => {
           if (v === 'pass') {
             if (ecranPrecedentEst('equipes') && S.brouillon) S.brouillon.debloque = true;
@@ -1549,7 +1549,7 @@
           } else S.pro = true;
           maj({ diffuser: true });
           retour();
-          toast(v === 'pass' ? tr('Tournoi débloqué !', 'Tournament unlocked!') : tr('Bienvenue dans OLYMPIAD Pro !', 'Welcome to OLYMPIAD Pro!'));
+          toast(v === 'pass' ? tr('Tournoi débloqué !', 'Tournament unlocked!') : tr('Bienvenue dans SPORTIMATCH Pro !', 'Welcome to SPORTIMATCH Pro!'));
         });
         break;
       }
@@ -2002,15 +2002,15 @@
   function ouvrirOffre(id) {
     const pass = id === 'pass';
     const etapes = pass
-      ? [tr('Installe l\'application OLYMPIAD et connecte-toi (ou crée ton compte).', 'Install the OLYMPIAD app and sign in (or create your account).'),
+      ? [tr('Installe l\'application SPORTIMATCH et connecte-toi (ou crée ton compte).', 'Install the SPORTIMATCH app and sign in (or create your account).'),
         tr('Ouvre ton tournoi, onglet Équipes, et ajoute une 13e équipe : l\'écran des offres s\'ouvre.', 'Open your tournament, Teams tab, and add a 13th team: the plans screen opens.'),
         tr('Choisis « Pass Tournoi » et valide l\'achat.', 'Pick “Tournament Pass” and confirm the purchase.')]
-      : [tr('Installe l\'application OLYMPIAD et connecte-toi (ou crée ton compte).', 'Install the OLYMPIAD app and sign in (or create your account).'),
+      : [tr('Installe l\'application SPORTIMATCH et connecte-toi (ou crée ton compte).', 'Install the SPORTIMATCH app and sign in (or create your account).'),
         tr('Va dans Mon profil, puis « Découvrir les offres ».', 'Go to My profile, then “See the offers”.'),
-        tr('Choisis OLYMPIAD Pro, mensuel ou annuel, et valide l\'achat.', 'Pick OLYMPIAD Pro, monthly or yearly, and confirm the purchase.')];
+        tr('Choisis SPORTIMATCH Pro, mensuel ou annuel, et valide l\'achat.', 'Pick SPORTIMATCH Pro, monthly or yearly, and confirm the purchase.')];
     fenetreOffre.innerHTML = `<button class="fermer-offre" type="button" data-offre-action="fermer" aria-label="${tr('Fermer', 'Close')}">${ico('croix')}</button>
       <p class="surtitre">${pass ? tr('Achat unique', 'One-time purchase') : tr('Abonnement mensuel ou annuel', 'Monthly or yearly subscription')}</p>
-      <h2 id="titre-fenetre-offre">${pass ? tr('Pass Tournoi', 'Tournament Pass') : 'OLYMPIAD Pro'}</h2>
+      <h2 id="titre-fenetre-offre">${pass ? tr('Pass Tournoi', 'Tournament Pass') : 'SPORTIMATCH Pro'}</h2>
       <p class="sous">${pass ? tr('Équipes illimitées, grand écran, export PDF et co-organisateurs pour un tournoi, jusqu\'à 5 jours après son dernier jour.', 'Unlimited teams, big screen, PDF export and co-organizers for one tournament, until 5 days after its last day.') : tr('Toutes les fonctions premium, sur tous tes tournois. Résiliable à tout moment.', 'Every premium feature, on all your tournaments. Cancel anytime.')}</p>
       <div class="encart-offre">
         <h3>${tr('Ça se passe dans l\'app', 'It happens in the app')}</h3>

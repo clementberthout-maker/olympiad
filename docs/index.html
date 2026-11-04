@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>OLYMPIAD — Organise tes tournois, suivis en direct</title>
-<meta name="description" content="OLYMPIAD : l'application pour organiser des tournois sportifs amateurs. Calendrier automatique, scores saisis au bord du terrain, résultats en direct pour les équipes et les spectateurs. Essaie-la directement dans ton navigateur.">
-<meta property="og:title" content="OLYMPIAD — Organise tes tournois, suivis en direct">
+<title>SPORTIMATCH — Organise tes tournois, suivis en direct</title>
+<meta name="description" content="SPORTIMATCH : l'application pour organiser des tournois sportifs amateurs. Calendrier automatique, scores saisis au bord du terrain, résultats en direct pour les équipes et les spectateurs. Essaie-la directement dans ton navigateur.">
+<meta property="og:title" content="SPORTIMATCH — Organise tes tournois, suivis en direct">
 <meta property="og:description" content="Calendrier automatique, scores au bord du terrain, résultats en direct pour tout le monde avec un simple QR code.">
 <meta property="og:image" content="https://clementberthout-maker.github.io/olympiad/icon-512.png">
 <meta property="og:type" content="website">
@@ -26,7 +26,6 @@
 <!-- Icônes communes au site et au simulateur -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
-    <symbol id="i-marque" viewBox="0 0 100 100"><g fill="#ebb517" class="barres"><rect x="18" y="26" width="8" height="48" rx="2" opacity="0.28"/><rect x="32" y="26" width="8" height="48" rx="2" opacity="0.6"/><rect x="46" y="26" width="8" height="48" rx="2"/><rect x="60" y="26" width="8" height="48" rx="2" opacity="0.6"/><rect x="74" y="26" width="8" height="48" rx="2" opacity="0.28"/></g></symbol>
     <symbol id="i-football" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round"><circle cx="24" cy="24" r="19"/><path d="M24 15.5l8 5.8-3 9.4h-10l-3-9.4z" fill="currentColor"/><path d="M24 15.5V5.5M32 21.3l9.4-3M29 30.7l5.8 8M19 30.7l-5.8 8M16 21.3l-9.4-3"/></symbol>
     <symbol id="i-rugby" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><ellipse cx="24" cy="24" rx="21" ry="12.5" transform="rotate(-38 24 24)"/><path d="M16.5 31.5l15-15M19 24.5l4.5 4.5M22.5 21l4.5 4.5M26 17.5l4.5 4.5"/></symbol>
     <symbol id="i-handball" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="24" cy="24" r="19"/><path d="M8 17c9 2 15 8 17 25M13 8.5c9 6 21 7 30 6M40 34c-8-1-13-5-15-14"/></symbol>
@@ -71,10 +70,7 @@
 
 <header class="entete">
   <div class="conteneur barre">
-    <a class="logo" href="#accueil" aria-label="OLYMPIAD">
-      <svg aria-hidden="true"><use href="#i-marque"/></svg>
-      <span>OLYMPIAD</span>
-    </a>
+    <a class="logo" href="#accueil" aria-label="SPORTIMATCH"><img src="sportimatch-logo.svg" alt=""></a>
     <nav class="nav-principale" aria-label="Navigation principale">
       <a href="#essayer" data-i18n="nav.essayer">Essayer</a>
       <a href="#fonctionnalites" data-i18n="nav.fonctions">Fonctionnalités</a>
@@ -119,7 +115,7 @@
             <span><small data-i18n="heros.bientot">Bientôt disponible sur</small><strong>Google Play</strong></span>
           </span>
         </div>
-        <p class="accroche" data-i18n="heros.accroche">OLYMPIAD génère ton calendrier, te laisse saisir les scores au bord du terrain et affiche les résultats en temps réel aux équipes et aux spectateurs, avec un simple QR code. Sans compte pour eux.</p>
+        <p class="accroche" data-i18n="heros.accroche">SPORTIMATCH génère ton calendrier, te laisse saisir les scores au bord du terrain et affiche les résultats en temps réel aux équipes et aux spectateurs, avec un simple QR code. Sans compte pour eux.</p>
         <div class="actions-heros">
           <a class="bouton" href="#essayer"><span data-i18n="heros.cta">Créer un tournoi maintenant</span><svg aria-hidden="true"><use href="#i-fleche"/></svg></a>
           <button class="bouton secondaire" type="button" data-demo="suivi"><span data-i18n="heros.cta2">Voir un tournoi en direct</span></button>
@@ -135,12 +131,12 @@
           <span class="ico"><svg><use href="#i-qr"/></svg></span>
           <span><span data-i18n="heros.bulle2">QR code scanné</span><small data-i18n="heros.bulle2b">sans compte, sans appli à configurer</small></span>
         </div>
-        <div class="telephone" id="telephone-heros" role="img" aria-label="Aperçu animé de l'écran de suivi d'un tournoi dans OLYMPIAD : scores en direct et classement de poule.">
+        <div class="telephone" id="telephone-heros" role="img" aria-label="Aperçu animé de l'écran de suivi d'un tournoi dans SPORTIMATCH : scores en direct et classement de poule.">
           <span class="bouton-cote bc1"></span><span class="bouton-cote bc2"></span><span class="bouton-cote bc3"></span><span class="bouton-cote bc4"></span>
           <div class="ecran-demo">
             <div class="ilot"></div>
             <div class="barre-etat"><span>9:41</span><span class="icones-etat"><span class="reseau"><i></i><i></i><i></i><i></i></span><span class="batterie"><i></i></span></span></div>
-            <div class="entete-app"><svg><use href="#i-marque"/></svg><span>OLYMPIAD</span></div>
+            <div class="entete-app"><img src="sportimatch-logo.svg" alt=""></div>
             <div class="titre-tournoi" data-i18n="tel.titre">Tournoi U13 de printemps</div>
             <div class="meta"><span data-i18n="tel.meta">Football · 8 équipes</span><span class="statut-direct" data-i18n="tel.direct">EN DIRECT</span></div>
             <div id="demo-matchs"></div>
@@ -211,7 +207,7 @@
         <div>
           <p class="surtitre" data-i18n="sim.sur2">Essaie sans rien installer</p>
           <h2 data-i18n="sim.appel">L'app, en vrai, ici.</h2>
-          <p data-i18n="sim.appelp">Crée un tournoi, saisis des scores, regarde le classement bouger : le vrai moteur d'OLYMPIAD tourne dans ton navigateur.</p>
+          <p data-i18n="sim.appelp">Crée un tournoi, saisis des scores, regarde le classement bouger : le vrai moteur de SPORTIMATCH tourne dans ton navigateur.</p>
         </div>
         <button class="bouton" type="button" id="ouvrir-sim"><span data-i18n="sim.ouvrir">Essayer l'app ici</span><svg aria-hidden="true"><use href="#i-fleche"/></svg></button>
       </div>
@@ -221,7 +217,7 @@
       <div class="guide">
         <p class="surtitre reveler" data-i18n="sim.sur">Essaie sans rien installer</p>
         <h2 class="reveler" data-i18n="sim.titre">L'app, en vrai, ici.</h2>
-        <p class="intro reveler" data-i18n="sim.intro">Ce simulateur fait tourner le moteur d'OLYMPIAD dans ton navigateur : même génération de calendrier, mêmes barèmes, mêmes classements. Crée ton tournoi, saisis des scores, et regarde tout se mettre à jour.</p>
+        <p class="intro reveler" data-i18n="sim.intro">Ce simulateur fait tourner le moteur de SPORTIMATCH dans ton navigateur : même génération de calendrier, mêmes barèmes, mêmes classements. Crée ton tournoi, saisis des scores, et regarde tout se mettre à jour.</p>
         <div class="reveler">
           <div class="guide-entete">
             <h3 data-i18n="sim.missions">Fonctionnalités découvertes</h3>
@@ -284,13 +280,13 @@
   </section>
 
   <!-- Offres -->
-  <!-- Espace organisateur : l'app OLYMPIAD dans le navigateur (docs/app/) -->
+  <!-- Espace organisateur : l'app SPORTIMATCH dans le navigateur (docs/app/) -->
   <section class="section-alt" id="ordinateur">
     <div class="conteneur espace">
       <div class="espace-texte">
         <p class="surtitre reveler" data-i18n="e.sur">Espace organisateur</p>
         <h2 class="reveler" data-i18n="e.titre">Ton tournoi, aussi sur ordinateur</h2>
-        <p class="intro reveler" data-i18n="e.intro">Connecte-toi avec ton compte OLYMPIAD et gère tes tournois depuis ton navigateur. Tout est synchronisé en temps réel avec l'application : saisis un score sur l'ordinateur, il apparaît aussitôt sur les téléphones.</p>
+        <p class="intro reveler" data-i18n="e.intro">Connecte-toi avec ton compte SPORTIMATCH et gère tes tournois depuis ton navigateur. Tout est synchronisé en temps réel avec l'application : saisis un score sur l'ordinateur, il apparaît aussitôt sur les téléphones.</p>
         <ul class="espace-liste reveler">
           <li data-i18n="e.l1">Créer un tournoi, ajouter les équipes, générer le calendrier</li>
           <li data-i18n="e.l2">Saisir les scores en direct, au clavier</li>
@@ -302,7 +298,7 @@
           <a class="bouton secondaire" href="espace.html#/connexion" data-i18n="e.cta2">Se connecter</a>
           <a class="bouton secondaire" href="espace.html?demo=1" data-i18n="e.cta3">Découvrir en démo</a>
         </div>
-        <p class="mention reveler" data-i18n="e.note">Les achats (Pass Tournoi, OLYMPIAD Pro) se font dans l'application mobile ; ils sont ensuite reconnus ici avec le même compte.</p>
+        <p class="mention reveler" data-i18n="e.note">Les achats (Pass Tournoi, SPORTIMATCH Pro) se font dans l'application mobile ; ils sont ensuite reconnus ici avec le même compte.</p>
       </div>
       <div class="ecran-ordi reveler" aria-hidden="true">
         <div class="ordi-barre"><i></i><i></i><i></i><span>clementberthout-maker.github.io/olympiad/espace.html</span></div>
@@ -371,7 +367,7 @@
         </div>
         <div class="offre vedette reveler" style="--delai:0.2s">
           <span class="ruban" data-i18n="o.ruban">Pour les clubs</span>
-          <h3>OLYMPIAD Pro</h3>
+          <h3>SPORTIMATCH Pro</h3>
           <p class="prix" data-i18n="o.proprix">59,99 € / an (Saison) ou 14,99 € / mois</p>
           <ul>
             <li data-i18n="o.pro1">Toutes les fonctionnalités premium</li>
@@ -410,7 +406,7 @@
             </details>
             <details>
               <summary data-i18n="a.q4">Combien d'équipes puis-je ajouter gratuitement&nbsp;?</summary>
-              <div class="reponse"><p data-i18n="a.r4">Jusqu'à 12 équipes (ou joueurs) par tournoi. Au-delà, débloque le tournoi avec un Pass Tournoi ou passe à OLYMPIAD Pro.</p></div>
+              <div class="reponse"><p data-i18n="a.r4">Jusqu'à 12 équipes (ou joueurs) par tournoi. Au-delà, débloque le tournoi avec un Pass Tournoi ou passe à SPORTIMATCH Pro.</p></div>
             </details>
             <details>
               <summary data-i18n="a.q5">Plusieurs personnes peuvent-elles saisir les scores&nbsp;?</summary>
@@ -437,7 +433,7 @@
         <aside class="contact reveler">
           <h3 data-i18n="a.contactT">Une question, un problème&nbsp;?</h3>
           <p data-i18n="a.contactP">Écris-nous par e-mail, avec le nom de ton tournoi si ta question le concerne.</p>
-          <a class="bouton" href="mailto:clement.berthout@gmail.com?subject=OLYMPIAD%20-%20Support" data-i18n="a.contactB">Contacter le support</a>
+          <a class="bouton" href="mailto:clement.berthout@gmail.com?subject=SPORTIMATCH%20-%20Support" data-i18n="a.contactB">Contacter le support</a>
         </aside>
       </div>
     </div>
@@ -453,8 +449,8 @@
 
 <footer>
   <div class="conteneur">
-    <a class="logo" href="#accueil" aria-label="OLYMPIAD"><svg aria-hidden="true"><use href="#i-marque"/></svg><span>OLYMPIAD</span></a>
-    <span>© 2026 OLYMPIAD · Clément Berthout</span>
+    <a class="logo" href="#accueil" aria-label="SPORTIMATCH"><img src="sportimatch-logo.svg" alt=""></a>
+    <span>© 2026 SPORTIMATCH · Clément Berthout</span>
     <nav aria-label="Liens légaux">
       <a href="politique-confidentialite.html" data-i18n="pied.conf">Politique de confidentialité</a>
       <a href="conditions-utilisation.html" data-i18n="pied.cgu">Conditions d'utilisation</a>

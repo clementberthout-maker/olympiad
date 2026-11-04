@@ -1,4 +1,4 @@
-/* OLYMPIAD — Espace organisateur : accès aux données.
+/* SPORTIMATCH — Espace organisateur : accès aux données.
    Deux sources avec la même interface :
    - Supabase : la vraie base de l'application (mêmes tables, mêmes règles
      d'accès, même temps réel) ;
