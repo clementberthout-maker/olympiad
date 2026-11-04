@@ -5,7 +5,7 @@ import {
 import { useState, useCallback, useMemo } from 'react';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { supabase } from '../lib/supabase';
-import { choisirPhoto, televerserPhoto, supprimerMonCompte } from '../lib/profil';
+import { choisirPhoto, televerserPhoto, retirerPhoto, supprimerMonCompte } from '../lib/profil';
 import { useTheme } from '../lib/ThemeContext';
 import { useLangue } from '../lib/LangueContext';
 import { useAchats } from '../lib/achats';
@@ -147,6 +147,34 @@ export default function Profil() {
   async function selectionnerPhoto() {
     const uri = await choisirPhoto();
     if (uri) setNouvellePhotoUri(uri);
+  }
+
+  function confirmerRetraitPhoto() {
+    // Photo choisie mais pas encore enregistrée : rien à supprimer sur le serveur.
+    if (!photoUrl) {
+      setNouvellePhotoUri(null);
+      return;
+    }
+    Alert.alert(
+      t('profil.retirerPhotoTitre'),
+      t('profil.retirerPhotoMessage'),
+      [
+        { text: t('commun.annuler'), style: 'cancel' },
+        {
+          text: t('profil.retirerPhotoConfirmer'),
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await retirerPhoto(userId);
+              setPhotoUrl(null);
+              setNouvellePhotoUri(null);
+            } catch (e) {
+              Alert.alert(t('commun.erreur'), messageErreur(e, t));
+            }
+          },
+        },
+      ]
+    );
   }
 
   async function enregistrer() {
@@ -296,6 +324,11 @@ export default function Profil() {
           )}
         </Pressable>
         <Text style={styles.aidePhoto}>{t('profil.toucheLaPhoto')}</Text>
+        {apercu && (
+          <Pressable style={styles.boutonRetirerPhoto} onPress={confirmerRetraitPhoto} hitSlop={8}>
+            <Text style={styles.texteRetirerPhoto}>{t('profil.retirerPhoto')}</Text>
+          </Pressable>
+        )}
 
         <Text style={styles.label}>{t('profil.nom')}</Text>
         <TextInput style={styles.input} value={nom} onChangeText={setNom} returnKeyType="next" />
@@ -489,6 +522,8 @@ function creerStyles(c) {
     textePhoto: { fontFamily: POLICE_TEXTE, fontSize: 11, color: c.texteAttenue, textAlign: 'center', paddingHorizontal: 6 },
     apercuPhoto: { width: 80, height: 80, borderRadius: 40 },
     aidePhoto: { fontFamily: POLICE_TEXTE, fontSize: 11, color: c.texteAttenue, textAlign: 'center', marginTop: 8 },
+    boutonRetirerPhoto: { alignSelf: 'center', marginTop: 8 },
+    texteRetirerPhoto: { fontFamily: POLICE_TEXTE_SEMIBOLD, fontSize: 12, color: c.danger },
     bouton: {
       backgroundColor: c.accent,
       borderRadius: 10,

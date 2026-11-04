@@ -495,6 +495,10 @@ OLYMPIAD sert à organiser des tournois sportifs amateurs. L'organisateur crée 
 - **Stores :** fiche Google Play FR/EN (titre sans tiret pour tenir en 30 caractères : `SPORTIMATCH Tournois sportifs`, `SPORTIMATCH Sports tournaments`), `store/icone-512.png`, 2 bannières, les 14 captures FR et EN (accueil, suivi, calendrier organisateur, QR code, choix du sport), état noté dans la fiche. Les 6 captures organisateur ont été prises après connexion de Clément dans une fenêtre Chrome à profil temporaire, supprimé ensuite. `store/test-ferme.md` : section ajoutée à la fin (messages aux testeurs, notes de version), l'historique ne bouge pas. Note ajoutée en tête de `BUDGET-PROJET.md` ; politique, README et `CLAUDE.md` renommés.
 - **Vérifié dans l'aperçu web, FR et EN, clair et sombre, 0 erreur console :** accueil, connexion, offres (non connecté : logo et textes), suivi public (`S2BA4A`), rejoindre. Connecté : profil (FR sombre, EN clair) et accueil (EN clair), 0 erreur console. Rien vérifié sur téléphone. *Vu au passage : boutons « Clair » et « Sombre » du profil non traduits en anglais, défaut déjà présent, non corrigé.*
 
+### App : « Retirer la photo » (4 novembre)
+- Lien sous la photo dans « Mon profil », visible seulement s'il y a une photo. Confirmation, puis suppression du fichier du bucket `avatars` et `photo_url` à null (`retirerPhoto` dans `lib/profil.js`, comme dans l'espace). Une photo choisie mais pas enregistrée est simplement enlevée, sans confirmation.
+- Vérifié dans l'aperçu web avec session et Supabase simulés, sans toucher aux vraies données : annuler, confirmer, FR/EN, clair/sombre, sans photo, 0 erreur console. **À livrer dans le prochain build, à tester une fois en vrai sur téléphone.**
+
 ### Site renommé SPORTIMATCH (4 novembre)
 - **Nom :** OLYMPIAD remplacé par SPORTIMATCH dans `docs/` (pages, titres, balises meta, FR/EN, pages légales, objets d'e-mail du support). Élision adaptée (« le moteur de SPORTIMATCH »).
 - **Logo :** `docs/sportimatch-logo.svg` (panneau LED) remplace le pictogramme et le texte dans l'en-tête, le pied de page, le téléphone de l'accueil, le simulateur, le grand écran et `compte-confirme.html`. Symbole `i-marque` et animation `.barres` retirés. Logo du téléphone de l'accueil centré, sinon caché par la carte « But ! ».
@@ -557,7 +561,7 @@ Légende : `[ ]` à faire · `[x]` fait
     - [x] Le 21/10 : vérifier le premier passage de nuit (`select status, start_time from cron.job_run_details order by start_time desc limit 3;`). *Fait le 21/10 : passage de 3 h réussi.* Le compte démo des stores doit rester actif (connexion au moins une fois tous les 3 ans). Un vrai envoi d'e-mail n'a pas encore été testé (aucun compte assez ancien).
   - [ ] Dès la micro-entreprise créée : compléter les mentions légales, les CGU et la politique (statut, adresse ou domiciliation, SIRET) et adhérer à un **médiateur de la consommation** (obligatoire pour vendre à des particuliers), à citer dans les CGU.
   - [ ] Supabase : passer l'onglet *Security Advisor*, activer la protection contre les mots de passe compromis, et prévoir des sauvegardes (C15). *Security Advisor passé le 20/10 : 0 erreur, 13 avertissements. Migration « Avertissements du Security Advisor » ajoutée à la fin de `supabase/schema.sql` (search_path de `proteger_debloque`, droits retirés aux fonctions de déclencheur et à `anon`, liste des photos limitée à sa propre photo). Migration exécutée par Clément le 20/10, changement de photo testé dans l'espace. Security Advisor relancé par Clément : 6 avertissements et 1 info, tous voulus (voir section 2). Protection des mots de passe et sauvegardes : au passage en Pro.*
-  - [ ] App (prochain build) : ajouter « Retirer la photo » dans « Mon profil », comme dans l'espace (`supprimerPhoto` de `docs/espace/donnees.js`).
+  - [x] App (prochain build) : ajouter « Retirer la photo » dans « Mon profil », comme dans l'espace (`supprimerPhoto` de `docs/espace/donnees.js`).
   - [ ] Facultatif : ajouter « Mentions légales » aux liens légaux de l'app (`components/LiensLegaux.js`) au prochain build.
 - [x] **C13. Publier la politique de confidentialité :** activer GitHub Pages sur le dossier `/docs` (le dépôt doit être public, ou la page hébergée ailleurs) et noter l'adresse obtenue. *Fait : les pages sont en ligne sur https://clementberthout-maker.github.io/olympiad/ (`politique-confidentialite.html`, `conditions-utilisation.html`, `suppression-compte.html`). Le lien de suppression à déclarer à Google est `suppression-compte.html`.*
 
@@ -640,6 +644,7 @@ Une ligne par modification, la plus récente en haut.
 |------|--------------|
 | 2026-11-04 | CGU : olympiades multisports retirées de la description de l'offre Pro |
 | 2026-11-04 | Espace : égaliseur de la page de connexion remplacé par un panneau LED à balayage lumineux |
+| 2026-11-04 | App : bouton « Retirer la photo » dans « Mon profil » (C16), à livrer dans le prochain build |
 | 2026-11-04 | 6 captures organisateur refaites : les 14 captures FR et EN portent le nouveau logo |
 | 2026-11-04 | App : carte « Olympiade multisports » masquée par `OLYMPIADES_VISIBLES`, code conservé |
 | 2026-11-04 | Ancien logo archivé dans `archives/logo-olympiad/`, `assets/logo/` refait avec SPORTIMATCH |
