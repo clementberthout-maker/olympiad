@@ -43,7 +43,7 @@
 
   // Textes fixes de la page en anglais ; le français est lu dans le HTML.
   const EN = {
-    'nav.espace': 'Organizer area', 'fin.cta2': 'Organizer area',
+    'nav.espace': 'Organizer area',
     'e.sur': 'Organizer area', 'e.titre': 'Your tournament, on your computer too', 'e.intro': 'Sign in with your OLYMPIAD account and manage your tournaments from your browser. Everything syncs in real time with the app: enter a score on the computer, it shows up instantly on phones.',
     'e.l1': 'Create a tournament, add teams, generate the schedule', 'e.l2': 'Enter live scores with your keyboard', 'e.l3': 'Standings, knockouts, QR code and big screen view', 'e.l4': 'Same tournaments, same account, same plans as on your phone',
     'e.cta': 'Open the organizer area', 'e.cta2': 'Sign in', 'e.cta3': 'Try the demo', 'e.note': 'Purchases (Tournament Pass, OLYMPIAD Pro) are made in the mobile app; they are then recognized here with the same account.',
@@ -57,9 +57,7 @@
     'd.sur': 'Trust', 'd.titre': 'Your data', 'd.intro': 'What our privacy policy says, in plain words.', 'd.lien': 'Read the privacy policy',
     'd.t1': 'Your GDPR rights', 'd.p1': 'Access, correction, deletion, portability: just ask.', 'd.t2': 'No ads, no tracking', 'd.p2': 'No audience measurement, no advertising cookies.',
     'd.t3': 'Spectators without an account', 'd.p3': 'A QR code is enough, no data requested.', 'd.t4': 'Delete anytime', 'd.p4': 'Your account and your tournaments, in one tap.',
-    'aa.titre': 'Before / after', 'aa.p': 'Drag the slider: the scribbled sheet turns into OLYMPIAD.', 'aa.avant': 'Before', 'aa.apres': 'With OLYMPIAD',
-    'aa.f0': 'U13 tournament — Saturday', 'aa.f2': '9:15 Étoile / Collines … which field?', 'aa.f4': 'Standings: <s>Aigles 4</s> Collines 3?', 'aa.f5': 'Final: 1st A vs ???',
-    'sim.sur2': 'Try it, nothing to install', 'sim.appel': 'The real app, right here.', 'sim.appelp': 'Create a tournament, enter scores, watch the standings move: the real OLYMPIAD engine runs in your browser.', 'sim.ouvrir': 'Try the app here',
+    'sim.sur2': 'Try it, nothing to install', 'sim.appel': 'The real app, right here.', 'sim.appelp': 'Create a tournament, enter scores, watch the standings move: the real OLYMPIAD engine runs in your browser.', 'sim.ouvrir': 'Try the app here', 'sim.replier': 'Collapse the app',
     't.sur': 'First feedback', 't.titre': 'They tried it', 'bf.creer': 'Create a tournament', 'bf.espace': 'Organizer area',
     'comment.sur': 'On the day', 'comment.titre': 'Three steps. Zero spreadsheets.', 'comment.intro': 'From the team list to the podium, everything is handled from your phone.',
     'comment.e1t': 'Create your tournament', 'comment.e1p': 'Pick the sport, the format (groups, knockout or both) and add the teams. The schedule is generated automatically, by field and time slot.',
@@ -89,7 +87,6 @@
     'a.q8': 'How do I delete my account?', 'a.r8': 'In the app: My profile, then “Delete my account”. Your data is deleted immediately. More details on the <a href="suppression-compte.html">Delete my account</a> page.',
     'a.q9': 'Does this site’s simulator store my data?', 'a.r9': 'No. The tournament you create here stays in your browser (local storage) and is sent nowhere. For a real tournament shared with your teams, use the app.',
     'a.contactT': 'A question, a problem?', 'a.contactP': 'Email us, with the name of your tournament if your question is about it.', 'a.contactB': 'Contact support',
-    'fin.titre': 'Ready for kick-off?', 'fin.p': 'OLYMPIAD is coming soon to iPhone and Android. Meanwhile, prepare your tournament right here.', 'fin.cta': 'Try the simulator',
     'pied.conf': 'Privacy policy', 'pied.cgu': 'Terms of use', 'pied.ml': 'Legal notice', 'pied.supp': 'Delete my account', 'pied.contact': 'Contact',
   };
   const FR = {};
@@ -1798,6 +1795,10 @@
     $$('.reveler', sec).forEach((el) => el.classList.add('visible'));
   }
   $('#ouvrir-sim').addEventListener('click', () => { ouvrirSimulateur(); $('#essayer .simulateur').scrollIntoView({ behavior: mouvementReduit ? 'auto' : 'smooth', block: 'start' }); });
+  $('#replier-sim').addEventListener('click', () => {
+    $('#essayer').classList.add('replie');
+    $('#essayer').scrollIntoView({ behavior: 'auto' });
+  });
   document.addEventListener('click', (e) => { if (e.target.closest('a[href="#essayer"], [data-demo], [data-essayer-sport], [data-offre-action]')) ouvrirSimulateur(); }, true);
   if (location.hash === '#essayer') ouvrirSimulateur();
 
@@ -1871,20 +1872,6 @@
   if (window.QRCode && $('#se-qr')) {
     try { new window.QRCode($('#se-qr'), { text: 'https://clementberthout-maker.github.io/olympiad/', width: 76, height: 76, colorDark: '#0b0f18', colorLight: '#ffffff', correctLevel: window.QRCode.CorrectLevel.L }); } catch (e) { /* QR décoratif */ }
   }
-
-  // Avant / après : la feuille raturée et l'écran OLYMPIAD, séparés par un curseur
-  function rendreAvantApres() {
-    const ligne = (p, a, sc, b, t, live) => `<div class="ordi-m ${live ? 'live' : ''}"><span class="ordi-p">${p}</span><span class="ordi-e">${a}</span><span class="ordi-s">${sc}</span><span class="ordi-e b">${b}</span><span class="ordi-t">${t}</span></div>`;
-    $('#aa-ecran').innerHTML = `<div class="ordi-titre">${tr('Tournoi U13', 'U13 tournament')}</div>
-      <div class="ordi-infos"><span>${tr('Football · samedi', 'Football · Saturday')}</span><b>${tr('EN DIRECT', 'LIVE')}</b></div>
-      <div class="ordi-cr now"><div class="ordi-h">09:00<small>${tr('EN COURS', 'LIVE NOW')}</small></div><div>${ligne('A', 'Les Aigles', '2 - 2', 'FC Rivière', `● ${tr('EN DIRECT', 'LIVE')}`, true)}${ligne('A', 'Étoile Sud', `<small>${tr('À venir', 'Upcoming')}</small>`, 'US Collines', tr('Terrain 2', 'Field 2'))}</div></div>
-      <div class="ordi-cr"><div class="ordi-h">10:00</div><div>${ligne('A', 'Les Aigles', `<small>${tr('À venir', 'Upcoming')}</small>`, 'Étoile Sud', tr('Terrain 1', 'Field 1'))}</div></div>
-      <div class="aa-classement"><b>${tr('Classement · Poule A', 'Standings · Group A')}</b><span>1 · US Collines <i>4</i></span><span>2 · Les Aigles <i>4</i></span></div>`;
-    $('#avant-apres input').setAttribute('aria-label', tr('Comparer avant et après', 'Compare before and after'));
-  }
-  rendreAvantApres();
-  document.addEventListener('olympiad-langue', rendreAvantApres);
-  $('#avant-apres input').addEventListener('input', (e) => $('#avant-apres').style.setProperty('--coupe', `${e.target.value}%`));
 
   // Ils l'ont testé : uniquement de vrais retours de testeurs, avec leur accord.
   // Tant que la liste est vide, la section reste masquée.
@@ -1997,8 +1984,8 @@
     let actif = null;
     liens.forEach((a) => { const s = $(a.getAttribute('href')); if (s && s.offsetParent !== null && s.getBoundingClientRect().top < 120) actif = a; });
     liens.forEach((a) => a.classList.toggle('actif', a === actif));
-    // Barre flottante : après le haut de page, et pas sur la section finale
-    const fin = $('.final').getBoundingClientRect().top;
+    // Barre flottante : après le haut de page, et pas sur le pied de page
+    const fin = $('footer').getBoundingClientRect().top;
     barreFlottante.classList.toggle('visible', window.scrollY > window.innerHeight * 0.8 && fin > window.innerHeight * 0.9);
   }
   window.addEventListener('scroll', () => { if (!tickDefil) { tickDefil = true; requestAnimationFrame(auDefilement); } }, { passive: true });

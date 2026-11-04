@@ -3,7 +3,7 @@
 > Fichier tenu à jour automatiquement par Claude à chaque modification du projet
 > (voir `CLAUDE.md` et le hook `.claude/hooks/verifier-suivi.sh`).
 
-**Dernière mise à jour :** 29 octobre 2026
+**Dernière mise à jour :** 4 novembre 2026
 
 ---
 
@@ -471,8 +471,12 @@ OLYMPIAD sert à organiser des tournois sportifs amateurs. L'organisateur crée 
 - **3. Chiffres clés** sous le bandeau défilant, qui comptent à l'apparition : 3 formats, 0 compte pour les spectateurs, 5 sports, 12 équipes gratuites.
 - **6. « Tes données »** (nouvelle section avant les offres) : droits RGPD, ni pub ni pistage, spectateurs sans compte, compte supprimable, lien vers la politique. Seulement ce qu'elle dit déjà (pas d'hébergement en Europe, non mentionné).
 - FR/EN, animations coupées si le système demande moins de mouvement, vérifié sur ordinateur et téléphone, aucune erreur.
-- **Ensuite, les points 4, 5, 7 et 8 :** chiffres clés dans le jaune du site ; vrai QR code (lien vers le site) dans l'étape 2 ; **avant / après** sous « Le jour J » (feuille raturée ↔ écran OLYMPIAD, curseur à faire glisser) ; **simulateur replié** derrière « Essayer l'app ici », qui se déplie aussi tout seul dès qu'un bouton du site y mène (créer un tournoi, démo, sport, lien de suivi) ; **Fonctionnalités et Sports** réunies en une section à deux onglets (les liens du menu ouvrent le bon onglet) ; **barre flottante** « Créer un tournoi / Espace organisateur » sur téléphone, visible après le haut de page et masquée sur la section finale.
+- **Ensuite, les points 4, 5, 7 et 8 :** chiffres clés dans le jaune du site ; vrai QR code (lien vers le site) dans l'étape 2 ; **simulateur replié** derrière « Essayer l'app ici », qui se déplie aussi tout seul dès qu'un bouton du site y mène (créer un tournoi, démo, sport, lien de suivi) ; **Fonctionnalités et Sports** réunies en une section à deux onglets (les liens du menu ouvrent le bon onglet) ; **barre flottante** « Créer un tournoi / Espace organisateur » sur téléphone, visible après le haut de page et masquée sur la section finale.
 - **Témoignages (point 5) :** section prête mais masquée, car il faut de vrais retours de testeurs (avec leur accord) : la remplir dans `TEMOIGNAGES` (`docs/site.js`), elle s'affiche alors toute seule. Aucun avis inventé n'est publié.
+
+### Accueil du site : ajustements (4 novembre)
+- Retirés à la demande de Clément : l'avant / après et la section « Prêt pour le coup d'envoi ». La barre flottante du téléphone se masque désormais sur le pied de page.
+- Nouveau bouton **« Replier l'app »** en haut du simulateur ouvert : il revient à la carte « Essayer l'app ici », sans perdre le tournoi en cours.
 
 ## 3. Ce qu'il reste à faire
 
@@ -608,6 +612,7 @@ Une ligne par modification, la plus récente en haut.
 
 | Date | Modification |
 |------|--------------|
+| 2026-11-04 | Accueil : avant / après et section finale retirés, bouton « Replier l'app » sur le simulateur |
 | 2026-10-29 | Accueil : avant / après, simulateur replié, Fonctionnalités et Sports en onglets, barre flottante sur téléphone, vrai QR code, chiffres en jaune ; section témoignages prête, masquée sans vrais retours (H44) |
 | 2026-10-29 | Accueil : écran ordinateur à jour, « Le jour J » animé, chiffres clés, section « Tes données » |
 | 2026-10-29 | Site : créneau 15:00 retiré du bas du téléphone de l'accueil |

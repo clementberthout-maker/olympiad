@@ -201,29 +201,6 @@
           </div>
         </div>
       </div>
-
-      <!-- Avant / après : curseur à faire glisser (site.js) -->
-      <div class="avant-apres reveler">
-        <div class="aa-texte">
-          <h3 data-i18n="aa.titre">Avant / après</h3>
-          <p data-i18n="aa.p">Fais glisser le curseur : la feuille raturée devient OLYMPIAD.</p>
-        </div>
-        <div class="aa-cadre" id="avant-apres">
-          <span class="aa-etiquette g" data-i18n="aa.avant">Avant</span><span class="aa-etiquette d" data-i18n="aa.apres">Avec OLYMPIAD</span>
-          <div class="aa-avant" aria-hidden="true"><div class="aa-feuille">
-            <p><b data-i18n="aa.f0">Tournoi U13 — samedi</b></p>
-            <p>9h00 Aigles / Rivière <s>2-1</s> 2-2 ?</p>
-            <p data-i18n="aa.f2">9h15 Étoile / Collines … terrain ?</p>
-            <p><s>9h30</s> 10h00 Aigles / Étoile</p>
-            <p data-i18n-html="aa.f4">Classement : <s>Aigles 4</s> Collines 3 ?</p>
-            <p data-i18n="aa.f5">Finale : 1er A contre ???</p>
-          </div><div class="aa-tache"></div></div>
-          <div class="aa-apres" aria-hidden="true"><div class="ordi-contenu" id="aa-ecran"></div></div>
-          <div class="aa-poignee"></div>
-          <input type="range" min="0" max="100" value="50" aria-label="Comparer avant et après">
-        </div>
-      </div>
-      </div>
     </div>
   </section>
 
@@ -238,6 +215,7 @@
         </div>
         <button class="bouton" type="button" id="ouvrir-sim"><span data-i18n="sim.ouvrir">Essayer l'app ici</span><svg aria-hidden="true"><use href="#i-fleche"/></svg></button>
       </div>
+      <button class="bouton secondaire replier-sim" type="button" id="replier-sim"><svg aria-hidden="true"><use href="#i-chevron"/></svg><span data-i18n="sim.replier">Replier l'app</span></button>
     </div>
     <div class="conteneur simulateur">
       <div class="guide">
@@ -465,16 +443,6 @@
     </div>
   </section>
 
-  <section class="final">
-    <div class="conteneur">
-      <h2 class="reveler" data-i18n="fin.titre">Prêt pour le coup d'envoi&nbsp;?</h2>
-      <p class="reveler" data-i18n="fin.p">OLYMPIAD arrive bientôt sur iPhone et Android. En attendant, prépare ton tournoi ici même.</p>
-      <div class="actions-heros reveler">
-        <a class="bouton" href="#essayer" data-i18n="fin.cta">Essayer le simulateur</a>
-        <a class="bouton secondaire" href="espace.html" data-i18n="fin.cta2">Espace organisateur</a>
-      </div>
-    </div>
-  </section>
 </main>
 
 <!-- Barre flottante sur téléphone (site.js) -->
