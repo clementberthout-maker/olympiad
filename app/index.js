@@ -129,8 +129,7 @@ export default function Accueil() {
     return (
       <View style={[styles.container, paddingHaut]}>
         <View style={styles.logo}>
-          <Squelette width={38} height={38} radius={19} />
-          <Squelette width={140} height={30} />
+          <Squelette width={180} height={96} />
         </View>
         <Squelette width={200} height={13} style={{ alignSelf: 'center', marginTop: 12, marginBottom: 36 }} />
         <Squelette height={44} radius={10} />
@@ -203,8 +202,7 @@ export default function Accueil() {
           <BoutonLangue />
         </View>
         <View style={styles.logo}>
-          <LogoMarque taille={38} />
-          <Text style={styles.titre}>OLYMPIAD</Text>
+          <LogoMarque hauteur={96} />
         </View>
         <Text style={styles.soustitre}>{t('accueil.sousTitre')}</Text>
 
@@ -233,8 +231,7 @@ export default function Accueil() {
         <BoutonLangue />
       </View>
       <View style={styles.logo}>
-        <LogoMarque taille={38} />
-        <Text style={styles.titre}>OLYMPIAD</Text>
+        <LogoMarque hauteur={96} />
       </View>
       <Text style={styles.soustitre}>{t('accueil.sousTitre')}</Text>
 
@@ -336,11 +333,7 @@ function creerStyles(c) {
     container: { flexGrow: 1, padding: 24, backgroundColor: c.fond },
     enteteAccueil: { alignItems: 'flex-end', marginBottom: 4 },
     logo: {
-      flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 10,
-    },
-    titre: {
-      fontSize: 60, fontFamily: POLICE_TITRE, textAlign: 'center',
-      letterSpacing: 1, color: c.texte,
+      flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 10, marginBottom: 10,
     },
     soustitre: {
       fontFamily: POLICE_TEXTE_MEDIUM, fontSize: 15, color: c.texteAttenue,

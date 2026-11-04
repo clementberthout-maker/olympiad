@@ -1,6 +1,8 @@
-# OLYMPIAD — Budget du projet
+# SPORTIMATCH — Budget du projet
 
 **Établi le :** 15 octobre 2026
+
+> Note du 04/11 : l'app s'appelle désormais SPORTIMATCH. Ce budget, écrit avant, parle de `olympiad-app.com` et de « OLYMPIAD » : les montants valent pour le domaine SPORTIMATCH à réserver (C14b).
 
 > Montants indicatifs, d'après les tarifs publics connus mi-2026. À revérifier au moment de payer.
 > Conversion utilisée : 1 $ ≈ 0,90 €. « TTC » quand le prix est affiché ainsi en France.

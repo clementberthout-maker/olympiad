@@ -1,7 +1,7 @@
-# Fiche Google Play — OLYMPIAD
+# Fiche Google Play — SPORTIMATCH
 
 Textes à copier dans la Play Console (Accroître le nombre d'utilisateurs > Présence sur le Store > Fiche principale).
-Limites Google : nom 30 caractères, description courte 80, description complète 4 000.
+Limites Google : nom 30 caractères, description courte 80, description complète 4 000. Le nom SPORTIMATCH est plus long : sans le tiret, le titre tient en 29 caractères (FR) et 30 (EN).
 La description complète est en texte brut : copier les puces « • » telles quelles.
 
 ---
@@ -11,7 +11,7 @@ La description complète est en texte brut : copier les puces « • » telles q
 ### Nom de l'application (30 max)
 
 ```
-OLYMPIAD - Tournois sportifs
+SPORTIMATCH Tournois sportifs
 ```
 
 ### Description courte (80 max)
@@ -23,11 +23,11 @@ Organisateurs : crée ton tournoi, saisis les scores, tous suivent en direct.
 ### Description complète
 
 ```
-OLYMPIAD est l'appli pour organiser des tournois sportifs amateurs, du tirage des poules jusqu'au podium.
+SPORTIMATCH est l'appli pour organiser des tournois sportifs amateurs, du tirage des poules jusqu'au podium.
 
 C'est un outil pour l'organisateur : lui seul crée le tournoi et saisit les scores. Les équipes et le public, eux, se contentent de suivre les résultats.
 
-Tu crées ton tournoi, OLYMPIAD génère le calendrier, tu saisis les scores au bord du terrain : les équipes et les spectateurs suivent les résultats en direct sur leur téléphone, avec un simple QR code. Sans créer de compte.
+Tu crées ton tournoi, SPORTIMATCH génère le calendrier, tu saisis les scores au bord du terrain : les équipes et les spectateurs suivent les résultats en direct sur leur téléphone, avec un simple QR code. Sans créer de compte.
 
 Pensée pour les clubs, les associations, les écoles et les bénévoles qui organisent des tournois d'une journée.
 
@@ -66,7 +66,7 @@ Politique de confidentialité : https://clementberthout-maker.github.io/olympiad
 ### App name (30 max)
 
 ```
-OLYMPIAD - Sports tournaments
+SPORTIMATCH Sports tournaments
 ```
 
 ### Short description (80 max)
@@ -78,11 +78,11 @@ Organizers: create your tournament, enter scores, everyone follows live.
 ### Full description
 
 ```
-OLYMPIAD is the app for running amateur sports tournaments, from the group draw to the podium.
+SPORTIMATCH is the app for running amateur sports tournaments, from the group draw to the podium.
 
 It is a tool for the organizer: only they create the tournament and enter the scores. Teams and spectators simply follow the results.
 
-Create your tournament, OLYMPIAD builds the schedule, you enter the scores pitch-side: teams and spectators follow the results live on their phones with a simple QR code. No account needed for them.
+Create your tournament, SPORTIMATCH builds the schedule, you enter the scores pitch-side: teams and spectators follow the results live on their phones with a simple QR code. No account needed for them.
 
 Built for clubs, associations, schools and volunteers who run one-day tournaments.
 
@@ -122,5 +122,5 @@ Privacy policy: https://clementberthout-maker.github.io/olympiad/politique-confi
 |---|---|---|
 | Icône | PNG 512 × 512, 32 bits, moins de 1 Mo, carrée (Google arrondit lui-même) | prête : `store/icone-512.png` |
 | Bannière (« Image de présentation ») | PNG ou JPEG 1024 × 500 | prête : `store/banniere-1024x500.png` (polices et couleurs de l'app) |
-| Captures téléphone | 2 à 8, PNG ou JPEG, côté court ≥ 320 px, format 9:16 conseillé (ex. 1080 × 1920) | 4 prêtes dans `store/captures/` (écrans publics, 1080 × 1919, thème sombre, version web de l'app via Edge) : classement, résultats, matchs à venir, accueil, calendrier organisateur, QR code, choix du sport. À compléter par des captures organisateur (création, saisie des scores) prises sur un téléphone. |
+| Captures téléphone | 2 à 8, PNG ou JPEG, côté court ≥ 320 px, format 9:16 conseillé (ex. 1080 × 1920) | 7 dans `store/captures/` (1080 × 1919, thème sombre, version web de l'app) : classement, résultats, matchs à venir, accueil, calendrier organisateur, QR code, choix du sport. **Les 7 refaites le 04/11 avec le nouveau logo.** À compléter par des captures organisateur (création, saisie des scores) prises sur un téléphone. |
 | Version anglaise (en-US) | mêmes formats | image de présentation `store/banniere-1024x500-en.png` (« Run your tournament. Everyone follows live. ») et 7 captures dans `store/captures-en/` (app en anglais) |

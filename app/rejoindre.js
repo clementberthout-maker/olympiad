@@ -9,7 +9,7 @@ import { useTheme } from '../lib/ThemeContext';
 import { useLangue } from '../lib/LangueContext';
 import { POLICE_TITRE, POLICE_TEXTE, POLICE_TEXTE_MEDIUM } from '../lib/theme';
 
-// Retrouve le code d'accès à partir du texte scanné : soit un lien OLYMPIAD
+// Retrouve le code d'accès à partir du texte scanné : soit un lien SPORTIMATCH
 // (ex: olympiad://suivi/ABC123, olympiad://suivi-olympiade/ABC123 ou
 // exp://.../--/suivi/ABC123), soit
 // directement le code si le QR ne contient pas un lien reconnu.

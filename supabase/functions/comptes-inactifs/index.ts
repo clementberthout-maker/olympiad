@@ -127,7 +127,7 @@ Deno.serve(async (req) => {
       try {
         const { sujet, html, texte } = modeleAvertissement(compte.prenom, new Date(compte.date_suppression));
         await transport.sendMail({
-          from: `"OLYMPIAD" <${smtpUser}>`,
+          from: `"SPORTIMATCH" <${smtpUser}>`,
           to: compte.email,
           subject: sujet,
           html,

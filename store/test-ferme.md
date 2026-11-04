@@ -140,3 +140,26 @@ Nouveau : olympiades multisports (Pro) avec classement général, tournois sur p
 `<en-US>`
 New: multi-sport olympiads (Pro) with an overall ranking, tournaments over several days, 30-day trash. Adding a team mid-tournament keeps the scores. Tied final: penalty shootout required. No automatic capital letter in passwords, "Sign in" link at the top of sign-up, duplicate team names refused, matches more clearly tappable, QR code separate from the card. Paid big screen, various fixes.
 `</en-US>`
+
+## Passage à SPORTIMATCH (prochain build)
+
+Note du 04/11 : l'app s'appelle désormais SPORTIMATCH. Le texte ci-dessus est conservé tel qu'il a servi. Le lien d'inscription, le groupe de testeurs et l'identifiant `com.clement.olympiad` ne changent pas.
+
+### Message aux testeurs (FR)
+
+> Petite nouvelle : OLYMPIAD change de nom et devient SPORTIMATCH, avec un nouveau logo et une nouvelle icône. C'est la même app : ton compte et tes tournois ne bougent pas, il suffit de faire la mise à jour depuis le Play Store. Si tu cherches l'app sur ton téléphone, c'est donc sous ce nom. Merci de continuer le test !
+
+### Message aux testeurs (EN)
+
+> Quick news: OLYMPIAD is changing its name to SPORTIMATCH, with a new logo and a new icon. It's the same app: your account and tournaments stay as they are, just update from the Play Store. If you look for the app on your phone, it now goes by this name. Thanks for keeping up the test!
+
+### Notes de version
+
+Nom de la release : numéro du build + `(1.0.0)`. À coller dans la Play Console (500 caractères maximum par langue). À compléter avec les autres corrections de ce build.
+
+`<fr-FR>`
+OLYMPIAD devient SPORTIMATCH : nouveau nom, nouveau logo, nouvelle icône. Ton compte, tes tournois et tes liens de suivi ne changent pas.
+`</fr-FR>`
+`<en-US>`
+OLYMPIAD is now SPORTIMATCH: new name, new logo, new icon. Your account, tournaments and tracking links stay the same.
+`</en-US>`

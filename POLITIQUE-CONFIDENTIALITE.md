@@ -1,10 +1,10 @@
-# Politique de confidentialité — OLYMPIAD
+# Politique de confidentialité — SPORTIMATCH
 
 Dernière mise à jour : 26 octobre 2026
 
-Cette politique explique quelles données l'application OLYMPIAD et son site internet (y compris l'espace organisateur) collectent, pourquoi, et comment exercer tes droits dessus.
+Cette politique explique quelles données l'application SPORTIMATCH et son site internet (y compris l'espace organisateur) collectent, pourquoi, et comment exercer tes droits dessus.
 
-**Responsable du traitement :** Clément Berthout, développeur de l'application OLYMPIAD.
+**Responsable du traitement :** Clément Berthout, développeur de l'application SPORTIMATCH.
 **Contact :** clement.berthout@gmail.com
 
 *(Si tu opères sous un statut d'entreprise — auto-entrepreneur ou autre — remplace la ligne ci-dessus par ta raison sociale complète, c'est ce que les magasins d'applications et le RGPD attendent comme identification du responsable de traitement.)*

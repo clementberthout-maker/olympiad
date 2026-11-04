@@ -1,4 +1,4 @@
-# OLYMPIAD — consignes pour Claude
+# SPORTIMATCH — consignes pour Claude
 
 ## Fichier de suivi du projet (obligatoire)
 

@@ -1,4 +1,4 @@
-// Code partagé par les Edge Functions d'OLYMPIAD (valider-pass-tournoi,
+// Code partagé par les Edge Functions de SPORTIMATCH (valider-pass-tournoi,
 // synchroniser-pro) : client Supabase service_role, utilisateur appelant et
 // lecture de ses achats chez RevenueCat.
 //

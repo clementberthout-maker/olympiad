@@ -1,4 +1,4 @@
--- OLYMPIAD — Schéma de base de données Supabase (V1)
+-- SPORTIMATCH — Schéma de base de données Supabase (V1)
 -- Correspond au modèle de données défini dans 03-MODELE-DONNEES.md
 
 -- Extension pour générer des UUID

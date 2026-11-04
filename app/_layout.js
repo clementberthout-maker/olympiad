@@ -1,4 +1,4 @@
-import { View, Text, Platform } from 'react-native';
+import { View, Platform } from 'react-native';
 import { Stack } from 'expo-router';
 import '../lib/alertesWeb';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -9,18 +9,8 @@ import {
 import { ThemeProvider, useTheme } from '../lib/ThemeContext';
 import { LangueProvider } from '../lib/LangueContext';
 import { AchatsProvider } from '../lib/achats';
-import { POLICE_TITRE } from '../lib/theme';
 import LogoMarque from '../components/LogoMarque';
 import BoutonRetour from '../components/BoutonRetour';
-
-function TitreEnTete({ couleurs }) {
-  return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-      <LogoMarque taille={22} />
-      <Text style={{ fontFamily: POLICE_TITRE, color: couleurs.texte, fontSize: 22 }}>OLYMPIAD</Text>
-    </View>
-  );
-}
 
 function NavigationThemee() {
   const { couleurs } = useTheme();
@@ -33,7 +23,7 @@ function NavigationThemee() {
   return (
     <Stack
       screenOptions={{
-        headerTitle: () => <TitreEnTete couleurs={couleurs} />,
+        headerTitle: () => <LogoMarque hauteur={40} />,
         // Android aligne le titre à gauche par défaut, iOS le centre.
         headerTitleAlign: 'center',
         headerLeft: ({ canGoBack }) => <BoutonRetour canGoBack={canGoBack} />,

@@ -27,7 +27,7 @@ Pour arrêter l'envoi un jour : supprimer ce mot de passe d'application (le mot 
 | Champ | Valeur |
 |---|---|
 | Sender email | `clement.berthout@gmail.com` (doit être l'adresse Gmail elle-même) |
-| Sender name | `OLYMPIAD` |
+| Sender name | `SPORTIMATCH` |
 | Host | `smtp.gmail.com` |
 | Port | `465` |
 | Minimum interval | `30` secondes (par défaut, pour un même utilisateur) |
@@ -54,9 +54,9 @@ Sans `olympiad://**`, Supabase ignore le lien de l'app et renvoie vers la Site U
 
 | Modèle Supabase | Sujet | Fichier |
 |---|---|---|
-| Confirm signup | `Confirme ton adresse · Confirm your email — OLYMPIAD` | `confirmation.html` |
-| Reset password | `Nouveau mot de passe · New password — OLYMPIAD` | `reinitialisation.html` |
-| Change email address | `Changement d'adresse · Email change — OLYMPIAD` | `changement-email.html` |
+| Confirm signup | `Confirme ton adresse · Confirm your email — SPORTIMATCH` | `confirmation.html` |
+| Reset password | `Nouveau mot de passe · New password — SPORTIMATCH` | `reinitialisation.html` |
+| Change email address | `Changement d'adresse · Email change — SPORTIMATCH` | `changement-email.html` |
 
 Les modèles sont en français puis en anglais : Supabase ne sait pas dans quelle langue l'utilisateur a l'app.
 

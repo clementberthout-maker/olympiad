@@ -1,4 +1,4 @@
-# OLYMPIAD
+# SPORTIMATCH
 
 Application mobile (iOS et Android) pour organiser des tournois sportifs
 amateurs : l'organisateur crée son tournoi, ajoute les équipes et génère le

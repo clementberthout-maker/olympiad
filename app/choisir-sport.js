@@ -10,6 +10,11 @@ import { POLICE_TITRE, POLICE_TEXTE } from '../lib/theme';
 import { SPORTS } from '../lib/sports';
 import IndicateurEtapes from '../components/IndicateurEtapes';
 
+// Carte « Olympiade multisports » masquée, comme sur le site (même drapeau dans
+// docs/espace/espace.js) : remettre à true pour la réafficher. Le reste de la
+// fonction ne change pas : les olympiades déjà créées restent accessibles.
+const OLYMPIADES_VISIBLES = false;
+
 // Premier écran du parcours de création d'un tournoi : le sport choisi ici
 // détermine le vocabulaire (buts/points...) utilisé sur les écrans suivants
 // — voir lib/sports.js et creer-tournoi.js.
@@ -57,7 +62,7 @@ export default function ChoisirSport() {
         </Pressable>
       ))}
 
-      {!olympiade && (
+      {OLYMPIADES_VISIBLES && !olympiade && (
         <>
           <Text style={styles.ou}>{t('olympiade.ouPlusieursSports')}</Text>
           <Pressable style={[styles.carte, styles.carteOlympiade]} onPress={choisirOlympiade}>
