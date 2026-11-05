@@ -39,7 +39,7 @@ function sourceSupabase() {
     async deconnexion() { await sb.auth.signOut(); },
     async motDePasseOublie(email, redirection) { verifier(await sb.auth.resetPasswordForEmail(email, { redirectTo: redirection })); },
     async changerMotDePasse(motDePasse) { verifier(await sb.auth.updateUser({ password: motDePasse })); },
-    async changerEmail(email) { verifier(await sb.auth.updateUser({ email })); },
+    async changerEmail(email, redirection) { verifier(await sb.auth.updateUser({ email }, { emailRedirectTo: redirection })); },
 
     async profil(uid) { return verifier(await sb.from('profils').select('*').eq('id', uid).maybeSingle()); },
     async majProfil(uid, champs) { verifier(await sb.from('profils').update(champs).eq('id', uid)); },

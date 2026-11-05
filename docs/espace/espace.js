@@ -340,7 +340,7 @@ async function soumettreAuth(form) {
     } else if (mode === 'inscription') {
       if (!valeur('prenom') || !valeur('nom')) { throw new Error(tr('Indique ton prénom et ton nom.', 'Enter your first and last name.')); }
       if ($('#mdp', form).value.length < 6) throw new Error('Password should be at least 6 characters');
-      const res = await donnees.inscription({ email, motDePasse: $('#mdp', form).value, prenom: valeur('prenom'), nom: valeur('nom'), club: valeur('club') });
+      const res = await donnees.inscription({ email, motDePasse: $('#mdp', form).value, prenom: valeur('prenom'), nom: valeur('nom'), club: valeur('club') }, `${BASE}espace.html`);
       if (!res?.session) {
         form.innerHTML = `<p class="succes-form" style="font-size:16px">${tr('Compte créé ! Ouvre l\'e-mail de confirmation que tu viens de recevoir, puis reviens te connecter.', 'Account created! Open the confirmation email you just received, then come back to sign in.')}</p><a class="bouton plein" href="#/connexion">${tr('Aller à la connexion', 'Go to sign in')}</a>`;
         return;
@@ -1915,7 +1915,7 @@ document.addEventListener('submit', async (e) => {
   if (f.id === 'form-email') {
     const email = $('#p-email').value.trim();
     if (!/^\S+@\S+\.\S+$/.test(email) || email === etat.session.user.email) return;
-    try { await donnees.changerEmail(email); toast(tr('Lien de confirmation envoyé à la nouvelle adresse', 'Confirmation link sent to the new address')); } catch (er) { toast(messageErreur(er), 'erreur'); }
+    try { await donnees.changerEmail(email, `${BASE}espace.html`); toast(tr('Lien de confirmation envoyé à la nouvelle adresse', 'Confirmation link sent to the new address')); } catch (er) { toast(messageErreur(er), 'erreur'); }
     return;
   }
   if (f.id === 'form-mdp') {
