@@ -118,9 +118,11 @@ Privacy policy: https://clementberthout-maker.github.io/olympiad/politique-confi
 
 ## Visuels à fournir
 
+**Depuis le 05/11 :** fichiers à téléverser et emplacements dans `store/fiche-play-console/LISEZ-MOI.md`. Ce dossier remplace la bannière et l'icône indiquées ci-dessous ; les captures du build 9 y sont en attente.
+
 | Élément | Format | Source |
 |---|---|---|
 | Icône | PNG 512 × 512, 32 bits, moins de 1 Mo, carrée (Google arrondit lui-même) | prête : `store/icone-512.png` |
 | Bannière (« Image de présentation ») | PNG ou JPEG 1024 × 500 | prête : `store/banniere-1024x500.png` (polices et couleurs de l'app) |
-| Captures téléphone | 2 à 8, PNG ou JPEG, côté court ≥ 320 px, format 9:16 conseillé (ex. 1080 × 1920) | 7 dans `store/captures/` (1080 × 1919, thème sombre, version web de l'app) : classement, résultats, matchs à venir, accueil, calendrier organisateur, QR code, choix du sport. **Les 7 refaites le 04/11 avec le nouveau logo.** À compléter par des captures organisateur (création, saisie des scores) prises sur un téléphone. |
+| Captures téléphone | 2 à 8, PNG ou JPEG, côté court ≥ 320 px, format 9:16 conseillé (ex. 1080 × 1920) | 7 dans `store/captures/` (1080 × 1920, thème sombre, version web de l'app) : classement, résultats, matchs à venir, accueil, calendrier organisateur, QR code, choix du sport. **Les 7 refaites le 05/11 (nouveau logo, tableau final cohérent, noms corrigés).** À compléter par des captures organisateur (création, saisie des scores) prises sur un téléphone. |
 | Version anglaise (en-US) | mêmes formats | image de présentation `store/banniere-1024x500-en.png` (« Run your tournament. Everyone follows live. ») et 7 captures dans `store/captures-en/` (app en anglais) |
