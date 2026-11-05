@@ -2,7 +2,7 @@
 
 **Établi le :** 15 octobre 2026
 
-> Note du 04/11 : l'app s'appelle désormais SPORTIMATCH. Ce budget, écrit avant, parle de `olympiad-app.com` et de « OLYMPIAD » : les montants valent pour le domaine SPORTIMATCH à réserver (C14b).
+> Note du 04/11 : l'app s'appelle désormais SPORTIMATCH. Ce budget, écrit avant, parle de `olympiad-app.com` et de « OLYMPIAD » : les montants valent pour SPORTIMATCH. Le domaine `sportimatch.com` a été acheté le 05/11 (section 1).
 
 > Montants indicatifs, d'après les tarifs publics connus mi-2026. À revérifier au moment de payer.
 > Conversion utilisée : 1 $ ≈ 0,90 €. « TTC » quand le prix est affiché ainsi en France.
@@ -14,9 +14,10 @@
 | Poste | Montant | Date | Fréquence | Remarque |
 |---|---|---|---|---|
 | Google Play Console (compte développeur) | 25 $ (≈ 23 €) | 11/10/2026 | Une seule fois | Payé et vérifié. |
+| Domaine `sportimatch.com` (Cloudflare) | ≈ 10,46 $ (≈ 9,50 €) *(montant exact à confirmer)* | 05/11/2026 | Chaque année | Prix relevé avant l'achat. Renouvellement le 05/11/2027. |
 | Abonnement Claude (outil de développement) | *à compléter* | — | Mensuel | Si tu veux suivre le coût réel du développement. |
 | Achats faits pendant les tests internes | 0 € *(à vérifier)* | 14/10/2026 | — | Gratuits si ton compte était testeur de licence ; sinon, vérifier qu'ils ont été remboursés. |
-| **Total payé** | **≈ 23 €** *(+ Claude)* | | | |
+| **Total payé** | **≈ 32,50 €** *(+ Claude)* | | | |
 
 Tout le reste tourne aujourd'hui sur des offres gratuites : Supabase, EAS (Expo), RevenueCat, GitHub et GitHub Pages, SMTP Gmail.
 
@@ -27,7 +28,6 @@ Tout le reste tourne aujourd'hui sur des offres gratuites : Supabase, EAS (Expo)
 | Poste | Montant | Fréquence | Quand | Remarque |
 |---|---|---|---|---|
 | Apple Developer Program | 99 € TTC | Chaque année | Avant la publication iOS | Sans lui, pas d'App Store. À renouveler sinon l'app disparaît du store. |
-| Nom de domaine `olympiad-app.com` | 10 à 15 € | Chaque année | Dès que possible | Cloudflare (prix coûtant, ≈ 10 €) ou OVHcloud (≈ 12-14 €). Attention : le prix de renouvellement est souvent plus élevé que celui de la 1re année. Protection WHOIS gratuite chez ces deux registrars. |
 | Boîte mail `support@olympiad-app.com` | 0 à 85 € | Chaque année | Avec le domaine | Voir les options section 3. |
 | **Total minimum 1re année** | **≈ 110 à 200 €** | | | |
 

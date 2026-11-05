@@ -120,6 +120,6 @@ Identifiant de l'app (iOS et Android) : `com.clement.olympiad`.
 
 ## Pages légales
 
-Publiées sur https://clementberthout-maker.github.io/olympiad/ depuis
+Publiées sur https://sportimatch.com/ depuis
 `docs/` : politique de confidentialité, conditions d'utilisation,
 suppression du compte.

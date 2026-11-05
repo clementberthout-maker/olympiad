@@ -55,8 +55,8 @@ OFFRES
 
 L'abonnement Pro se renouvelle automatiquement sauf résiliation au moins 24 h avant la fin de la période en cours. Tu peux le gérer ou le résilier à tout moment dans les abonnements Google Play.
 
-Conditions d'utilisation : https://clementberthout-maker.github.io/olympiad/conditions-utilisation.html
-Politique de confidentialité : https://clementberthout-maker.github.io/olympiad/politique-confidentialite.html
+Conditions d'utilisation : https://sportimatch.com/conditions-utilisation.html
+Politique de confidentialité : https://sportimatch.com/politique-confidentialite.html
 ```
 
 ---
@@ -110,8 +110,8 @@ PLANS
 
 The Pro subscription renews automatically unless cancelled at least 24 hours before the end of the current period. You can manage or cancel it at any time in your Google Play subscriptions.
 
-Terms of use: https://clementberthout-maker.github.io/olympiad/conditions-utilisation.html
-Privacy policy: https://clementberthout-maker.github.io/olympiad/politique-confidentialite.html
+Terms of use: https://sportimatch.com/conditions-utilisation.html
+Privacy policy: https://sportimatch.com/politique-confidentialite.html
 ```
 
 ---

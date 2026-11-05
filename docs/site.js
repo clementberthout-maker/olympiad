@@ -1870,7 +1870,7 @@
 
   // QR code de l'étape 2 : un vrai QR code (lien vers le site)
   if (window.QRCode && $('#se-qr')) {
-    try { new window.QRCode($('#se-qr'), { text: 'https://clementberthout-maker.github.io/olympiad/', width: 76, height: 76, colorDark: '#0b0f18', colorLight: '#ffffff', correctLevel: window.QRCode.CorrectLevel.L }); } catch (e) { /* QR décoratif */ }
+    try { new window.QRCode($('#se-qr'), { text: 'https://sportimatch.com/', width: 76, height: 76, colorDark: '#0b0f18', colorLight: '#ffffff', correctLevel: window.QRCode.CorrectLevel.L }); } catch (e) { /* QR décoratif */ }
   }
 
   // Ils l'ont testé : uniquement de vrais retours de testeurs, avec leur accord.

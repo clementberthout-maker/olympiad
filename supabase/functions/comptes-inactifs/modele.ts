@@ -4,8 +4,8 @@
 // ces modèles ; il est ici et non dans supabase/emails/ car il est envoyé
 // par l'Edge Function, pas par Supabase Auth.
 
-const ESPACE = 'https://clementberthout-maker.github.io/olympiad/espace.html';
-const SUPPRESSION = 'https://clementberthout-maker.github.io/olympiad/suppression-compte.html';
+const ESPACE = 'https://sportimatch.com/espace.html';
+const SUPPRESSION = 'https://sportimatch.com/suppression-compte.html';
 
 function echapper(texte: string) {
   return texte

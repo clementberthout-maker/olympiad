@@ -40,11 +40,11 @@ Puis *Authentication → Rate Limits* : « Rate limit for sending emails » → 
 
 *Authentication → URL Configuration*
 
-- **Site URL** : `https://clementberthout-maker.github.io/olympiad/compte-confirme.html`
+- **Site URL** : `https://sportimatch.com/compte-confirme.html`
 - **Redirect URLs** (Add URL) :
   - `olympiad://**` (lien du mot de passe oublié, dans l'app installée)
   - `exp://**` (seulement pour les tests avec Expo en développement)
-  - `https://clementberthout-maker.github.io/olympiad/**`
+  - `https://sportimatch.com/**`
 
 Sans `olympiad://**`, Supabase ignore le lien de l'app et renvoie vers la Site URL : le mot de passe oublié ne marcherait plus.
 
