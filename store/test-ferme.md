@@ -48,7 +48,7 @@ L'examen d'une première release en test fermé prend de quelques heures à quel
 
 Seuls comptent les **téléphones Android** avec un compte Google (les amis sur iPhone ne peuvent pas aider ici, mais serviront pour TestFlight).
 
-**Groupe Google plutôt qu'une liste d'e-mails** : créer `olympiad-testeurs@googlegroups.com` (groups.google.com, groupe ouvert à tous), puis l'ajouter dans l'onglet Testeurs de la piste Alpha. Chacun s'inscrit seul au groupe, sans t'envoyer son adresse. Pratique pour les inconnus. Inconvénient : les testeurs de licence se déclarent adresse par adresse (à vérifier dans la Console), donc les inscrits du groupe paieraient vraiment s'ils achètent → leur dire de ne pas acheter, ou leur offrir le Pro par RevenueCat.
+**Groupe Google (conseillé pour les nouveaux testeurs)** : créer le groupe sur groups.google.com (adresse `nom@googlegroups.com`), avec approbation des demandes pour rejoindre, puis l'ajouter dans l'onglet Testeurs de la piste Alpha **et** dans la page Test de licence (Google accepte les groupes aux deux endroits). Chaque testeur rejoint d'abord le groupe avec son compte Gmail, puis s'inscrit au test. Garder la liste « TEST FERMÉ » active pour ne pas retirer les testeurs déjà inscrits. **Avant la mise en production**, retirer le groupe de la page Test de licence : ses membres pourraient faire des achats de test gratuits dans l'app publique.
 
 Par ordre de priorité :
 1. **Entourage** : famille, amis, collègues sur Android. Compter qui a un Android avant de chercher ailleurs.

@@ -555,6 +555,9 @@ OLYMPIAD sert à organiser des tournois sportifs amateurs. L'organisateur crée 
 - Page `docs/testeur.html`, à l'adresse `https://sportimatch.com/testeur` : elle renvoie vers la fiche Google Play. « olympiad » n'apparaît plus dans le lien envoyé, mais reste dans l'adresse de Google Play : l'identifiant `com.clement.olympiad` ne peut plus changer sur cette fiche.
 - Messages aux testeurs de `store/test-ferme.md` : lien court et nom SPORTIMATCH.
 
+### Groupe Google pour les testeurs (6 novembre)
+- Vérifié dans l'aide Google : un groupe Google est accepté pour le test fermé et pour les testeurs de licence. `store/test-ferme.md` corrigé (il disait que les testeurs de licence se déclaraient adresse par adresse).
+
 ## 3. Ce qu'il reste à faire
 
 Légende : `[ ]` à faire · `[x]` fait
@@ -643,6 +646,7 @@ Légende : `[ ]` à faire · `[x]` fait
   - [ ] Recruter 15 à 20 testeurs sur Android (liste d'e-mails « TEST FERMÉ » créée le 15/10 avec 3 testeurs ; pistes dans `store/test-ferme.md`, section 2 bis). *Lien à envoyer depuis le 06/11 : `https://sportimatch.com/testeur`.*
   - [x] Refaire la classification du contenu (« Oui » au signalement, B8b). *Envoyée le 15/10 à 12 h 47 : classification inchangée (PEGI « ! », USK 12, ESRB Teen, IARC 12+, 14 au Brésil), cohérente avec les comptes dès 15 ans.*
   - [ ] Ajouter les testeurs comme testeurs de licence (sinon leurs achats sont réels).
+  - [ ] Créer le groupe Google des nouveaux testeurs, l'ajouter au test fermé et au test de licence, sans retirer la liste « TEST FERMÉ ». Retirer le groupe du test de licence avant la mise en production.
   - [x] Piste Alpha : liste de testeurs, pays, release du build 5, envoi en examen. *Envoyé en examen le 15/10, en attente de validation par Google.*
   - [ ] Release validée : envoyer le lien d'inscription à 15-20 testeurs (12 minimum). *Release Alpha (build 5) validée par Google le 15/10 ; lien envoyé aux 3 premiers testeurs.*
   - [ ] 14 jours avec 12 testeurs inscrits sans interruption, puis « Demander l'accès à la production ».
@@ -691,6 +695,7 @@ Une ligne par modification, la plus récente en haut.
 
 | Date | Modification |
 |------|--------------|
+| 2026-11-06 | Groupe Google pour les testeurs : guide corrigé, étapes ajoutées (F22) |
 | 2026-11-06 | Lien court `sportimatch.com/testeur` vers la fiche Google Play (`docs/testeur.html`) ; messages aux testeurs mis à jour |
 | 2026-11-06 | Espace : prénom retiré d'un commentaire de `espace.js` |
 | 2026-11-06 | Accueil : nom de Clément retiré du pied de page, gardé dans les pages légales ; statut à voir avec un conseil (C15) |
