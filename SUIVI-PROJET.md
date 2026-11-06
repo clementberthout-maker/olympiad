@@ -687,6 +687,7 @@ Une ligne par modification, la plus récente en haut.
 
 | Date | Modification |
 |------|--------------|
+| 2026-11-06 | Accueil : nom de Clément retiré du pied de page, gardé dans les pages légales ; statut à voir avec un conseil (C15) |
 | 2026-11-06 | Site : pied de page sur une seule ligne sur ordinateur |
 | 2026-11-06 | Site publié avec `support@sportimatch.com`, vérifié en ligne (C14) |
 | 2026-11-06 | Réception sur `support@` testée ; Gmail remplacé par `support@sportimatch.com` dans le site, l'espace et l'app (C14) |
