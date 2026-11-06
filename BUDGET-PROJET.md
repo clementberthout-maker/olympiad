@@ -28,7 +28,7 @@ Tout le reste tourne aujourd'hui sur des offres gratuites : Supabase, EAS (Expo)
 | Poste | Montant | Fréquence | Quand | Remarque |
 |---|---|---|---|---|
 | Apple Developer Program | 99 € TTC | Chaque année | Avant la publication iOS | Sans lui, pas d'App Store. À renouveler sinon l'app disparaît du store. |
-| Boîte mail `support@olympiad-app.com` | 0 à 85 € | Chaque année | Avec le domaine | Voir les options section 3. |
+| Adresse `support@sportimatch.com` | 0 € pour l'instant | — | Faite le 06/11 | Cloudflare Email Routing, redirection vers Gmail. Pour répondre depuis `support@` : voir les options section 3. |
 | **Total minimum 1re année** | **≈ 110 à 200 €** | | | |
 
 ---
@@ -45,6 +45,8 @@ Tout le reste tourne aujourd'hui sur des offres gratuites : Supabase, EAS (Expo)
 | Configuration SPF, DKIM, DMARC | 0 € | Indispensable pour que les e-mails n'arrivent pas en spam. |
 
 ### Options pour `support@olympiad-app.com`
+
+> Mise à jour du 06/11 : option retenue, Cloudflare Email Routing (0 €, réception seulement, réponses depuis Gmail). Offre gratuite Zoho absente de la page de tarifs vue par Clément ; Zoho Mail Lite 5 Go affiché à 0,90 €/mois facturés à l'année, soit 10,80 €/an (taxes et IMAP non vérifiés).
 
 | Option | Coût | Avantages | Limites |
 |---|---|---|---|

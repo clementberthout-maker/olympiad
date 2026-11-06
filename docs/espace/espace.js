@@ -1350,7 +1350,7 @@ async function vueSuivi(code) {
 }
 // Signalement d'un contenu inapproprié, comme dans l'app (lib/liensLegaux.js) :
 // e-mail prérempli avec le nom et le code du tournoi
-const EMAIL_CONTACT = 'clement.berthout@gmail.com';
+const EMAIL_CONTACT = 'support@sportimatch.com';
 function lienSignalement(t) {
   const code = String(t.code_acces).toUpperCase();
   const sujet = tr(`Signalement du tournoi ${code}`, `Report for tournament ${code}`);
