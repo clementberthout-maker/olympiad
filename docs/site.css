@@ -322,14 +322,6 @@ button.bouton-store:hover .fleche-test { transform: translateX(4px); }
 .bulle.b2 { bottom: 14%; right: -4%; animation-delay: -3s; }
 @keyframes flotter { 50% { transform: translateY(-12px); } }
 
-/* Bandeau défilant */
-.bandeau { border-block: 1px solid var(--bordure); background: var(--surface); overflow: hidden; padding: 14px 0; }
-.bandeau-piste { display: flex; gap: 36px; width: max-content; animation: defiler 38s linear infinite; }
-.bandeau:hover .bandeau-piste { animation-play-state: paused; }
-.bandeau-piste span { font-family: var(--titre); font-size: 26px; letter-spacing: 0.04em; white-space: nowrap; display: inline-flex; align-items: center; gap: 36px; color: var(--texte-attenue); }
-.bandeau-piste span::after { content: ""; width: 8px; height: 8px; border-radius: 2px; background: var(--accent); transform: rotate(45deg); }
-@keyframes defiler { to { transform: translateX(-50%); } }
-
 /* ---------- Sections ---------- */
 section { padding: 96px 0; scroll-margin-top: 68px; }
 .section-alt { background: var(--surface); border-block: 1px solid var(--bordure); }
@@ -354,7 +346,7 @@ h2 { font-size: clamp(40px, 6vw, 68px); line-height: 0.95; margin: 0 0 14px; }
 .etape p { margin: 0; color: var(--texte-attenue); font-size: 15px; }
 .etape.active { border-color: var(--accent); box-shadow: 0 0 0 4px var(--lueur); }
 
-/* Chiffres clés sous le bandeau */
+/* Chiffres clés sous le haut de page */
 .chiffres { display: grid; grid-template-columns: repeat(4, 1fr); margin: 34px 0 -40px; border-block: 1px solid var(--bordure); }
 .chiffres div { padding: 22px 16px; text-align: center; border-left: 1px solid var(--bordure); }
 .chiffres div:first-child { border-left: 0; }

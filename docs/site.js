@@ -109,7 +109,6 @@
     $$('[data-i18n-html]').forEach((el) => { const v = dico[el.dataset.i18nHtml]; if (v != null) el.innerHTML = v; });
     $$('[data-i18n-placeholder]').forEach((el) => { const v = dico[el.dataset.i18nPlaceholder]; if (v != null) el.placeholder = v; });
     $('#bouton-langue').textContent = langue === 'fr' ? 'EN' : 'FR';
-    rendreBandeau();
     rendreBento();
     rendreSports();
     rendreMissions();
@@ -1705,16 +1704,6 @@
   // ---------------------------------------------------------------------
   // Partie vitrine du site
   // ---------------------------------------------------------------------
-  const MOTS_BANDEAU = [
-    ['Calendrier automatique', 'Automatic schedule'], ['Scores en direct', 'Live scores'], ['QR code', 'QR code'], ['Grand écran', 'Big screen'],
-    ['Phases finales', 'Knockout stages'], ['Podium', 'Podium'], ['Co-organisateurs', 'Co-organizers'], ['Export PDF', 'PDF export'],
-    ['Football', 'Football'], ['Rugby', 'Rugby'], ['Handball', 'Handball'], ['Basket-ball', 'Basketball'], ['Tennis', 'Tennis'],
-  ];
-  function rendreBandeau() {
-    const html = MOTS_BANDEAU.map((m) => `<span>${iL(m)}</span>`).join('');
-    $('#bandeau').innerHTML = html + html;
-  }
-
   const TUILES = [
     { ico: 'calendrier', large: true, c: 'orga', m: 'calendrier', t: ['Calendrier automatique', 'Automatic schedule'], p: ['Poules organisées par journées pour qu\'une équipe n\'enchaîne pas ses matchs, répartition sur tous les terrains, horaires calculés avec mi-temps, pauses et pause déjeuner.', 'Groups organized into rounds so no team plays back-to-back, matches spread over every field, times computed with half-time, breaks and lunch.'], tags: [['Poules', 'Groups'], ['Élimination directe', 'Knockout'], ['Mixte', 'Mixed']] },
     { ico: 'direct', c: 'orga', m: 'score', t: ['Saisie au bord du terrain', 'Sideline scoring'], p: ['Gros boutons plus et moins, score « en cours » ou « terminé », retour par vibration.', 'Big plus and minus buttons, “live” or “finished” score, haptic feedback.'] },

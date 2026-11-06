@@ -567,6 +567,9 @@ OLYMPIAD sert à organiser des tournois sportifs amateurs. L'organisateur crée 
 - **Notification par e-mail :** Edge Function `notifier-test-ferme` et déclencheur sur la table (`supabase/schema.sql`) : un e-mail à chaque nouvelle adresse, 30 au plus en 24 h, sans effet sur l'inscription en cas d'échec. Envoi direct au Gmail de Clément : testé vers `support@`, il n'apparaissait que dans « Messages envoyés ». Politique complétée (Cloudflare, Gmail, suppression des notifications). Fonction déployée et migration exécutée par Clément le 06/11, réception en boîte confirmée par Clément.
 - **Bouton Google Play mis en valeur (7 novembre) :** fond ambre, flèche, halo animé, badge « Android », texte « Deviens testeur sur » (accueil et fenêtre des offres). Bouton App Store inchangé.
 
+### Bandeau défilant retiré du site (7 novembre)
+- La bande de mots défilants de l'accueil est supprimée : les chiffres clés suivent directement le haut de page.
+
 ## 3. Ce qu'il reste à faire
 
 Légende : `[ ]` à faire · `[x]` fait
@@ -710,6 +713,7 @@ Une ligne par modification, la plus récente en haut.
 
 | Date | Modification |
 |------|--------------|
+| 2026-11-07 | Site : bandeau défilant retiré de l'accueil |
 | 2026-11-07 | Site : bouton Google Play mis en valeur (ambre, flèche, halo, « Deviens testeur sur ») |
 | 2026-11-06 | Notification par e-mail vers le Gmail à chaque inscription au test fermé (`notifier-test-ferme`), politique complétée ; fonction déployée, réception confirmée (F22) |
 | 2026-11-06 | Site : boutons Google Play vers une inscription au test fermé (table `inscriptions_test_ferme`, migration exécutée, envoi réel testé), politique de confidentialité complétée (F22) |
