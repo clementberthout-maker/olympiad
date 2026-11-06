@@ -816,9 +816,9 @@ details p { margin: 0 0 18px; color: var(--texte-attenue); }
 .contact .bouton { width: 100%; }
 
 /* ---------- Pied de page ---------- */
-footer { padding: 40px 0 50px; border-top: 1px solid var(--bordure); font-size: 14px; color: var(--texte-attenue); }
+footer { padding: 40px 0 50px; border-top: 1px solid var(--bordure); font-size: 13px; color: var(--texte-attenue); }
 footer .conteneur { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; }
-footer nav { display: flex; flex-wrap: wrap; gap: 18px; }
+footer nav { display: flex; flex-wrap: wrap; gap: 14px; }
 footer nav a { color: var(--texte-attenue); text-decoration: none; }
 footer nav a:hover { color: var(--texte); }
 

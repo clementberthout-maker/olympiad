@@ -543,6 +543,9 @@ OLYMPIAD sert à organiser des tournois sportifs amateurs. L'organisateur crée 
 - **Icônes du site :** icône carrée fournie par Clément (`sportimatch-icone.svg`) copiée en `docs/icon.svg` ; `favicon-32.png`, `apple-touch-icon.png` et `icon-512.png` (image de partage) régénérés à partir d'elle, tailles inchangées. Lisible à 32 px, presque plus à 16 px.
 - **Page de connexion de l'espace :** l'égaliseur à cinq barres, dernier rappel de l'ancien logo, devient un panneau LED où une vague de lumière révèle SPORTI / MATCH (`panneauLed` dans `docs/espace/espace.js`). Image fixe si le système demande moins de mouvement.
 
+### Pied de page du site sur une ligne (6 novembre)
+- Logo, liens légaux et copyright sur une seule ligne sur ordinateur (texte à 13 px, liens resserrés, copyright à droite). Sur les écrans de moins de 1 130 px environ, retour à plusieurs lignes.
+
 ## 3. Ce qu'il reste à faire
 
 Légende : `[ ]` à faire · `[x]` fait
@@ -679,6 +682,7 @@ Une ligne par modification, la plus récente en haut.
 
 | Date | Modification |
 |------|--------------|
+| 2026-11-06 | Site : pied de page sur une seule ligne sur ordinateur |
 | 2026-11-06 | Site publié avec `support@sportimatch.com`, vérifié en ligne (C14) |
 | 2026-11-06 | Réception sur `support@` testée ; Gmail remplacé par `support@sportimatch.com` dans le site, l'espace et l'app (C14) |
 | 2026-11-06 | `support@sportimatch.com` créée (Cloudflare Email Routing vers Gmail, MX/SPF/DKIM vus dans le DNS) ; test de réception à faire, `BUDGET-PROJET.md` mis à jour (C14) |
