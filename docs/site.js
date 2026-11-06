@@ -51,7 +51,7 @@
     'heros.etiquette': 'Amateur sports tournaments · live', 'heros.l1': 'Run', 'heros.l2': 'your tournament.', 'heros.l3': 'Everyone follows.',
     'heros.accroche': 'SPORTIMATCH builds your schedule, lets you enter scores from the sideline and shows results in real time to teams and spectators with a simple QR code. No account needed for them.',
     'tel.titre': 'U13 Spring Cup', 'tel.meta': 'Football · 8 teams', 'tel.direct': 'LIVE',
-    'heros.cta': 'Create a tournament now', 'heros.cta2': 'Watch a live tournament', 'heros.bientot': 'Coming soon on', 'heros.badge': 'Soon',
+    'heros.cta': 'Create a tournament now', 'heros.cta2': 'Watch a live tournament', 'heros.bientot': 'Coming soon on', 'heros.badge': 'Soon', 'heros.testeur': 'Become a tester on',
     'heros.bulle1': 'updated for 48 spectators', 'heros.bulle2': 'QR code scanned', 'heros.bulle2b': 'no account, nothing to set up',
     'ch.formats': 'formats: groups, knockout or both', 'ch.comptes': 'account needed for spectators', 'ch.sports': 'sports, each with its rules', 'ch.equipes': 'free teams per tournament',
     'd.sur': 'Trust', 'd.titre': 'Your data', 'd.intro': 'What our privacy policy says, in plain words.', 'd.lien': 'Read the privacy policy',
@@ -2025,7 +2025,7 @@
       </div>
       <div class="stores-offre">
         <span class="store-offre"><span class="bientot">${tr('Bientôt', 'Soon')}</span><small>${tr('Bientôt disponible sur', 'Coming soon on')}</small>App Store</span>
-        <button class="store-offre" type="button" data-test-ferme aria-haspopup="dialog"><span class="bientot">${tr('Bientôt', 'Soon')}</span><small>${tr('Bientôt disponible sur', 'Coming soon on')}</small>Google Play</button>
+        <button class="store-offre" type="button" data-test-ferme aria-haspopup="dialog"><span class="bientot">Android</span><small>${tr('Deviens testeur sur', 'Become a tester on')}</small>Google Play</button>
       </div>
       <p class="mention">${tr('Prix affichés dans l\'application avant tout achat. Paiement via l\'App Store ou Google Play.', 'Prices are shown in the app before any purchase. Payment through the App Store or Google Play.')}</p>
       <div class="actions-offre">

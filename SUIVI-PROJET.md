@@ -3,7 +3,7 @@
 > Fichier tenu à jour automatiquement par Claude à chaque modification du projet
 > (voir `CLAUDE.md` et le hook `.claude/hooks/verifier-suivi.sh`).
 
-**Dernière mise à jour :** 6 novembre 2026
+**Dernière mise à jour :** 7 novembre 2026
 
 ---
 
@@ -565,6 +565,7 @@ OLYMPIAD sert à organiser des tournois sportifs amateurs. L'organisateur crée 
 - Politique de confidentialité complétée au 06/11 (HTML et `.md`, section 1 ter) : conservation jusqu'à la fin du test, 6 mois au plus. Procédure de copie vers la Play Console dans `store/test-ferme.md` (section 2 bis).
 - Vérifié sur le serveur local (FR/EN, clair/sombre, ordinateur et téléphone). Migration exécutée par Clément le 06/11. Envoi réel testé : réussite, doublon (même message), adresse invalide refusée par le serveur ; lecture, insertion directe, modification et suppression refusées à un visiteur (erreur 401).
 - **Notification par e-mail :** Edge Function `notifier-test-ferme` et déclencheur sur la table (`supabase/schema.sql`) : un e-mail à chaque nouvelle adresse, 30 au plus en 24 h, sans effet sur l'inscription en cas d'échec. Envoi direct au Gmail de Clément : testé vers `support@`, il n'apparaissait que dans « Messages envoyés ». Politique complétée (Cloudflare, Gmail, suppression des notifications). Fonction déployée et migration exécutée par Clément le 06/11, réception en boîte confirmée par Clément.
+- **Bouton Google Play mis en valeur (7 novembre) :** fond ambre, flèche, halo animé, badge « Android », texte « Deviens testeur sur » (accueil et fenêtre des offres). Bouton App Store inchangé.
 
 ## 3. Ce qu'il reste à faire
 
@@ -709,6 +710,7 @@ Une ligne par modification, la plus récente en haut.
 
 | Date | Modification |
 |------|--------------|
+| 2026-11-07 | Site : bouton Google Play mis en valeur (ambre, flèche, halo, « Deviens testeur sur ») |
 | 2026-11-06 | Notification par e-mail vers le Gmail à chaque inscription au test fermé (`notifier-test-ferme`), politique complétée ; fonction déployée, réception confirmée (F22) |
 | 2026-11-06 | Site : boutons Google Play vers une inscription au test fermé (table `inscriptions_test_ferme`, migration exécutée, envoi réel testé), politique de confidentialité complétée (F22) |
 | 2026-11-06 | Groupe `sportimatch-testeurs` créé puis abandonné (choix exclusif avec la liste « TEST FERMÉ ») ; guide mis à jour (F22) |
