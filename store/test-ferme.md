@@ -79,9 +79,9 @@ Garder un tableau simple des inscrits (nom, adresse, inscrit oui/non, installé 
 
 ## Message aux testeurs (FR)
 
-> Salut ! Je lance OLYMPIAD, une app pour organiser des tournois sportifs amateurs (calendrier, scores en direct, suivi par QR code). Google me demande 14 jours de test avant la sortie, et j'ai besoin de toi :
+> Salut ! Je lance SPORTIMATCH, une app pour organiser des tournois sportifs amateurs (calendrier, scores en direct, suivi par QR code). Google me demande 14 jours de test avant la sortie, et j'ai besoin de toi :
 >
-> 1. Ouvre ce lien dans **Chrome** sur ton téléphone Android (pas dans Messenger, Instagram ou WhatsApp : copie-le et colle-le dans Chrome), connecté avec ton compte Gmail : [LIEN]
+> 1. Ouvre ce lien dans **Chrome** sur ton téléphone Android (pas dans Messenger, Instagram ou WhatsApp : copie-le et colle-le dans Chrome), connecté avec ton compte Gmail : https://sportimatch.com/testeur
 > 2. Clique sur « Devenir testeur », puis installe l'app depuis le Play Store.
 > 3. Garde l'app installée **14 jours** et ouvre-la de temps en temps (crée un tournoi, ajoute des équipes, saisis un score).
 > 4. Si tu vois un bug ou une idée, dis-le moi ou laisse un avis privé sur la fiche.
@@ -90,9 +90,9 @@ Garder un tableau simple des inscrits (nom, adresse, inscrit oui/non, installé 
 
 ## Message aux testeurs (EN)
 
-> Hi! I'm launching OLYMPIAD, an app to run amateur sports tournaments (schedule, live scores, QR code following). Google requires 14 days of testing before release, and I need your help:
+> Hi! I'm launching SPORTIMATCH, an app to run amateur sports tournaments (schedule, live scores, QR code following). Google requires 14 days of testing before release, and I need your help:
 >
-> 1. Open this link in **Chrome** on your Android phone (not inside Messenger, Instagram or WhatsApp: copy it and paste it into Chrome), signed in with your Gmail account: [LINK]
+> 1. Open this link in **Chrome** on your Android phone (not inside Messenger, Instagram or WhatsApp: copy it and paste it into Chrome), signed in with your Gmail account: https://sportimatch.com/testeur
 > 2. Tap "Become a tester", then install the app from the Play Store.
 > 3. Keep the app installed for **14 days** and open it now and then (create a tournament, add teams, enter a score).
 > 4. If you find a bug or have an idea, tell me or leave private feedback on the store listing.

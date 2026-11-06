@@ -551,6 +551,10 @@ OLYMPIAD sert à organiser des tournois sportifs amateurs. L'organisateur crée 
 ### Pied de page du site sur une ligne (6 novembre)
 - Logo, liens légaux et copyright sur une seule ligne sur ordinateur (texte à 13 px, liens resserrés, copyright à droite). Sur les écrans de moins de 1 130 px environ, retour à plusieurs lignes.
 
+### Lien court pour les testeurs (6 novembre)
+- Page `docs/testeur.html`, à l'adresse `https://sportimatch.com/testeur` : elle renvoie vers la fiche Google Play. « olympiad » n'apparaît plus dans le lien envoyé, mais reste dans l'adresse de Google Play : l'identifiant `com.clement.olympiad` ne peut plus changer sur cette fiche.
+- Messages aux testeurs de `store/test-ferme.md` : lien court et nom SPORTIMATCH.
+
 ## 3. Ce qu'il reste à faire
 
 Légende : `[ ]` à faire · `[x]` fait
@@ -636,7 +640,7 @@ Légende : `[ ]` à faire · `[x]` fait
 ### F. Mise en ligne
 - [ ] **F21.** `eas build --profile production --platform all`, puis `eas submit`.
 - [ ] **F22.** Envoyer en validation. Apple répond en 1 à 3 jours en général. Chez Google, prévoir le test fermé de 14 jours si ton compte est concerné. *Build 7 importé dans le test fermé (Alpha) et envoyé en examen le 21/10 (remplace le build 5 ; le build 6 n'a jamais été envoyé). Avant : test fermé (canal Alpha) avec le build 5 (`olympiad-com.clement-5.aab`), au moins 12 testeurs pendant 14 jours.* *Étapes dans `store/test-ferme.md`.*
-  - [ ] Recruter 15 à 20 testeurs sur Android (liste d'e-mails « TEST FERMÉ » créée le 15/10 avec 3 testeurs ; pistes dans `store/test-ferme.md`, section 2 bis).
+  - [ ] Recruter 15 à 20 testeurs sur Android (liste d'e-mails « TEST FERMÉ » créée le 15/10 avec 3 testeurs ; pistes dans `store/test-ferme.md`, section 2 bis). *Lien à envoyer depuis le 06/11 : `https://sportimatch.com/testeur`.*
   - [x] Refaire la classification du contenu (« Oui » au signalement, B8b). *Envoyée le 15/10 à 12 h 47 : classification inchangée (PEGI « ! », USK 12, ESRB Teen, IARC 12+, 14 au Brésil), cohérente avec les comptes dès 15 ans.*
   - [ ] Ajouter les testeurs comme testeurs de licence (sinon leurs achats sont réels).
   - [x] Piste Alpha : liste de testeurs, pays, release du build 5, envoi en examen. *Envoyé en examen le 15/10, en attente de validation par Google.*
@@ -687,6 +691,7 @@ Une ligne par modification, la plus récente en haut.
 
 | Date | Modification |
 |------|--------------|
+| 2026-11-06 | Lien court `sportimatch.com/testeur` vers la fiche Google Play (`docs/testeur.html`) ; messages aux testeurs mis à jour |
 | 2026-11-06 | Espace : prénom retiré d'un commentaire de `espace.js` |
 | 2026-11-06 | Accueil : nom de Clément retiré du pied de page, gardé dans les pages légales ; statut à voir avec un conseil (C15) |
 | 2026-11-06 | Site : pied de page sur une seule ligne sur ordinateur |
