@@ -528,7 +528,7 @@ OLYMPIAD sert à organiser des tournois sportifs amateurs. L'organisateur crée 
 - **Reste :** livrer l'app au prochain build ; vérifier l'adresse de contact de la Play Console après l'examen.
 
 ### Nom de Clément sur le site (6 novembre)
-- **Retiré du pied de page de l'accueil** à la demande de Clément.
+- **Retiré du pied de page de l'accueil** à la demande de Clément, et du commentaire de `docs/espace/espace.js`.
 - **Gardé dans les pages légales** (confidentialité, CGU, mentions légales) : l'app étant payante, l'identité du responsable et de l'éditeur doit rester affichée. Une société le remplacerait comme éditeur et responsable du traitement, mais il faudrait toujours un directeur de la publication ; une micro-entreprise afficherait le nom et une adresse. Question à poser à un expert-comptable ou un avocat avant la sortie (C15).
 
 
@@ -687,6 +687,7 @@ Une ligne par modification, la plus récente en haut.
 
 | Date | Modification |
 |------|--------------|
+| 2026-11-06 | Espace : prénom retiré d'un commentaire de `espace.js` |
 | 2026-11-06 | Accueil : nom de Clément retiré du pied de page, gardé dans les pages légales ; statut à voir avec un conseil (C15) |
 | 2026-11-06 | Site : pied de page sur une seule ligne sur ordinateur |
 | 2026-11-06 | Site publié avec `support@sportimatch.com`, vérifié en ligne (C14) |

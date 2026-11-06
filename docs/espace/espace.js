@@ -29,7 +29,7 @@ const stock = {
 };
 const BASE = new URL('..', import.meta.url).href; // dossier du site (docs/)
 const LIMITE_GRATUITE = 12;
-// Olympiades multisports : bouton « Nouvelle olympiade » masqué à la demande de Clément
+// Olympiades multisports : bouton « Nouvelle olympiade » masqué
 // (29/10, priorité aux tournois). Mettre à true pour le remettre ; tout le reste du code est gardé.
 const OLYMPIADES_VISIBLES = false;
 
