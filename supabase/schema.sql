@@ -1475,3 +1475,48 @@ select cron.schedule(
   delete from inscriptions_test_ferme where cree_le < now() - interval '6 months';
   $cron$
 );
+
+-- ============================================================
+-- Notification des inscriptions au test fermé
+-- Chaque nouvelle adresse déclenche un e-mail vers le compte Gmail d'envoi
+-- (Edge Function notifier-test-ferme, secrets Vault de comptes-inactifs). Un
+-- doublon n'insère rien, donc ne notifie pas. Au plus 30 e-mails en 24 h : le
+-- quota Gmail est partagé avec les e-mails de connexion. Un échec de
+-- notification ne fait jamais échouer l'inscription.
+-- ============================================================
+create or replace function notifier_inscription_test_ferme()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_du_jour integer;
+begin
+  select count(*) into v_du_jour from inscriptions_test_ferme
+  where cree_le > now() - interval '1 day';
+
+  if v_du_jour <= 30 then
+    perform net.http_post(
+      url := (select decrypted_secret from vault.decrypted_secrets where name = 'olympiad_url_projet')
+             || '/functions/v1/notifier-test-ferme',
+      headers := jsonb_build_object(
+        'Content-Type', 'application/json',
+        'x-cron-secret', (select decrypted_secret from vault.decrypted_secrets where name = 'olympiad_secret_cron')
+      ),
+      body := jsonb_build_object('email', new.email, 'langue', new.langue, 'limite_atteinte', v_du_jour = 30),
+      timeout_milliseconds := 30000
+    );
+  end if;
+  return null;
+exception when others then
+  raise warning 'notifier_inscription_test_ferme : %', sqlerrm;
+  return null;
+end;
+$$;
+revoke execute on function notifier_inscription_test_ferme() from public, anon, authenticated;
+
+drop trigger if exists notifier_inscription_test_ferme on inscriptions_test_ferme;
+create trigger notifier_inscription_test_ferme
+  after insert on inscriptions_test_ferme
+  for each row execute function notifier_inscription_test_ferme();

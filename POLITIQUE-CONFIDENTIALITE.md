@@ -44,7 +44,7 @@ Nous ne collectons **aucune donnée de localisation précise, aucun identifiant 
 
 ## 1 ter. Inscription au test fermé Android (facultatif)
 
-Si tu t'inscris au test depuis le bouton Google Play du site, nous enregistrons ton **adresse e-mail** (celle de ton compte Google), ta langue et la date d'inscription. Cette adresse sert uniquement à organiser le test : t'ajouter à la liste des testeurs dans la Google Play Console et t'écrire à ce sujet. La durée de conservation figure en section 4. Tu peux demander à être retiré à tout moment à l'adresse indiquée en Contact.
+Si tu t'inscris au test depuis le bouton Google Play du site, nous enregistrons ton **adresse e-mail** (celle de ton compte Google), ta langue et la date d'inscription. Cette adresse sert uniquement à organiser le test : t'ajouter à la liste des testeurs dans la Google Play Console et t'écrire à ce sujet. Elle nous parvient aussi dans un e-mail de notification, envoyé et reçu par Google (Gmail). La durée de conservation figure en section 4. Tu peux demander à être retiré à tout moment à l'adresse indiquée en Contact.
 
 ## 2. Pourquoi ces données sont collectées
 
@@ -65,6 +65,7 @@ Aucune donnée n'est vendue. Elle est partagée uniquement avec les prestataires
 - **RevenueCat** — gestion des abonnements et achats intégrés
 - **Apple (App Store) / Google (Play Store)** — traitement des paiements des achats intégrés ; pour Google, également la liste des testeurs si tu t'inscris au test fermé Android
 - **GitHub (GitHub Pages), jsDelivr et cdnjs** — hébergement et fichiers techniques du site internet (voir 1 bis)
+- **Cloudflare et Google (Gmail)** — acheminement et réception des e-mails adressés à notre support ; Google (Gmail) également pour les notifications d'inscription au test fermé Android
 
 Ces prestataires n'ont accès qu'aux données nécessaires à leur fonction et sont eux-mêmes soumis à leurs propres obligations de confidentialité.
 
@@ -74,7 +75,7 @@ Ces prestataires n'ont accès qu'aux données nécessaires à leur fonction et s
 - **Suppression à ta demande :** depuis **Mon profil > Supprimer mon compte** (dans l'application ou l'espace organisateur), ton compte, ton profil, ta photo et tous les tournois que tu as créés sont supprimés immédiatement et définitivement. Par e-mail (voir Contact ci-dessous), la suppression est effective sous 30 jours.
 - **Tournois :** l'organisateur peut supprimer un tournoi (ou une olympiade) à tout moment : il disparaît aussitôt pour tout le monde et reste **30 jours** dans sa corbeille (Mon profil), d'où il peut le restaurer. Passé ce délai, ses équipes, matchs et résultats sont supprimés définitivement.
 - **Achats :** les justificatifs d'achat sont conservés par Apple, Google et RevenueCat selon leurs propres obligations légales (comptables notamment). Un abonnement Pro n'est pas résilié par la suppression du compte : il doit être annulé depuis les réglages de l'App Store ou du Google Play Store.
-- **Inscription au test fermé Android :** adresse supprimée de notre liste et de la Play Console à la fin du test, et de notre liste au plus tard **6 mois** après ton inscription.
+- **Inscription au test fermé Android :** adresse supprimée de notre liste, de la Play Console et de nos e-mails de notification à la fin du test, et au plus tard **6 mois** après ton inscription.
 - **Journaux techniques :** les hébergeurs (Supabase, GitHub) conservent des journaux de connexion pendant une courte durée, pour la sécurité et le bon fonctionnement du service.
 - **E-mails que tu nous envoies** (questions, signalements, demandes d'exercice de tes droits) : conservés le temps de traiter la demande, puis au plus 1 an.
 - **Stockage du navigateur :** reste sur ton appareil jusqu'à ta déconnexion ou jusqu'à ce que tu effaces les données de navigation.
