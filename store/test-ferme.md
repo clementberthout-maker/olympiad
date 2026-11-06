@@ -48,7 +48,11 @@ L'examen d'une première release en test fermé prend de quelques heures à quel
 
 Seuls comptent les **téléphones Android** avec un compte Google (les amis sur iPhone ne peuvent pas aider ici, mais serviront pour TestFlight).
 
-**Groupe Google (conseillé pour les nouveaux testeurs)** : créer le groupe sur groups.google.com (adresse `nom@googlegroups.com`), avec approbation des demandes pour rejoindre, puis l'ajouter dans l'onglet Testeurs de la piste Alpha **et** dans la page Test de licence (Google accepte les groupes aux deux endroits). Chaque testeur rejoint d'abord le groupe avec son compte Gmail, puis s'inscrit au test. Garder la liste « TEST FERMÉ » active pour ne pas retirer les testeurs déjà inscrits. **Avant la mise en production**, retirer le groupe de la page Test de licence : ses membres pourraient faire des achats de test gratuits dans l'app publique.
+**Ajouter un testeur** : demander son adresse Gmail, l'ajouter à la liste « TEST FERMÉ » (onglet Testeurs de la piste Alpha, flèche à droite de la liste) et dans la page Test de licence, puis lui envoyer le message ci-dessous.
+
+**Groupe Google : non utilisé.** L'onglet Testeurs impose un choix entre « Listes de diffusion » et « Groupes » (vu le 06/11). Ne pas cocher « Groupes » : la liste et ses testeurs déjà inscrits sortiraient probablement du test. Le groupe `sportimatch-testeurs@googlegroups.com` a été créé mais reste vide et n'est relié à rien.
+
+**Avant la mise en production**, retirer les testeurs de la page Test de licence : ils pourraient faire des achats de test gratuits dans l'app publique.
 
 Par ordre de priorité :
 1. **Entourage** : famille, amis, collègues sur Android. Compter qui a un Android avant de chercher ailleurs.
