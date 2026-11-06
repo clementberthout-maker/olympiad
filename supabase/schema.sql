@@ -1426,3 +1426,52 @@ drop trigger if exists proteger_contenu_archive on resultats;
 create trigger proteger_contenu_archive
   before insert or update or delete on resultats
   for each row execute function proteger_contenu_archive();
+
+-- ============================================================
+-- Inscriptions au test fermé Android (bouton Google Play du site)
+-- Un visiteur non connecté passe uniquement par inscrire_test_ferme() : il
+-- ne peut ni lire, ni modifier, ni supprimer la table. Un doublon ne fait
+-- rien et répond comme une inscription réussie, sans révéler qu'une adresse
+-- est déjà inscrite. Liste à relire depuis le tableau de bord Supabase.
+-- ============================================================
+create table if not exists inscriptions_test_ferme (
+  email text primary key check (char_length(email) <= 254),
+  langue text not null default 'fr' check (langue in ('fr', 'en')),
+  cree_le timestamptz not null default now()
+);
+alter table inscriptions_test_ferme enable row level security;
+revoke all on inscriptions_test_ferme from public, anon, authenticated;
+
+create or replace function inscrire_test_ferme(p_email text, p_langue text default 'fr')
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_email text := lower(trim(p_email));
+begin
+  if v_email is null or char_length(v_email) > 254 or v_email !~ '^[^@\s]+@[^@\s]+\.[^@\s]+$' then
+    raise exception 'Adresse e-mail invalide' using errcode = '22023';
+  end if;
+  -- Garde-fou contre un remplissage automatique de la table
+  if (select count(*) from inscriptions_test_ferme) >= 2000 then
+    raise exception 'Liste complète' using errcode = '53400';
+  end if;
+  insert into inscriptions_test_ferme (email, langue)
+  values (v_email, case when p_langue = 'en' then 'en' else 'fr' end)
+  on conflict (email) do nothing;
+end;
+$$;
+revoke execute on function inscrire_test_ferme(text, text) from public, anon, authenticated;
+grant execute on function inscrire_test_ferme(text, text) to anon, authenticated;
+
+-- Conservation : au plus 6 mois après l'inscription (politique de
+-- confidentialité), chaque nuit à 3 h 45 (UTC).
+select cron.schedule(
+  'inscriptions-test-ferme-purge',
+  '45 3 * * *',
+  $cron$
+  delete from inscriptions_test_ferme where cree_le < now() - interval '6 months';
+  $cron$
+);

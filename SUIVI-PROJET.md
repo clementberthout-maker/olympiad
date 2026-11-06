@@ -559,6 +559,12 @@ OLYMPIAD sert à organiser des tournois sportifs amateurs. L'organisateur crée 
 - Vérifié dans l'aide Google : un groupe Google est accepté pour le test fermé et pour les testeurs de licence. `store/test-ferme.md` corrigé (il disait que les testeurs de licence se déclaraient adresse par adresse).
 - Groupe `sportimatch-testeurs@googlegroups.com` créé, puis abandonné : l'onglet Testeurs impose un choix entre listes et groupes, et basculer aurait retiré la liste « TEST FERMÉ » (7 adresses). Les nouveaux testeurs sont ajoutés à cette liste, messages aux testeurs inchangés.
 
+### Inscription au test fermé depuis le site (6 novembre)
+- Les boutons Google Play de l'accueil et de la fenêtre des offres (`docs/site.js`, `docs/index.html`, `docs/site.css`) ouvrent une fenêtre d'inscription : explication du test, e-mail du compte Google, envoi, réussite, erreur, FR et EN. Bouton App Store inchangé.
+- Table `inscriptions_test_ferme` (`supabase/schema.sql`) : aucun accès direct pour les visiteurs, écriture seulement par la fonction `inscrire_test_ferme`. Un doublon répond comme une inscription réussie. Plafond de 2 000 lignes, purge automatique après 6 mois.
+- Politique de confidentialité complétée au 06/11 (HTML et `.md`, section 1 ter) : conservation jusqu'à la fin du test, 6 mois au plus. Procédure de copie vers la Play Console dans `store/test-ferme.md` (section 2 bis).
+- Vérifié sur le serveur local (FR/EN, clair/sombre, ordinateur et téléphone). Migration exécutée par Clément le 06/11. Envoi réel testé : réussite, doublon (même message), adresse invalide refusée par le serveur ; lecture, insertion directe, modification et suppression refusées à un visiteur (erreur 401).
+
 ## 3. Ce qu'il reste à faire
 
 Légende : `[ ]` à faire · `[x]` fait
@@ -648,6 +654,10 @@ Légende : `[ ]` à faire · `[x]` fait
   - [x] Refaire la classification du contenu (« Oui » au signalement, B8b). *Envoyée le 15/10 à 12 h 47 : classification inchangée (PEGI « ! », USK 12, ESRB Teen, IARC 12+, 14 au Brésil), cohérente avec les comptes dès 15 ans.*
   - [ ] Ajouter les testeurs comme testeurs de licence (sinon leurs achats sont réels).
   - [ ] Ajouter les nouveaux testeurs à la liste « TEST FERMÉ » et au test de licence (7 adresses dans la liste le 06/11, 12 minimum). Pas de groupe Google : choix exclusif avec la liste.
+  - [x] Inscription depuis le site : migration « Inscriptions au test fermé Android » exécutée le 06/11, envoi réel testé.
+  - [ ] Retirer l'adresse de test de la table : `delete from inscriptions_test_ferme where email = 'test-sportimatch@example.com';`
+  - [ ] Copier régulièrement les adresses de `inscriptions_test_ferme` dans la liste et le test de licence, puis envoyer le lien (`store/test-ferme.md`, section 2 bis).
+  - [ ] À la fin du test : vider `inscriptions_test_ferme` et retirer ces adresses de la liste « TEST FERMÉ ».
   - [ ] Retirer les testeurs du test de licence avant la mise en production.
   - [x] Piste Alpha : liste de testeurs, pays, release du build 5, envoi en examen. *Envoyé en examen le 15/10, en attente de validation par Google.*
   - [ ] Release validée : envoyer le lien d'inscription à 15-20 testeurs (12 minimum). *Release Alpha (build 5) validée par Google le 15/10 ; lien envoyé aux 3 premiers testeurs.*
@@ -697,6 +707,7 @@ Une ligne par modification, la plus récente en haut.
 
 | Date | Modification |
 |------|--------------|
+| 2026-11-06 | Site : boutons Google Play vers une inscription au test fermé (table `inscriptions_test_ferme`, migration exécutée, envoi réel testé), politique de confidentialité complétée (F22) |
 | 2026-11-06 | Groupe `sportimatch-testeurs` créé puis abandonné (choix exclusif avec la liste « TEST FERMÉ ») ; guide mis à jour (F22) |
 | 2026-11-06 | Groupe Google pour les testeurs : guide corrigé, étapes ajoutées (F22) |
 | 2026-11-06 | Lien court `sportimatch.com/testeur` vers la fiche Google Play (`docs/testeur.html`) ; messages aux testeurs mis à jour |

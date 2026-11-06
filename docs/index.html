@@ -109,11 +109,11 @@
             <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.37 12.63c-.02-2.2 1.8-3.26 1.88-3.31-1.03-1.5-2.62-1.7-3.18-1.73-1.35-.14-2.64.8-3.33.8-.69 0-1.74-.78-2.87-.76-1.47.02-2.83.86-3.59 2.18-1.53 2.66-.39 6.6 1.1 8.76.73 1.06 1.6 2.24 2.73 2.2 1.1-.04 1.51-.71 2.84-.71 1.32 0 1.7.71 2.86.69 1.18-.02 1.93-1.07 2.65-2.13.84-1.22 1.18-2.41 1.2-2.47-.03-.01-2.3-.88-2.32-3.52zM14.2 6.16c.6-.73 1.01-1.74.9-2.75-.87.04-1.92.58-2.54 1.3-.56.64-1.05 1.67-.92 2.66.97.08 1.96-.49 2.56-1.21z"/></svg>
             <span><small data-i18n="heros.bientot">Bientôt disponible sur</small><strong>App Store</strong></span>
           </span>
-          <span class="bouton-store">
+          <button class="bouton-store" type="button" data-test-ferme aria-haspopup="dialog">
             <span class="bientot" data-i18n="heros.badge">Bientôt</span>
             <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3.6 2.2c-.24.25-.38.64-.38 1.14v17.32c0 .5.14.89.38 1.14l.06.06 9.7-9.7v-.23l-9.7-9.8-.06.07zm12.99 12.99-3.23-3.24v-.23l3.23-3.24.07.04 3.83 2.18c1.1.62 1.1 1.64 0 2.26l-3.83 2.18-.07.05zm-.08.04L13.2 12 3.6 21.6c.36.38.94.42 1.6.05l11.31-6.42zm0-6.46L5.2 2.35c-.66-.38-1.24-.33-1.6.05L13.2 12l3.31-3.23z"/></svg>
             <span><small data-i18n="heros.bientot">Bientôt disponible sur</small><strong>Google Play</strong></span>
-          </span>
+          </button>
         </div>
         <p class="accroche" data-i18n="heros.accroche">SPORTIMATCH génère ton calendrier, te laisse saisir les scores au bord du terrain et affiche les résultats en temps réel aux équipes et aux spectateurs, avec un simple QR code. Sans compte pour eux.</p>
         <div class="actions-heros">
@@ -467,6 +467,45 @@
 <!-- Souscrire à une offre : l'achat se fait dans l'app (App Store, Google Play) -->
 <div class="voile-offre" id="voile-offre"></div>
 <div class="fenetre-offre" id="fenetre-offre" role="dialog" aria-modal="true" aria-labelledby="titre-fenetre-offre"></div>
+
+<!-- Test fermé Android : inscription depuis les boutons Google Play (site.js) -->
+<div class="voile-offre" id="voile-test"></div>
+<div class="fenetre-offre fenetre-test" id="fenetre-test" role="dialog" aria-modal="true" aria-labelledby="titre-fenetre-test" inert>
+  <button class="fermer-offre" type="button" data-test-action="fermer" aria-label="Fermer"><svg aria-hidden="true"><use href="#i-croix"/></svg></button>
+  <div id="test-saisie">
+    <p class="surtitre" data-i18n="tf.sur">Test fermé · Android</p>
+    <h2 id="titre-fenetre-test" data-i18n="tf.titre">Deviens testeur</h2>
+    <p class="sous" data-i18n="tf.intro">Avant la sortie sur Google Play, l'app doit être testée pendant 14 jours par au moins 12 personnes. Essaie-la en avant-première et aide-nous à la sortir.</p>
+    <div class="encart-offre">
+      <h3 data-i18n="tf.etapes">Comment ça se passe</h3>
+      <ol>
+        <li data-i18n="tf.e1">Donne l'adresse du compte Google de ton téléphone Android : l'accès au test ne fonctionne qu'avec ce compte.</li>
+        <li data-i18n="tf.e2">Nous t'ajoutons à la liste des testeurs et t'envoyons le lien d'inscription par e-mail.</li>
+        <li data-i18n="tf.e3">Ouvre le lien dans Chrome, clique sur « Devenir testeur », installe l'app et garde-la 14 jours.</li>
+      </ol>
+      <p data-i18n="tf.android">Android uniquement : ce test n'est pas disponible sur iPhone.</p>
+    </div>
+    <form id="form-test" novalidate>
+      <label for="email-test" data-i18n="tf.label">Adresse e-mail de ton compte Google</label>
+      <div class="ligne-test">
+        <input class="s-champ" id="email-test" type="email" autocomplete="email" inputmode="email" autocapitalize="off" spellcheck="false" maxlength="254" placeholder="prenom.nom@gmail.com" data-i18n-placeholder="tf.exemple" aria-describedby="erreur-test-email erreur-test-envoi">
+        <button class="bouton" id="envoi-test" type="submit">
+          <span id="envoi-test-repos" data-i18n="tf.envoyer">M'inscrire</span>
+          <span id="envoi-test-cours" hidden><span class="rond-envoi" aria-hidden="true"></span><span data-i18n="tf.envoi">Envoi…</span></span>
+        </button>
+      </div>
+      <p class="erreur-test" id="erreur-test-email" role="alert" data-i18n="tf.erreurEmail" hidden>Saisis une adresse e-mail valide, par exemple prenom.nom@gmail.com.</p>
+      <p class="erreur-test" id="erreur-test-envoi" role="alert" data-i18n-html="tf.erreurEnvoi" hidden>L'envoi n'a pas abouti. Vérifie ta connexion et réessaie, ou écris à <a href="mailto:support@sportimatch.com">support@sportimatch.com</a>.</p>
+    </form>
+    <p class="mention" data-i18n-html="tf.mention">Ton adresse sert uniquement à organiser ce test : t'ajouter aux testeurs sur Google Play et t'écrire à ce sujet. Elle est supprimée à la fin du test, au plus tard 6 mois après ton inscription. Réservé aux 15 ans et plus. Voir la <a href="politique-confidentialite.html#test-ferme">politique de confidentialité</a>.</p>
+  </div>
+  <div class="succes-test" id="test-succes" role="status" hidden>
+    <span class="coche-test" aria-hidden="true"><svg><use href="#i-coche"/></svg></span>
+    <h2 data-i18n="tf.okTitre">C'est noté !</h2>
+    <p class="sous" data-i18n="tf.okTexte">Merci ! Tu recevras par e-mail le lien d'inscription au test. Pense à regarder dans tes indésirables.</p>
+    <button class="bouton" type="button" data-test-action="fermer"><span data-i18n="tf.okFermer">Fermer</span></button>
+  </div>
+</div>
 
 <!-- Programme imprimable (export PDF) -->
 <div class="impression" id="impression"></div>

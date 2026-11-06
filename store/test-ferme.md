@@ -50,6 +50,8 @@ Seuls comptent les **téléphones Android** avec un compte Google (les amis sur 
 
 **Ajouter un testeur** : demander son adresse Gmail, l'ajouter à la liste « TEST FERMÉ » (onglet Testeurs de la piste Alpha, flèche à droite de la liste) et dans la page Test de licence, puis lui envoyer le message ci-dessous.
 
+**Inscriptions depuis le site (bouton Google Play) :** les adresses arrivent dans la table Supabase `inscriptions_test_ferme`. Tableau de bord Supabase → *SQL Editor* : `select string_agg(email, ', ' order by cree_le) from inscriptions_test_ferme;` donne la liste à copier (ajouter `where cree_le > '2026-11-20'` avant `;` pour ne prendre que les nouvelles). La coller dans la liste « TEST FERMÉ » et dans Test de licence, puis envoyer le message ci-dessous à ces adresses. **À la fin du test**, vider la table (`delete from inscriptions_test_ferme;`) et retirer ces adresses de la liste : c'est ce que promet la politique de confidentialité.
+
 **Groupe Google : non utilisé.** L'onglet Testeurs impose un choix entre « Listes de diffusion » et « Groupes » (vu le 06/11). Ne pas cocher « Groupes » : la liste et ses testeurs déjà inscrits sortiraient probablement du test. Le groupe `sportimatch-testeurs@googlegroups.com` a été créé mais reste vide et n'est relié à rien.
 
 **Avant la mise en production**, retirer les testeurs de la page Test de licence : ils pourraient faire des achats de test gratuits dans l'app publique.

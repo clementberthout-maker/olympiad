@@ -87,6 +87,12 @@
     'a.q8': 'How do I delete my account?', 'a.r8': 'In the app: My profile, then “Delete my account”. Your data is deleted immediately. More details on the <a href="suppression-compte.html">Delete my account</a> page.',
     'a.q9': 'Does this site’s simulator store my data?', 'a.r9': 'No. The tournament you create here stays in your browser (local storage) and is sent nowhere. For a real tournament shared with your teams, use the app.',
     'a.contactT': 'A question, a problem?', 'a.contactP': 'Email us, with the name of your tournament if your question is about it.', 'a.contactB': 'Contact support',
+    'tf.sur': 'Closed test · Android', 'tf.titre': 'Become a tester', 'tf.intro': 'Before its release on Google Play, the app must be tested for 14 days by at least 12 people. Try it ahead of everyone and help us launch it.',
+    'tf.etapes': 'How it works', 'tf.e1': 'Give the address of the Google account on your Android phone: access to the test only works with that account.', 'tf.e2': 'We add you to the testers list and email you the sign-up link.', 'tf.e3': 'Open the link in Chrome, tap “Become a tester”, install the app and keep it for 14 days.', 'tf.android': 'Android only: this test is not available on iPhone.',
+    'tf.label': 'Email address of your Google account', 'tf.exemple': 'your.name@gmail.com', 'tf.envoyer': 'Sign me up', 'tf.envoi': 'Sending…',
+    'tf.erreurEmail': 'Enter a valid email address, for example your.name@gmail.com.', 'tf.erreurEnvoi': 'Your request could not be sent. Check your connection and try again, or email <a href="mailto:support@sportimatch.com">support@sportimatch.com</a>.',
+    'tf.mention': 'Your address is only used to run this test: adding you to the testers on Google Play and writing to you about it. It is deleted when the test ends, at the latest 6 months after you sign up. For ages 15 and over. See the <a href="politique-confidentialite.html#test-ferme">privacy policy</a> (in French).',
+    'tf.okTitre': 'You’re on the list!', 'tf.okTexte': 'Thank you! You will receive the test sign-up link by email. Remember to check your spam folder.', 'tf.okFermer': 'Close',
     'pied.conf': 'Privacy policy', 'pied.cgu': 'Terms of use', 'pied.ml': 'Legal notice', 'pied.supp': 'Delete my account', 'pied.contact': 'Contact',
   };
   const FR = {};
@@ -2019,7 +2025,7 @@
       </div>
       <div class="stores-offre">
         <span class="store-offre"><span class="bientot">${tr('Bientôt', 'Soon')}</span><small>${tr('Bientôt disponible sur', 'Coming soon on')}</small>App Store</span>
-        <span class="store-offre"><span class="bientot">${tr('Bientôt', 'Soon')}</span><small>${tr('Bientôt disponible sur', 'Coming soon on')}</small>Google Play</span>
+        <button class="store-offre" type="button" data-test-ferme aria-haspopup="dialog"><span class="bientot">${tr('Bientôt', 'Soon')}</span><small>${tr('Bientôt disponible sur', 'Coming soon on')}</small>Google Play</button>
       </div>
       <p class="mention">${tr('Prix affichés dans l\'application avant tout achat. Paiement via l\'App Store ou Google Play.', 'Prices are shown in the app before any purchase. Payment through the App Store or Google Play.')}</p>
       <div class="actions-offre">
@@ -2045,6 +2051,105 @@
   fenetreOffre.addEventListener('click', (e) => { const a = e.target.closest('[data-offre-action="fermer"]'); if (a) { if (a.tagName === 'A') declencheurOffre = null; fermerOffre(); } });
   voileOffre.addEventListener('click', fermerOffre);
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') fermerOffre(); });
+
+  // ---------------------------------------------------------------------
+  // Test fermé Android : les boutons Google Play ouvrent une inscription par
+  // e-mail. Appel direct à la base (sans la bibliothèque Supabase, pour garder
+  // la page légère). La clé publique est celle de docs/espace/donnees.js ;
+  // inscrire_test_ferme() (supabase/schema.sql) est le seul accès à la liste.
+  // ---------------------------------------------------------------------
+  const API_TEST_FERME = 'https://kqowpznkihaxamuizjzq.supabase.co/rest/v1/rpc/inscrire_test_ferme';
+  const CLE_SUPABASE = 'sb_publishable_JhPDibj6cbhyFtoQac-owg_6ffE-kJ2';
+  const FORMAT_EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+  const fenetreTest = $('#fenetre-test');
+  const voileTest = $('#voile-test');
+  const formTest = $('#form-test');
+  const champTest = $('#email-test');
+  const envoiTest = $('#envoi-test');
+  let declencheurTest = null;
+  let envoiEnCours = false;
+
+  function etatEnvoiTest(actif) {
+    envoiEnCours = actif;
+    envoiTest.disabled = actif;
+    champTest.readOnly = actif;
+    fenetreTest.setAttribute('aria-busy', String(actif));
+    $('#envoi-test-repos').hidden = actif;
+    $('#envoi-test-cours').hidden = !actif;
+  }
+  function erreurTest(type) {
+    $('#erreur-test-email').hidden = type !== 'email';
+    $('#erreur-test-envoi').hidden = type !== 'envoi';
+    if (type === 'email') champTest.setAttribute('aria-invalid', 'true');
+    else champTest.removeAttribute('aria-invalid');
+  }
+  function vueTest(succes) {
+    $('#test-saisie').hidden = succes;
+    $('#test-succes').hidden = !succes;
+    fenetreTest.scrollTop = 0;
+  }
+  function ouvrirTest(bouton) {
+    if (fenetreOffre.contains(bouton)) { declencheurTest = declencheurOffre; declencheurOffre = null; fermerOffre(); } else declencheurTest = bouton;
+    $('.fermer-offre', fenetreTest).setAttribute('aria-label', tr('Fermer', 'Close'));
+    // Après une inscription réussie, la fenêtre repart de zéro
+    if (!$('#test-succes').hidden) { formTest.reset(); vueTest(false); }
+    fenetreTest.inert = false;
+    fenetreTest.classList.add('ouvert'); voileTest.classList.add('ouvert');
+    document.body.classList.add('fenetre-offre-ouverte');
+    // Sur téléphone, le clavier ne s'ouvre pas d'office : il cacherait l'explication
+    (window.matchMedia('(hover: hover)').matches ? champTest : $('.fermer-offre', fenetreTest)).focus();
+  }
+  function fermerTest() {
+    if (!fenetreTest.classList.contains('ouvert')) return;
+    fenetreTest.classList.remove('ouvert'); voileTest.classList.remove('ouvert');
+    fenetreTest.inert = true;
+    document.body.classList.remove('fenetre-offre-ouverte');
+    if (declencheurTest) { declencheurTest.focus({ preventScroll: true }); declencheurTest = null; }
+  }
+  document.addEventListener('click', (e) => {
+    const bouton = e.target.closest('[data-test-ferme]');
+    if (bouton) { vibrer(); ouvrirTest(bouton); }
+  });
+  fenetreTest.addEventListener('click', (e) => { if (e.target.closest('[data-test-action="fermer"]')) fermerTest(); });
+  voileTest.addEventListener('click', fermerTest);
+  document.addEventListener('keydown', (e) => {
+    if (!fenetreTest.classList.contains('ouvert')) return;
+    if (e.key === 'Escape') { fermerTest(); return; }
+    if (e.key !== 'Tab') return;
+    // La tabulation reste dans la fenêtre
+    const focusables = $$('a[href], button:not([disabled]), input', fenetreTest).filter((el) => el.offsetParent !== null);
+    const premier = focusables[0];
+    const dernier = focusables[focusables.length - 1];
+    if (e.shiftKey && document.activeElement === premier) { e.preventDefault(); dernier.focus(); }
+    else if (!e.shiftKey && document.activeElement === dernier) { e.preventDefault(); premier.focus(); }
+  });
+  champTest.addEventListener('input', () => erreurTest(null));
+  formTest.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (envoiEnCours) return;
+    const email = champTest.value.trim();
+    if (email.length > 254 || !FORMAT_EMAIL.test(email)) { erreurTest('email'); champTest.focus(); return; }
+    erreurTest(null);
+    etatEnvoiTest(true);
+    const controleur = new AbortController();
+    const minuteur = setTimeout(() => controleur.abort(), 15000);
+    try {
+      const reponse = await fetch(API_TEST_FERME, {
+        method: 'POST',
+        headers: { apikey: CLE_SUPABASE, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ p_email: email, p_langue: langue }),
+        signal: controleur.signal,
+      });
+      if (!reponse.ok) throw new Error(`HTTP ${reponse.status}`);
+      vueTest(true);
+      if (fenetreTest.classList.contains('ouvert')) $('[data-test-action="fermer"].bouton', fenetreTest).focus();
+    } catch (err) {
+      erreurTest('envoi');
+    } finally {
+      clearTimeout(minuteur);
+      etatEnvoiTest(false);
+    }
+  });
 
   // Boutons de l'en-tête
   $('#bouton-langue').addEventListener('click', () => changerLangue());
